@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>反辐射无人机仿真系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(135deg, #0a0f1e 0%, #03060c 100%);
+            font-family: 'Inter', sans-serif;
+            color: #eef2ff;
+            min-height: 100vh;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto 1fr;
+            gap: 16px;
+            padding: 16px;
+            max-width: 1920px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        /* 头部 */
+        .header {
+            grid-column: 1 / -1;
+            background: rgba(12, 20, 35, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(72, 187, 255, 0.3);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #FFFFFF, #80CFFF);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .header-stats {
+            display: flex;
+            gap: 20px;
+        }
+        .stat-box {
+            background: rgba(20, 40, 65, 0.6);
+            padding: 8px 16px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(64, 128, 255, 0.3);
+        }
+        .stat-box .num {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #5BC0FF;
+        }
+        .stat-box .label {
+            font-size: 0.65rem;
+            color: #8E9CB9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 卡片通用样式 */
+        .card {
+            background: rgba(8, 16, 30, 0.75);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(72, 187, 255, 0.3);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 12px 16px;
+            background: linear-gradient(95deg, rgba(20, 40, 65, 0.9) 0%, rgba(10, 22, 45, 0.7) 100%);
+            border-bottom: 1px solid rgba(72, 187, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            flex: 1;
+        }
+        .card-header .count {
+            background: rgba(0,0,0,0.3);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: #5BC0FF;
+        }
+        .card-body {
+            padding: 0;
+        }
+
+        /* 辐射源列表 - 表格样式 */
+        .source-table-wrapper {
+            overflow-x: auto;
+        }
+        .source-tabs {
+            display: flex;
+            gap: 6px;
+            padding: 10px 12px;
+            background: rgba(0,0,0,0.2);
+            flex-wrap: wrap;
+        }
+        .source-tab {
+            flex: 1;
+            min-width: 70px;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: rgba(30, 50, 70, 0.5);
+            color: #bbd9ff;
+        }
+        .source-tab:hover { background: rgba(50, 80, 110, 0.6); }
+        .source-tab.active {
+            background: linear-gradient(135deg, #2c577c, #1a3a55);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(91, 192, 255, 0.3);
+        }
+        .source-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        .source-table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: rgba(12, 26, 45, 0.9);
+            color: #c2e0ff;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(72, 187, 255, 0.4);
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+        .source-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(72, 120, 160, 0.2);
+            vertical-align: middle;
+            background-color: rgba(12, 22, 40, 0.3);
+        }
+        .source-table tr:hover td {
+            background-color: rgba(30, 70, 110, 0.4);
+        }
+        .source-table tr:last-child td {
+            border-bottom: none;
+        }
+        .threat-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .threat-high { background: rgba(255, 90, 70, 0.3); color: #ff8a7a; border: 1px solid rgba(255, 90, 70, 0.5); }
+        .threat-medium { background: rgba(255, 180, 60, 0.3); color: #FFD966; border: 1px solid rgba(255, 180, 60, 0.5); }
+        .threat-low { background: rgba(100, 200, 130, 0.3); color: #6fcf97; border: 1px solid rgba(100, 200, 130, 0.5); }
+
+        /* 态势控制 */
+        .control-group {
+            padding: 12px;
+            border-bottom: 1px solid rgba(72, 120, 160, 0.2);
+        }
+        .control-group:last-child {
+            border-bottom: none;
+        }
+        .control-group-title {
+            font-size: 0.75rem;
+            color: #8E9CB9;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+        }
+        .toggle-label {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 20px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(30, 50, 70, 0.8);
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background: #8E9CB9;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        input:checked + .toggle-slider {
+            background: rgba(91, 192, 255, 0.5);
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+            background: #5BC0FF;
+        }
+
+        /* 频谱分析 */
+        .spectrum-container {
+            position: relative;
+            height: 220px;
+            background: rgba(5, 10, 20, 0.8);
+            padding: 16px;
+        }
+        .spectrum-chart {
+            position: relative;
+            height: calc(100% - 40px);
+            background: linear-gradient(0deg, rgba(20, 40, 60, 0.5) 0%, transparent 100%);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .spectrum-bars {
+            display: flex;
+            align-items: flex-end;
+            height: 100%;
+            padding: 0 8px;
+        }
+        .spectrum-bar {
+            flex: 1;
+            margin: 0 2px;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            cursor: pointer;
+            transition: 0.2s;
+            min-width: 30px;
+        }
+        .spectrum-bar:hover {
+            transform: scaleY(1.05);
+            box-shadow: 0 0 15px currentColor;
+        }
+        .freq-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            color: #8E9CB9;
+            white-space: nowrap;
+        }
+        .spectrum-tooltip {
+            position: absolute;
+            background: rgba(10, 20, 40, 0.95);
+            border: 1px solid rgba(91, 192, 255, 0.5);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+            min-width: 150px;
+        }
+        .spectrum-tooltip.visible {
+            display: block;
+        }
+        .tooltip-title {
+            font-weight: 600;
+            color: #5BC0FF;
+            margin-bottom: 4px;
+        }
+        .tooltip-info {
+            color: #8E9CB9;
+            font-size: 0.7rem;
+        }
+
+        /* 威胁评估 */
+        .threat-rules {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 12px;
+            background: rgba(0,0,0,0.2);
+        }
+        .rule-item {
+            background: rgba(20, 40, 60, 0.5);
+            padding: 8px 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .rule-item i { font-size: 1rem; }
+        .rule-info { flex: 1; }
+        .rule-info .name { font-size: 0.7rem; font-weight: 500; }
+        .rule-info .value { font-size: 0.6rem; color: #8E9CB9; }
+        .threat-list {
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        .threat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(72, 120, 160, 0.15);
+        }
+        .threat-item:hover { background: rgba(30, 70, 110, 0.3); }
+        .priority-rank {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+        .rank-1 { background: linear-gradient(135deg, #ff5e4a, #ff8a7a); color: #fff; }
+        .rank-2 { background: linear-gradient(135deg, #f5b042, #FFD966); color: #333; }
+        .rank-3 { background: linear-gradient(135deg, #2ecc71, #6fcf97); color: #fff; }
+        .threat-name { flex: 1; font-size: 0.85rem; }
+        .threat-level {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* 防控火力 */
+        .firepower-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .firepower-item {
+            padding: 12px;
+            border-bottom: 1px solid rgba(72, 120, 160, 0.2);
+        }
+        .firepower-item:last-child { border-bottom: none; }
+        .firepower-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .firepower-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .firepower-status {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+        .status-active { background: rgba(46, 204, 113, 0.3); color: #2ecc71; }
+        .status-standby { background: rgba(241, 196, 15, 0.3); color: #f1c40f; }
+        .status-disabled { background: rgba(231, 76, 60, 0.3); color: #e74c3c; }
+        .firepower-params {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            font-size: 0.7rem;
+        }
+        .param-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px 8px;
+            border-radius: 6px;
+        }
+        .param-box .label { color: #8E9CB9; font-size: 0.6rem; }
+        .param-box .value { color: #5BC0FF; font-weight: 500; }
+        .firepower-range {
+            margin-top: 8px;
+            background: rgba(20, 40, 60, 0.5);
+            border-radius: 8px;
+            padding: 8px;
+        }
+        .range-bar {
+            height: 6px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .range-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: rgba(91, 192, 255, 0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(91, 192, 255, 0.5); }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+            .header-stats {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- 头部 -->
+        <header class="header">
+            <h1><i class="fas fa-drone"></i> 反辐射无人机仿真系统</h1>
+            <div class="header-stats">
+                <div class="stat-box">
+                    <div class="num" id="totalTargets">12</div>
+                    <div class="label">总目标</div>
+                </div>
+                <div class="stat-box">
+                    <div class="num" id="highThreat">4</div>
+                    <div class="label">高威胁</div>
+                </div>
+                <div class="stat-box">
+                    <div class="num" id="firepowerCount">5</div>
+                    <div class="label">防控火力</div>
+                </div>
+                <div class="stat-box">
+                    <div class="num" id="currentTime">--:--:--</div>
+                    <div class="label">系统时间</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 左侧：辐射源列表 + 态势控制 -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- 辐射源列表 -->
+            <div class="card" style="flex: 1;">
+                <div class="card-header">
+                    <i class="fas fa-broadcast-tower" style="color: #5BC0FF;"></i>
+                    <h3>辐射源列表</h3>
+                    <span class="count" id="sourceCount">12个目标</span>
+                </div>
+                <div class="source-tabs">
+                    <button class="source-tab active" data-type="radar">
+                        <i class="fas fa-satellite-dish"></i> 雷达
+                    </button>
+                    <button class="source-tab" data-type="communication">
+                        <i class="fas fa-broadcast-tower"></i> 电台
+                    </button>
+                    <button class="source-tab" data-type="comm_jammer">
+                        <i class="fas fa-signal-slash"></i> 通信对抗
+                    </button>
+                    <button class="source-tab" data-type="radar_jammer">
+                        <i class="fas fa-shield-alt"></i> 雷达对抗
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="source-table-wrapper">
+                        <table class="source-table" id="sourceTable">
+                            <thead id="sourceTableHead">
+                                <!-- 动态生成 -->
+                            </thead>
+                            <tbody id="sourceTableBody">
+                                <!-- 动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 态势控制 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-sliders-h" style="color: #f3a683;"></i>
+                    <h3>态势控制</h3>
+                    <span class="count">威力范围</span>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <div class="control-group">
+                        <div class="control-group-title"><i class="fas fa-wave-square"></i> 辐射源威力范围</div>
+                        <div class="toggle-row">
+                            <span class="toggle-label"><i class="fas fa-satellite-dish" style="color:#ff8a7a;"></i> 雷达</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="showRadar" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label"><i class="fas fa-broadcast-tower" style="color:#5bc0ff;"></i> 电台</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="showComm" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label"><i class="fas fa-signal-slash" style="color:#f3a683;"></i> 通信对抗</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="showCommJammer" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label"><i class="fas fa-shield-alt" style="color:#c68eff;"></i> 雷达对抗</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="showRadarJammer" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="control-group-title"><i class="fas fa-crosshairs"></i> 防控火力</div>
+                        <div class="toggle-row">
+                            <span class="toggle-label"><i class="fas fa-bullseye" style="color:#2ecc71;"></i> 防控火力显示</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="showFirepower" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：频谱分析 + 防控火力 + 威胁评估 -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- 频谱分析 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-wave-square" style="color: #5BC0FF;"></i>
+                    <h3>频谱分析</h3>
+                    <span class="count">实时频谱</span>
+                </div>
+                <div class="card-body">
+                    <div class="spectrum-container">
+                        <div class="spectrum-chart">
+                            <div class="spectrum-bars" id="spectrumBars">
+                                <!-- 动态生成 -->
+                            </div>
+                        </div>
+                        <div class="spectrum-tooltip" id="spectrumTooltip">
+                            <div class="tooltip-title">频段信息</div>
+                            <div class="tooltip-info"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 防控火力 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-bullseye" style="color: #2ecc71;"></i>
+                    <h3>防控火力</h3>
+                    <span class="count">5个单位</span>
+                </div>
+                <div class="card-body">
+                    <div class="firepower-list" id="firepowerList">
+                        <!-- 动态填充 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 威胁评估 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-exclamation-triangle" style="color: #FFD966;"></i>
+                    <h3>威胁评估</h3>
+                    <span class="count">优先级排序</span>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <div class="threat-rules">
+                        <div class="rule-item">
+                            <i class="fas fa-crosshairs" style="color:#ff8a7a;"></i>
+                            <div class="rule-info">
+                                <div class="name">威胁等级</div>
+                                <div class="value">高/中/低</div>
+                            </div>
+                        </div>
+                        <div class="rule-item">
+                            <i class="fas fa-sort-numeric-down" style="color:#5bc0ff;"></i>
+                            <div class="rule-info">
+                                <div class="name">打击优先级</div>
+                                <div class="value">1-12排序</div>
+                            </div>
+                        </div>
+                        <div class="rule-item">
+                            <i class="fas fa-clock" style="color:#f3a683;"></i>
+                            <div class="rule-info">
+                                <div class="name">响应时间</div>
+                                <div class="value">≤30s</div>
+                            </div>
+                        </div>
+                        <div class="rule-item">
+                            <i class="fas fa-bullseye" style="color:#2ecc71;"></i>
+                            <div class="rule-info">
+                                <div class="name">打击精度</div>
+                                <div class="value">CEP≤10m</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="threat-list" id="threatList">
+                        <!-- 动态填充 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 辐射源数据
+        const sourcesData = {
+            radar: [
+                { name: "AN/MPQ-53 相控阵雷达", freq: "5.2~6.1GHz", prf: "200~500Hz", pw: "0.5~25μs", scan: "电子扫描", threat: "高", type: "高功率火控雷达" },
+                { name: "P-18 预警雷达", freq: "150~170MHz", prf: "300Hz", pw: "8μs", scan: "6rpm", threat: "中", type: "米波远程警戒" },
+                { name: "MPQ-64 哨兵雷达", freq: "8~12GHz", prf: "可变", pw: "-", scan: "旋转扫描", threat: "高", type: "低空补盲雷达" }
+            ],
+            communication: [
+                { name: "Link-16 战术数据链", freq: "960~1215MHz", mod: "MSK/扩频", rate: "1.0Mbps", waveform: "JTIDS", threat: "高", type: "关键指控链路" },
+                { name: "VHF 战术电台", freq: "30~88MHz", mod: "FM/跳频", rate: "-", power: "25W", threat: "中", type: "班组级通信" },
+                { name: "卫星通信终端", freq: "Ku波段", mod: "QPSK", rate: "5Msps", orbit: "同步卫星", threat: "中", type: "远程指挥链路" }
+            ],
+            comm_jammer: [
+                { name: "R-330Zh 通信干扰系统", jamType: "噪声调频/梳状谱", coverage: "20~100MHz", erp: "1kW", threat: "高", type: "大功率宽带压制" },
+                { name: "便携式通信干扰机", jamType: "单音/扫频", coverage: "400~470MHz", erp: "50W", threat: "低", type: "近距离战术干扰" },
+                { name: "车载智能干扰站", jamType: "协议伪造/随机脉冲", coverage: "225~400MHz", erp: "200W", threat: "中", type: "自适应干扰" }
+            ],
+            radar_jammer: [
+                { name: "SPECTRAL 侦察干扰吊舱", jamType: "距离门拖引/速度欺骗", band: "2~18GHz", tech: "DRFM转发", threat: "高", type: "先进数字射频存储" },
+                { name: "Pelena-1 地面干扰站", jamType: "噪声压制/假目标", band: "8~12GHz", tech: "模拟转发", threat: "高", type: "火控雷达对抗" },
+                { name: "战术侦察/干扰模块", jamType: "测频/测向+间歇采样", band: "S/C波段", tech: "数字接收", threat: "中", type: "小型化电子攻击" }
+            ]
+        };
+
+        // 表头配置
+        const tableHeaders = {
+            radar: ['目标名称', '工作频率', '脉冲重频', '脉宽', '扫描方式', '威胁等级'],
+            communication: ['目标名称', '工作频率', '调制方式', '码速率', '功率/波形', '威胁等级'],
+            comm_jammer: ['目标名称', '干扰样式', '覆盖频段', '有效辐射功率', '威胁等级', '类型'],
+            radar_jammer: ['目标名称', '对抗类型', '工作频段', '技术体制', '威胁等级', '类型']
+        };
+
+        // 防控火力数据
+        const firepowerData = [
+            { name: "红旗-16 防空系统", status: "active", type: "中程防空", range: "40km", ammo: "16枚", response: "8s", intercept: "95%" },
+            { name: "道尔-M1 防空车", status: "active", type: "低空防御", range: "15km", ammo: "8枚", response: "5s", intercept: "90%" },
+            { name: "PGZ-07 自行高炮", status: "standby", type: "末端防御", range: "3km", ammo: "400发", response: "3s", intercept: "85%" },
+            { name: "便携式防空导弹", status: "standby", type: "单兵武器", range: "5km", ammo: "2枚", response: "10s", intercept: "80%" },
+            { name: "电子对抗系统", status: "disabled", type: "软杀伤", range: "20km", mode: "压制/欺骗", power: "高", intercept: "-" }
+        ];
+
+        // 频谱数据
+        const spectrumData = [
+            { name: "HF", range: "3-30MHz", color: "#8B5CF6", height: 25, signals: 2 },
+            { name: "VHF", range: "30-300MHz", color: "#EC4899", height: 45, signals: 5 },
+            { name: "UHF", range: "300-1000MHz", color: "#F59E0B", height: 60, signals: 8 },
+            { name: "L", range: "1-2GHz", color: "#10B981", height: 40, signals: 4 },
+            { name: "S", range: "2-4GHz", color: "#3B82F6", height: 75, signals: 9 },
+            { name: "C", range: "4-8GHz", color: "#6366F1", height: 55, signals: 6 },
+            { name: "X", range: "8-12GHz", color: "#EF4444", height: 85, signals: 11 },
+            { name: "Ku", range: "12-18GHz", color: "#14B8A6", height: 50, signals: 5 },
+            { name: "K", range: "18-27GHz", color: "#F97316", height: 30, signals: 3 },
+            { name: "Ka", range: "27-40GHz", color: "#8B5CF6", height: 20, signals: 2 }
+        ];
+
+        // 当前选中类型
+        let currentSourceType = 'radar';
+
+        // 渲染辐射源表格
+        function renderSourceTable(type) {
+            const thead = document.getElementById('sourceTableHead');
+            const tbody = document.getElementById('sourceTableBody');
+            const items = sourcesData[type];
+            const headers = tableHeaders[type];
+
+            // 生成表头
+            thead.innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+
+            // 生成表格数据
+            tbody.innerHTML = items.map(item => {
+                const iconClass = type === 'radar' ? 'satellite-dish' : type === 'communication' ? 'broadcast-tower' : type === 'comm_jammer' ? 'signal-slash' : 'shield-alt';
+                const iconColor = type === 'radar' ? '#ff8a7a' : type === 'communication' ? '#5bc0ff' : type === 'comm_jammer' ? '#f3a683' : '#c68eff';
+
+                let cells = '';
+                if (type === 'radar') {
+                    cells = `
+                        <td><i class="fas fa-${iconClass}" style="color:${iconColor};margin-right:6px;"></i>${item.name}</td>
+                        <td>${item.freq}</td>
+                        <td>${item.prf}</td>
+                        <td>${item.pw}</td>
+                        <td>${item.scan}</td>
+                        <td><span class="threat-badge threat-${item.threat === '高' ? 'high' : item.threat === '中' ? 'medium' : 'low'}">${item.threat}</span></td>
+                    `;
+                } else if (type === 'communication') {
+                    cells = `
+                        <td><i class="fas fa-${iconClass}" style="color:${iconColor};margin-right:6px;"></i>${item.name}</td>
+                        <td>${item.freq}</td>
+                        <td>${item.mod}</td>
+                        <td>${item.rate || '-'}</td>
+                        <td>${item.power || item.waveform}</td>
+                        <td><span class="threat-badge threat-${item.threat === '高' ? 'high' : item.threat === '中' ? 'medium' : 'low'}">${item.threat}</span></td>
+                    `;
+                } else if (type === 'comm_jammer') {
+                    cells = `
+                        <td><i class="fas fa-${iconClass}" style="color:${iconColor};margin-right:6px;"></i>${item.name}</td>
+                        <td>${item.jamType}</td>
+                        <td>${item.coverage}</td>
+                        <td>${item.erp}</td>
+                        <td><span class="threat-badge threat-${item.threat === '高' ? 'high' : item.threat === '中' ? 'medium' : 'low'}">${item.threat}</span></td>
+                        <td>${item.type}</td>
+                    `;
+                } else if (type === 'radar_jammer') {
+                    cells = `
+                        <td><i class="fas fa-${iconClass}" style="color:${iconColor};margin-right:6px;"></i>${item.name}</td>
+                        <td>${item.jamType}</td>
+                        <td>${item.band}</td>
+                        <td>${item.tech}</td>
+                        <td><span class="threat-badge threat-${item.threat === '高' ? 'high' : item.threat === '中' ? 'medium' : 'low'}">${item.threat}</span></td>
+                        <td>${item.type}</td>
+                    `;
+                }
+                return `<tr>${cells}</tr>`;
+            }).join('');
+
+            document.getElementById('sourceCount').textContent = `${items.length}个目标`;
+        }
+
+        // 渲染防控火力
+        function renderFirepower() {
+            const list = document.getElementById('firepowerList');
+            list.innerHTML = firepowerData.map(item => `
+                <div class="firepower-item">
+                    <div class="firepower-header">
+                        <div class="firepower-name">
+                            <i class="fas fa-crosshairs" style="color: ${item.status === 'active' ? '#2ecc71' : item.status === 'standby' ? '#f1c40f' : '#e74c3c'};"></i>
+                            ${item.name}
+                        </div>
+                        <span class="firepower-status status-${item.status}">${item.status === 'active' ? '在线' : item.status === 'standby' ? '待机' : '离线'}</span>
+                    </div>
+                    <div class="firepower-params">
+                        <div class="param-box"><div class="label">类型</div><div class="value">${item.type}</div></div>
+                        <div class="param-box"><div class="label">射程</div><div class="value">${item.range}</div></div>
+                        <div class="param-box"><div class="label">${item.ammo ? '弹药' : '模式'}</div><div class="value">${item.ammo || item.mode}</div></div>
+                        <div class="param-box"><div class="label">响应</div><div class="value">${item.response}</div></div>
+                    </div>
+                    <div class="firepower-range">
+                        <div style="font-size: 0.65rem; color: #8E9CB9; margin-bottom: 4px;">拦截概率</div>
+                        <div class="range-bar">
+                            <div class="range-fill" style="width: ${item.intercept === '-' ? '0' : item.intercept.replace('%','')}%; background: linear-gradient(90deg, #2ecc71, #27ae60);"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 渲染威胁评估
+        function renderThreatAssessment() {
+            const list = document.getElementById('threatList');
+            // 合并所有目标并按威胁等级排序
+            let allTargets = [];
+            Object.keys(sourcesData).forEach(type => {
+                sourcesData[type].forEach(item => {
+                    allTargets.push({...item, type});
+                });
+            });
+            // 按威胁等级排序：高 > 中 > 低
+            allTargets.sort((a, b) => {
+                const priority = { '高': 0, '中': 1, '低': 2 };
+                return priority[a.threat] - priority[b.threat];
+            });
+
+            list.innerHTML = allTargets.map((item, index) => `
+                <div class="threat-item">
+                    <div class="priority-rank rank-${index < 1 ? '1' : index < 4 ? '2' : '3'}">${index + 1}</div>
+                    <div class="threat-name">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-${item.type === 'radar' ? 'satellite-dish' : item.type === 'communication' ? 'broadcast-tower' : item.type === 'comm_jammer' ? 'signal-slash' : 'shield-alt'}"
+                               style="color: ${item.type === 'radar' ? '#ff8a7a' : item.type === 'communication' ? '#5bc0ff' : item.type === 'comm_jammer' ? '#f3a683' : '#c68eff'}; font-size: 0.8rem;"></i>
+                            ${item.name}
+                        </div>
+                        <div style="font-size: 0.65rem; color: #8E9CB9;">${item.type}</div>
+                    </div>
+                    <span class="threat-level threat-${item.threat === '高' ? 'high' : item.threat === '中' ? 'medium' : 'low'}">${item.threat}</span>
+                </div>
+            `).join('');
+        }
+
+        // 渲染频谱图
+        function renderSpectrum() {
+            const container = document.getElementById('spectrumBars');
+            container.innerHTML = spectrumData.map(band => `
+                <div class="spectrum-bar" style="height: ${band.height}%; background: ${band.color};"
+                     data-name="${band.name}" data-range="${band.range}" data-signals="${band.signals}">
+                    <span class="freq-label">${band.name}</span>
+                </div>
+            `).join('');
+
+            // 悬浮事件
+            const tooltip = document.getElementById('spectrumTooltip');
+            document.querySelectorAll('.spectrum-bar').forEach(bar => {
+                bar.addEventListener('mouseenter', (e) => {
+                    const rect = bar.getBoundingClientRect();
+                    const containerRect = document.querySelector('.spectrum-container').getBoundingClientRect();
+                    tooltip.querySelector('.tooltip-title').textContent = `${bar.dataset.name}频段`;
+                    tooltip.querySelector('.tooltip-info').innerHTML = `
+                        频率范围: ${bar.dataset.range}<br>
+                        信号数量: ${bar.dataset.signals}个<br>
+                        能量占比: ${bar.style.height}
+                    `;
+                    tooltip.style.left = (rect.left - containerRect.left + rect.width/2 - 75) + 'px';
+                    tooltip.style.top = (rect.top - containerRect.top - 70) + 'px';
+                    tooltip.classList.add('visible');
+                });
+                bar.addEventListener('mouseleave', () => {
+                    tooltip.classList.remove('visible');
+                });
+            });
+        }
+
+        // 态势控制状态存储
+        const controlState = {
+            radar: true,
+            comm: true,
+            commJammer: true,
+            radarJammer: true,
+            firepower: true
+        };
+
+        // 态势控制提示
+        function setupSituationControl() {
+            const toggles = [
+                { id: 'showRadar', key: 'radar', label: '雷达威力范围' },
+                { id: 'showComm', key: 'comm', label: '电台威力范围' },
+                { id: 'showCommJammer', key: 'commJammer', label: '通信对抗威力范围' },
+                { id: 'showRadarJammer', key: 'radarJammer', label: '雷达对抗威力范围' },
+                { id: 'showFirepower', key: 'firepower', label: '防控火力信息' }
+            ];
+
+            toggles.forEach(toggle => {
+                const checkbox = document.getElementById(toggle.id);
+                if (checkbox) {
+                    checkbox.addEventListener('change', () => {
+                        controlState[toggle.key] = checkbox.checked;
+                        showControlToast(`${toggle.label}已${checkbox.checked ? '显示' : '隐藏'}`);
+                    });
+                }
+            });
+        }
+
+        // 显示控制提示
+        function showControlToast(message) {
+            const existing = document.querySelector('.control-toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'control-toast';
+            toast.style.cssText = `
+                position: fixed;
+                top: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(12, 20, 35, 0.95);
+                border: 1px solid rgba(91, 192, 255, 0.5);
+                color: #5BC0FF;
+                padding: 10px 20px;
+                border-radius: 20px;
+                font-size: 0.8rem;
+                z-index: 1000;
+                transition: opacity 0.3s;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 1500);
+        }
+
+        // 源类型切换
+        function setupSourceTabs() {
+            document.querySelectorAll('.source-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentSourceType = tab.dataset.type;
+                    renderSourceTable(currentSourceType);
+                });
+            });
+        }
+
+        // 更新时间
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('zh-CN', {hour12: false});
+        }
+
+        // 初始化
+        function init() {
+            renderSourceTable('radar');
+            renderFirepower();
+            renderThreatAssessment();
+            renderSpectrum();
+            setupSituationControl();
+            setupSourceTabs();
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            // 更新统计
+            let total = 0, highThreat = 0;
+            Object.values(sourcesData).forEach(arr => {
+                arr.forEach(item => {
+                    total++;
+                    if(item.threat === '高') highThreat++;
+                });
+            });
+            document.getElementById('totalTargets').textContent = total;
+            document.getElementById('highThreat').textContent = highThreat;
+            document.getElementById('firepowerCount').textContent = firepowerData.length;
+        }
+
+        init();
+    </script>
+
+<style>
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.inland-security-footer {
+  position: fixed;
+  z-index: 10;
+  bottom: 0;
+  right: 0;
+  width: fit-content;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.tooltip-container {
+  position: relative;
+}
+
+.trigger-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background-color: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.minimax-link {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 300;
+  color: #adadad;
+  text-decoration: none;
+}
+
+.minimax-link:visited {
+  color: #adadad;
+}
+
+.minimax-link:hover {
+  color: #666666;
+}
+
+.tooltip-content {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  padding-bottom: 16px; /* 8px 内容间距 + 8px 用于鼠标移动的透明区域 */
+  font-size: 12px;
+  line-height: 17px;
+  background-color: #fafafa;
+  border-radius: 12px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: #171717;
+}
+
+/* 创建透明的连接区域，让鼠标可以平滑移动到 tooltip */
+.tooltip-content::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+  height: 16px;
+}
+
+.tooltip-container:hover .tooltip-content {
+  display: flex;
+}
+
+.info-section {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.beian-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #171717;
+}
+
+.beian-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 2px;
+}
+
+.underline-text {
+  color: #171717;
+  text-decoration: underline;
+}
+
+.underline-text:hover {
+  color: #000000;
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .trigger-content {
+    background-color: transparent;
+  }
+
+  .minimax-link,
+  .minimax-link:visited {
+    color: #666666;
+  }
+
+  .minimax-link:hover {
+    color: #adadad;
+  }
+
+  .tooltip-content {
+    background-color: #262626;
+    color: #ededed;
+  }
+
+  .beian-link,
+  .underline-text {
+    color: #ededed;
+  }
+
+  .underline-text:hover {
+    color: #ffffff;
+  }
+}
+
+</style>
+<div class="inland-security-footer">
+  <div class="tooltip-container">
+    <div class="trigger-content">
+      <a href="https://www.minimaxi.com/" target="_blank" rel="noreferrer" class="minimax-link">
+        <span>© 2026 MiniMax</span>
+      </a>
+    </div>
+    <div class="tooltip-content">
+      <section class="info-section">
+        <span>上海稀宇科技有限公司</span>
+      </section>
+
+      <section class="info-section">
+        <a class="beian-link" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31010402010179" target="_blank" rel="noreferrer">
+          <img alt="hailuo-beian-icon" src="https://cdn.hailuoai.com/hailuo-video-web/public_assets/223037d3-79fd-4db0-a456-749f38a6a14b.png" class="beian-icon">
+          <span class="underline-text">沪公网安备31010402010179号</span>
+        </a>
+        <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer" class="underline-text">
+          沪ICP备2023003282号-38
+        </a>
+      </section>
+
+      <section class="info-section">
+        <span>模型名称：MiniMax</span>
+        <span>备案号：Shanghai-MiniMax-202505230046</span>
+      </section>
+
+      <section class="info-section">
+        <a href="https://agent.minimaxi.com/doc/zh/terms-of-service.html" target="_blank" rel="noreferrer" class="underline-text">
+          用户协议
+        </a>
+        <a href="https://agent.minimaxi.com/doc/zh/privacy-policy.html" target="_blank" rel="noreferrer" class="underline-text">
+          隐私政策
+        </a>
+      </section>
+    </div>
+  </div>
+</div>
+
+
+<script>
+/**
+ * Iframe 元素高亮注入脚本
+ * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
+ *
+ * 使用方法：
+ * 1. 将此脚本添加到目标网站的 HTML 中
+ * 2. 或通过浏览器扩展、用户脚本等方式注入
+ */
+
+(function () {
+  "use strict";
+
+  // 检查是否在 iframe 中
+  if (window.self === window.top) {
+    return; // 不在 iframe 中，不执行
+  }
+
+  // 检查是否已经初始化过
+  if (window.__iframeHighlightInitialized) {
+    return;
+  }
+  window.__iframeHighlightInitialized = true;
+  console.log("Iframe 高亮脚本已加载");
+
+  // 创建高亮覆盖层
+  var overlay = document.createElement("div");
+  overlay.id = "iframe-highlight-overlay";
+  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
+
+  // 创建悬停高亮框（虚线边框）
+  var highlightBox = document.createElement("div");
+  highlightBox.id = "iframe-highlight-box";
+  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
+
+  // 创建选中节点的常驻高亮框（实线边框）
+  var selectedBox = document.createElement("div");
+  selectedBox.id = "iframe-selected-box";
+  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
+
+  // 创建悬停标签显示
+  var tagLabel = document.createElement("div");
+  tagLabel.id = "iframe-tag-label";
+  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
+
+  // 创建选中节点标签
+  var selectedLabel = document.createElement("div");
+  selectedLabel.id = "iframe-selected-label";
+  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
+  overlay.appendChild(highlightBox);
+  overlay.appendChild(selectedBox);
+  overlay.appendChild(tagLabel);
+  overlay.appendChild(selectedLabel);
+  document.body.appendChild(overlay);
+
+  // 存储当前选中的元素
+  var selectedElement = null;
+  var highlightEnabled = false;
+
+  // 更新选中元素的高亮显示
+  function updateSelectedHighlight(element) {
+    console.log("updateSelectedHighlight called with:", element);
+    if (!element) {
+      selectedBox.style.display = "none";
+      selectedLabel.style.display = "none";
+      selectedElement = null;
+      console.log("Cleared selected highlight");
+      return;
+    }
+    selectedElement = element;
+    var rect = element.getBoundingClientRect();
+    console.log("Selected element rect:", rect);
+
+    // 更新选中高亮框位置
+    selectedBox.style.display = "block";
+    selectedBox.style.left = "".concat(rect.left - 2, "px");
+    selectedBox.style.top = "".concat(rect.top - 2, "px");
+    selectedBox.style.width = "".concat(rect.width + 4, "px");
+    selectedBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新选中标签位置和内容
+    selectedLabel.style.display = "block";
+    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 28;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 5) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
+    if (labelLeft + labelWidth > window.innerWidth - 10) {
+      labelLeft = window.innerWidth - labelWidth - 10;
+    }
+    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
+    selectedLabel.style.top = "".concat(labelTop, "px");
+    console.log("Selected highlight positioned at:", {
+      left: selectedBox.style.left,
+      top: selectedBox.style.top,
+      width: selectedBox.style.width,
+      height: selectedBox.style.height
+    });
+  }
+  function getElementSelector(element) {
+    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
+    var segments = [];
+    var current = element;
+    while (current !== document.documentElement) {
+      var selector = '';
+      // 优先检查唯一ID
+      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
+        segments.unshift("#".concat(current.id));
+        break; // ID唯一，无需继续向上
+      }
+
+      // 生成类名选择器（取第一个有效类名）
+      var classes = Array.from(current.classList).filter(function (c) {
+        return !c.startsWith('js-');
+      });
+      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
+
+      // 生成位置索引（nth-child）
+      var tag = current.tagName.toLowerCase();
+      if (!className) {
+        var siblings = Array.from(current.parentNode.children);
+        var index = siblings.findIndex(function (el) {
+          return el === current;
+        }) + 1;
+        selector = "".concat(tag, ":nth-child(").concat(index, ")");
+      } else {
+        selector = className;
+      }
+      segments.unshift(selector);
+      current = current.parentElement;
+    }
+
+    // 处理根元素
+    if (current === document.documentElement) {
+      segments.unshift('html');
+    }
+    return segments.join(' > ');
+  }
+
+  // 获取元素文本内容
+  function getElementText(element) {
+    var _element$textContent;
+    if (element.tagName === "INPUT") {
+      return element.value || element.placeholder || "";
+    }
+    if (element.tagName === "TEXTAREA") {
+      return element.value || element.placeholder || "";
+    }
+    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
+    return text.length > 50 ? text.substring(0, 50) + "..." : text;
+  }
+
+  // 获取元素属性信息
+  function getElementAttributes(element) {
+    var attrs = {};
+    for (var i = 0; i < element.attributes.length; i++) {
+      var attr = element.attributes[i];
+      attrs[attr.name] = attr.value;
+    }
+    return attrs;
+  }
+
+  // 鼠标悬停事件处理
+  function handleMouseOver(e) {
+    if (!highlightEnabled) return;
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免高亮 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 如果是已选中的元素，不显示悬停高亮
+    if (target === selectedElement) {
+      highlightBox.style.display = "none";
+      tagLabel.style.display = "none";
+      return;
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+
+    // 更新悬停高亮框位置
+    highlightBox.style.display = "block";
+    highlightBox.style.left = "".concat(rect.left - 2, "px");
+    highlightBox.style.top = "".concat(rect.top - 2, "px");
+    highlightBox.style.width = "".concat(rect.width + 4, "px");
+    highlightBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新标签位置和内容
+    tagLabel.style.display = "block";
+    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 22;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 0) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
+      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
+    }
+    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
+    tagLabel.style.top = "".concat(labelTop, "px");
+
+    // 发送消息到父窗口
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 鼠标离开事件处理
+  function handleMouseOut(e) {
+    if (!highlightEnabled) return;
+    var relatedTarget = e.relatedTarget;
+
+    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
+    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
+      return;
+    }
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: null,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 点击事件处理
+  function handleClick(e) {
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免处理 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 检查是否是交互元素，这些元素需要保留默认行为
+    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
+
+    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
+    if (highlightEnabled) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+    console.log("Element clicked:", {
+      tagName: target.tagName,
+      selector: selector,
+      rect: rect
+    });
+
+    // 立即更新选中高亮
+    updateSelectedHighlight(target);
+
+    // 隐藏悬停高亮，因为现在是选中状态
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-click",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 监听来自父窗口的消息
+  function handleParentMessage(event) {
+    console.log("Received message from parent:", event.data);
+    if (event.data.type === "iframe-highlight-toggle") {
+      var enabled = event.data.enabled;
+      console.log("Highlight toggle:", enabled);
+      if (enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "enable-iframe-highlight") {
+      console.log("Enable iframe highlight");
+      enableHighlight();
+    } else if (event.data.type === "disable-iframe-highlight") {
+      console.log("Disable iframe highlight");
+      disableHighlight();
+    } else if (event.data.type === "toggle-iframe-highlight") {
+      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
+      console.log("Toggle iframe highlight to:", _enabled);
+      if (_enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "update-selected-element") {
+      var selector = event.data.selector;
+      console.log("Update selected element with selector:", selector);
+      if (selector) {
+        try {
+          var element = document.querySelector(selector);
+          console.log("Found element by selector:", element);
+          updateSelectedHighlight(element);
+        } catch (error) {
+          console.warn("Failed to select element:", error);
+          updateSelectedHighlight(null);
+        }
+      } else {
+        updateSelectedHighlight(null);
+      }
+    } else if (event.data.type === "clear-selected-element") {
+      console.log("Clear selected element");
+      updateSelectedHighlight(null);
+    }
+  }
+
+  // 启用高亮功能
+  function enableHighlight() {
+    console.log("Enabling highlight");
+    document.addEventListener("mouseover", handleMouseOver, true);
+    document.addEventListener("mouseout", handleMouseOut, true);
+    document.addEventListener("click", handleClick, true);
+    highlightEnabled = true;
+    overlay.style.display = "block";
+  }
+
+  // 禁用高亮功能
+  function disableHighlight() {
+    console.log("Disabling highlight");
+    highlightEnabled = false;
+    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
+    // 这样可以保留选中状态的显示
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
+  }
+
+  // 完全禁用高亮功能（移除所有监听器）
+  function fullyDisableHighlight() {
+    console.log("Fully disabling highlight");
+    highlightEnabled = false;
+    document.removeEventListener("mouseover", handleMouseOver, true);
+    document.removeEventListener("mouseout", handleMouseOut, true);
+    document.removeEventListener("click", handleClick, true);
+    overlay.style.display = "none";
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    selectedBox.style.display = "none";
+    selectedLabel.style.display = "none";
+  }
+
+  // 添加事件监听
+  enableHighlight();
+  window.addEventListener("message", handleParentMessage);
+
+  // 暴露全局函数供外部调用
+  window.__iframeHighlightControl = {
+    enable: enableHighlight,
+    disable: disableHighlight,
+    fullyDisable: fullyDisableHighlight,
+    isEnabled: function isEnabled() {
+      return highlightEnabled;
+    },
+    getSelectedElement: function getSelectedElement() {
+      return selectedElement;
+    },
+    updateSelected: updateSelectedHighlight,
+    // 通过消息发送开关控制
+    sendToggleMessage: function sendToggleMessage(enabled) {
+      window.parent.postMessage({
+        type: 'iframe-highlight-status',
+        enabled: enabled || highlightEnabled,
+        source: 'iframe-highlight-injector'
+      }, '*');
+    }
+  };
+
+  // 通知父窗口脚本已加载
+  try {
+    window.parent.postMessage({
+      type: "iframe-highlight-ready",
+      data: {
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: Date.now()
+      },
+      source: "iframe-highlight-injector"
+    }, "*");
+  } catch (error) {
+    console.warn("无法发送就绪消息到父窗口:", error);
+  }
+
+  // 清理函数
+  window.__iframeHighlightCleanup = function () {
+    fullyDisableHighlight();
+    window.removeEventListener("message", handleParentMessage);
+    if (overlay.parentElement) {
+      overlay.parentElement.removeChild(overlay);
+    }
+    delete window.__iframeHighlightInitialized;
+    delete window.__iframeHighlightCleanup;
+  };
+})();
+
+</script>
+
+<script>
+/**
+ * Iframe 元素高亮注入脚本
+ * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
+ *
+ * 使用方法：
+ * 1. 将此脚本添加到目标网站的 HTML 中
+ * 2. 或通过浏览器扩展、用户脚本等方式注入
+ */
+
+(function () {
+  "use strict";
+
+  // 检查是否在 iframe 中
+  if (window.self === window.top) {
+    return; // 不在 iframe 中，不执行
+  }
+
+  // 检查是否已经初始化过
+  if (window.__iframeHighlightInitialized) {
+    return;
+  }
+  window.__iframeHighlightInitialized = true;
+  console.log("Iframe 高亮脚本已加载");
+
+  // 创建高亮覆盖层
+  var overlay = document.createElement("div");
+  overlay.id = "iframe-highlight-overlay";
+  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
+
+  // 创建悬停高亮框（虚线边框）
+  var highlightBox = document.createElement("div");
+  highlightBox.id = "iframe-highlight-box";
+  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
+
+  // 创建选中节点的常驻高亮框（实线边框）
+  var selectedBox = document.createElement("div");
+  selectedBox.id = "iframe-selected-box";
+  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
+
+  // 创建悬停标签显示
+  var tagLabel = document.createElement("div");
+  tagLabel.id = "iframe-tag-label";
+  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
+
+  // 创建选中节点标签
+  var selectedLabel = document.createElement("div");
+  selectedLabel.id = "iframe-selected-label";
+  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
+  overlay.appendChild(highlightBox);
+  overlay.appendChild(selectedBox);
+  overlay.appendChild(tagLabel);
+  overlay.appendChild(selectedLabel);
+  document.body.appendChild(overlay);
+
+  // 存储当前选中的元素
+  var selectedElement = null;
+  var highlightEnabled = false;
+
+  // 更新选中元素的高亮显示
+  function updateSelectedHighlight(element) {
+    console.log("updateSelectedHighlight called with:", element);
+    if (!element) {
+      selectedBox.style.display = "none";
+      selectedLabel.style.display = "none";
+      selectedElement = null;
+      console.log("Cleared selected highlight");
+      return;
+    }
+    selectedElement = element;
+    var rect = element.getBoundingClientRect();
+    console.log("Selected element rect:", rect);
+
+    // 更新选中高亮框位置
+    selectedBox.style.display = "block";
+    selectedBox.style.left = "".concat(rect.left - 2, "px");
+    selectedBox.style.top = "".concat(rect.top - 2, "px");
+    selectedBox.style.width = "".concat(rect.width + 4, "px");
+    selectedBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新选中标签位置和内容
+    selectedLabel.style.display = "block";
+    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 28;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 5) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
+    if (labelLeft + labelWidth > window.innerWidth - 10) {
+      labelLeft = window.innerWidth - labelWidth - 10;
+    }
+    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
+    selectedLabel.style.top = "".concat(labelTop, "px");
+    console.log("Selected highlight positioned at:", {
+      left: selectedBox.style.left,
+      top: selectedBox.style.top,
+      width: selectedBox.style.width,
+      height: selectedBox.style.height
+    });
+  }
+  function getElementSelector(element) {
+    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
+    var segments = [];
+    var current = element;
+    while (current !== document.documentElement) {
+      var selector = '';
+      // 优先检查唯一ID
+      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
+        segments.unshift("#".concat(current.id));
+        break; // ID唯一，无需继续向上
+      }
+
+      // 生成类名选择器（取第一个有效类名）
+      var classes = Array.from(current.classList).filter(function (c) {
+        return !c.startsWith('js-');
+      });
+      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
+
+      // 生成位置索引（nth-child）
+      var tag = current.tagName.toLowerCase();
+      if (!className) {
+        var siblings = Array.from(current.parentNode.children);
+        var index = siblings.findIndex(function (el) {
+          return el === current;
+        }) + 1;
+        selector = "".concat(tag, ":nth-child(").concat(index, ")");
+      } else {
+        selector = className;
+      }
+      segments.unshift(selector);
+      current = current.parentElement;
+    }
+
+    // 处理根元素
+    if (current === document.documentElement) {
+      segments.unshift('html');
+    }
+    return segments.join(' > ');
+  }
+
+  // 获取元素文本内容
+  function getElementText(element) {
+    var _element$textContent;
+    if (element.tagName === "INPUT") {
+      return element.value || element.placeholder || "";
+    }
+    if (element.tagName === "TEXTAREA") {
+      return element.value || element.placeholder || "";
+    }
+    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
+    return text.length > 50 ? text.substring(0, 50) + "..." : text;
+  }
+
+  // 获取元素属性信息
+  function getElementAttributes(element) {
+    var attrs = {};
+    for (var i = 0; i < element.attributes.length; i++) {
+      var attr = element.attributes[i];
+      attrs[attr.name] = attr.value;
+    }
+    return attrs;
+  }
+
+  // 鼠标悬停事件处理
+  function handleMouseOver(e) {
+    if (!highlightEnabled) return;
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免高亮 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 如果是已选中的元素，不显示悬停高亮
+    if (target === selectedElement) {
+      highlightBox.style.display = "none";
+      tagLabel.style.display = "none";
+      return;
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+
+    // 更新悬停高亮框位置
+    highlightBox.style.display = "block";
+    highlightBox.style.left = "".concat(rect.left - 2, "px");
+    highlightBox.style.top = "".concat(rect.top - 2, "px");
+    highlightBox.style.width = "".concat(rect.width + 4, "px");
+    highlightBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新标签位置和内容
+    tagLabel.style.display = "block";
+    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 22;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 0) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
+      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
+    }
+    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
+    tagLabel.style.top = "".concat(labelTop, "px");
+
+    // 发送消息到父窗口
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 鼠标离开事件处理
+  function handleMouseOut(e) {
+    if (!highlightEnabled) return;
+    var relatedTarget = e.relatedTarget;
+
+    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
+    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
+      return;
+    }
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: null,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 点击事件处理
+  function handleClick(e) {
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免处理 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 检查是否是交互元素，这些元素需要保留默认行为
+    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
+
+    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
+    if (highlightEnabled) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+    console.log("Element clicked:", {
+      tagName: target.tagName,
+      selector: selector,
+      rect: rect
+    });
+
+    // 立即更新选中高亮
+    updateSelectedHighlight(target);
+
+    // 隐藏悬停高亮，因为现在是选中状态
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-click",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 监听来自父窗口的消息
+  function handleParentMessage(event) {
+    console.log("Received message from parent:", event.data);
+    if (event.data.type === "iframe-highlight-toggle") {
+      var enabled = event.data.enabled;
+      console.log("Highlight toggle:", enabled);
+      if (enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "enable-iframe-highlight") {
+      console.log("Enable iframe highlight");
+      enableHighlight();
+    } else if (event.data.type === "disable-iframe-highlight") {
+      console.log("Disable iframe highlight");
+      disableHighlight();
+    } else if (event.data.type === "toggle-iframe-highlight") {
+      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
+      console.log("Toggle iframe highlight to:", _enabled);
+      if (_enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "update-selected-element") {
+      var selector = event.data.selector;
+      console.log("Update selected element with selector:", selector);
+      if (selector) {
+        try {
+          var element = document.querySelector(selector);
+          console.log("Found element by selector:", element);
+          updateSelectedHighlight(element);
+        } catch (error) {
+          console.warn("Failed to select element:", error);
+          updateSelectedHighlight(null);
+        }
+      } else {
+        updateSelectedHighlight(null);
+      }
+    } else if (event.data.type === "clear-selected-element") {
+      console.log("Clear selected element");
+      updateSelectedHighlight(null);
+    }
+  }
+
+  // 启用高亮功能
+  function enableHighlight() {
+    console.log("Enabling highlight");
+    document.addEventListener("mouseover", handleMouseOver, true);
+    document.addEventListener("mouseout", handleMouseOut, true);
+    document.addEventListener("click", handleClick, true);
+    highlightEnabled = true;
+    overlay.style.display = "block";
+  }
+
+  // 禁用高亮功能
+  function disableHighlight() {
+    console.log("Disabling highlight");
+    highlightEnabled = false;
+    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
+    // 这样可以保留选中状态的显示
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
+  }
+
+  // 完全禁用高亮功能（移除所有监听器）
+  function fullyDisableHighlight() {
+    console.log("Fully disabling highlight");
+    highlightEnabled = false;
+    document.removeEventListener("mouseover", handleMouseOver, true);
+    document.removeEventListener("mouseout", handleMouseOut, true);
+    document.removeEventListener("click", handleClick, true);
+    overlay.style.display = "none";
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    selectedBox.style.display = "none";
+    selectedLabel.style.display = "none";
+  }
+
+  // 添加事件监听
+  enableHighlight();
+  window.addEventListener("message", handleParentMessage);
+
+  // 暴露全局函数供外部调用
+  window.__iframeHighlightControl = {
+    enable: enableHighlight,
+    disable: disableHighlight,
+    fullyDisable: fullyDisableHighlight,
+    isEnabled: function isEnabled() {
+      return highlightEnabled;
+    },
+    getSelectedElement: function getSelectedElement() {
+      return selectedElement;
+    },
+    updateSelected: updateSelectedHighlight,
+    // 通过消息发送开关控制
+    sendToggleMessage: function sendToggleMessage(enabled) {
+      window.parent.postMessage({
+        type: 'iframe-highlight-status',
+        enabled: enabled || highlightEnabled,
+        source: 'iframe-highlight-injector'
+      }, '*');
+    }
+  };
+
+  // 通知父窗口脚本已加载
+  try {
+    window.parent.postMessage({
+      type: "iframe-highlight-ready",
+      data: {
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: Date.now()
+      },
+      source: "iframe-highlight-injector"
+    }, "*");
+  } catch (error) {
+    console.warn("无法发送就绪消息到父窗口:", error);
+  }
+
+  // 清理函数
+  window.__iframeHighlightCleanup = function () {
+    fullyDisableHighlight();
+    window.removeEventListener("message", handleParentMessage);
+    if (overlay.parentElement) {
+      overlay.parentElement.removeChild(overlay);
+    }
+    delete window.__iframeHighlightInitialized;
+    delete window.__iframeHighlightCleanup;
+  };
+})();
+
+</script>
+</body>
+</html>
