@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>反辐射无人机协同任务规划系统 v2.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+:root {
+  --win-bg:        #ECE9D8;
+  --win-bg-dark:   #D4D0C8;
+  --win-bg-deeper: #C0BDB5;
+  --win-border-lt: #FFFFFF;
+  --win-border-sh: #888880;
+  --win-border-dk: #716F64;
+  --win-text:      #1A1A1A;
+  --win-text-dim:  #5A5A5A;
+  --win-text-dis:  #A0A098;
+  --win-sel:       #316AC5;
+  --win-sel-bg:    #C1D5F7;
+  --mil-red:       #C0392B;
+  --mil-orange:    #E67E22;
+  --mil-green:     #1E7A1E;
+  --mil-blue:      #1B4F8A;
+  --mil-yellow:    #C8960A;
+  --row-alt:       #F5F3EE;
+  --row-hover:     #DCE8FA;
+  --row-sel:       #C1D5F7;
+  --grid-border:   #B8B5AC;
+  --font: 'Noto Sans SC', 'Microsoft YaHei UI', '微软雅黑', sans-serif;
+  --mono: 'Courier New', 'Consolas', monospace;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;font-family:var(--font);font-size:12px;color:var(--win-text);background:var(--win-bg);cursor:default;user-select:none;}
+
+/* TITLE BAR */
+.titlebar{height:26px;background:linear-gradient(180deg,#1565C0 0%,#0A3D91 40%,#0A246A 100%);display:flex;align-items:center;padding:0 4px 0 6px;gap:4px;flex-shrink:0;}
+.titlebar-text{flex:1;color:#fff;font-size:12px;font-weight:500;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.titlebar-btns{display:flex;gap:2px;}
+.tb-btn{width:21px;height:18px;background:linear-gradient(180deg,#ddd,#bbb);border-top:1px solid #eee;border-left:1px solid #eee;border-right:1px solid #888;border-bottom:1px solid #888;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;font-family:var(--mono);}
+.tb-btn:hover{background:linear-gradient(180deg,#e8e8e8,#ccc);}
+.tb-btn.close:hover{background:#c00;color:#fff;}
+
+/* MENU BAR */
+.menubar{height:22px;background:var(--win-bg);border-bottom:1px solid var(--win-border-sh);display:flex;align-items:stretch;padding:0 2px;flex-shrink:0;}
+.menu-item{padding:0 8px;display:flex;align-items:center;cursor:pointer;font-size:12px;}
+.menu-item:hover{background:var(--win-sel);color:#fff;}
+.menu-item .ul{text-decoration:underline;}
+
+/* TOOLBAR */
+.toolbar{height:29px;background:var(--win-bg-dark);border-bottom:1px solid var(--win-border-sh);display:flex;align-items:center;padding:2px 4px;gap:1px;flex-shrink:0;}
+.tb-sep{width:1px;height:20px;background:var(--win-border-sh);margin:0 3px;}
+.tbtn{height:22px;padding:0 7px;background:var(--win-bg);border-top:1px solid var(--win-border-lt);border-left:1px solid var(--win-border-lt);border-right:1px solid var(--win-border-sh);border-bottom:1px solid var(--win-border-sh);font-size:11px;font-family:var(--font);cursor:pointer;display:flex;align-items:center;gap:3px;color:var(--win-text);white-space:nowrap;}
+.tbtn:hover{background:linear-gradient(180deg,#fff,#e8e6e0);}
+.tbtn:active{border-top-color:var(--win-border-sh);border-left-color:var(--win-border-sh);border-right-color:var(--win-border-lt);border-bottom-color:var(--win-border-lt);background:var(--win-bg-dark);}
+.tbtn.pri{background:linear-gradient(180deg,#4A90D9,#1B5FB4);border-color:#0A3D91 #0A3D91 #5A9FE0 #5A9FE0;color:#fff;}
+.tbtn.pri:hover{background:linear-gradient(180deg,#5AA0E9,#2B6FC4);}
+.tbtn.suc{color:var(--mil-green);}
+.tbtn.dan{color:var(--mil-red);}
+
+/* LAYOUT */
+.app-shell{height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+.main-content{flex:1;display:flex;overflow:hidden;}
+.col-left{width:420px;min-width:300px;flex-shrink:0;display:flex;flex-direction:column;border-right:2px solid var(--win-border-sh);overflow:hidden;}
+.col-mid{flex:1;min-width:0;display:flex;flex-direction:column;border-right:2px solid var(--win-border-sh);overflow:hidden;}
+.col-right{width:380px;min-width:260px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;}
+
+/* SECTION HEADER */
+.sec-hdr{height:20px;background:linear-gradient(180deg,#6B8CCC,#3A5FA8);color:#fff;font-size:11px;font-weight:500;padding:0 6px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;letter-spacing:.3px;}
+.sec-hdr .hbtns{display:flex;gap:3px;}
+.hbtn{height:16px;padding:0 5px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:10px;font-family:var(--font);cursor:pointer;display:flex;align-items:center;gap:2px;white-space:nowrap;}
+.hbtn:hover{background:rgba(255,255,255,.35);}
+
+/* PANEL */
+.panel-sunken{border-top:1px solid var(--win-border-sh);border-left:1px solid var(--win-border-sh);border-right:1px solid var(--win-border-lt);border-bottom:1px solid var(--win-border-lt);background:#fff;overflow:auto;}
+
+/* DATA GRID */
+.dgrid{width:100%;border-collapse:collapse;font-size:11px;}
+.dgrid thead tr{height:20px;}
+.dgrid th{background:linear-gradient(180deg,#EAE7DF,#D4D0C8);border-right:1px solid var(--win-border-sh);border-bottom:2px solid var(--win-border-sh);padding:2px 5px;text-align:left;font-weight:500;font-size:11px;white-space:nowrap;position:sticky;top:0;z-index:1;}
+.dgrid td{padding:2px 5px;border-bottom:1px solid var(--grid-border);border-right:1px solid var(--grid-border);white-space:nowrap;font-size:11px;height:20px;overflow:hidden;text-overflow:ellipsis;}
+.dgrid tbody tr:nth-child(even) td{background:var(--row-alt);}
+.dgrid tbody tr:hover td{background:var(--row-hover);cursor:pointer;}
+.dgrid tbody tr.sel td{background:var(--win-sel)!important;color:#fff;}
+.dgrid .rn{width:24px;text-align:center;color:var(--win-text-dim);background:var(--win-bg-dark)!important;border-right:2px solid var(--win-border-sh)!important;}
+
+/* BADGE */
+.badge{display:inline-block;padding:0 4px;font-size:10px;border:1px solid;border-radius:1px;font-weight:500;line-height:14px;}
+.br{background:#FDE8E8;color:var(--mil-red);border-color:var(--mil-red);}
+.bo{background:#FDEBD0;color:var(--mil-orange);border-color:var(--mil-orange);}
+.by{background:#FEF9E7;color:var(--mil-yellow);border-color:var(--mil-yellow);}
+.bg{background:#E9F7EF;color:var(--mil-green);border-color:var(--mil-green);}
+.bb{background:#EBF5FB;color:var(--mil-blue);border-color:var(--mil-blue);}
+
+/* PROPERTY GRID */
+.pgrid{width:100%;border-collapse:collapse;font-size:11px;}
+.pgrid .pcat td{background:linear-gradient(180deg,#EAE7DF,#D8D5CE);font-weight:600;padding:2px 5px;border-bottom:1px solid var(--win-border-sh);}
+.pgrid tr td:first-child{width:100px;background:var(--win-bg-dark);padding:2px 5px 2px 10px;color:var(--win-text-dim);border-right:1px solid var(--win-border-sh);border-bottom:1px solid var(--grid-border);font-size:11px;}
+.pgrid tr td:last-child{padding:2px 5px;background:#fff;border-bottom:1px solid var(--grid-border);font-family:var(--mono);font-size:11px;}
+.pgrid tr:hover td{background:var(--row-hover)!important;}
+.pr{color:var(--mil-red)!important;font-weight:600;}
+.po{color:var(--mil-orange)!important;font-weight:600;}
+
+/* GAUGE */
+.gauge-row{display:flex;align-items:center;gap:5px;margin-bottom:3px;}
+.gauge-lbl{width:80px;font-size:10px;color:var(--win-text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gauge-track{flex:1;height:12px;border-top:1px solid var(--win-border-sh);border-left:1px solid var(--win-border-sh);border-right:1px solid var(--win-border-lt);border-bottom:1px solid var(--win-border-lt);background:#fff;overflow:hidden;}
+.gauge-fill{height:100%;transition:width .8s ease;}
+.gauge-pct{width:30px;font-size:10px;font-family:var(--mono);text-align:right;}
+
+/* FORM CONTROLS */
+.cinput{height:21px;background:#fff;border-top:1px solid var(--win-border-sh);border-left:1px solid var(--win-border-sh);border-right:1px solid var(--win-border-lt);border-bottom:1px solid var(--win-border-lt);padding:0 3px;font-size:11px;font-family:var(--font);color:var(--win-text);outline:none;width:100%;}
+.cinput:focus{outline:1px solid var(--win-sel);}
+.csel{height:21px;background:#fff;border-top:1px solid var(--win-border-sh);border-left:1px solid var(--win-border-sh);border-right:1px solid var(--win-border-lt);border-bottom:1px solid var(--win-border-lt);padding:0 2px;font-size:11px;font-family:var(--font);color:var(--win-text);outline:none;width:100%;cursor:pointer;}
+.ctxt{background:#fff;border-top:1px solid var(--win-border-sh);border-left:1px solid var(--win-border-sh);border-right:1px solid var(--win-border-lt);border-bottom:1px solid var(--win-border-lt);padding:2px 4px;font-size:11px;font-family:var(--font);color:var(--win-text);outline:none;width:100%;resize:vertical;}
+.ctxt:focus{outline:1px solid var(--win-sel);}
+.clbl{font-size:11px;color:var(--win-text);margin-bottom:2px;display:block;}
+.frow{display:flex;gap:8px;margin-bottom:5px;}
+.fcol{display:flex;flex-direction:column;flex:1;}
+
+/* PUSH BUTTONS */
+.pbtn{height:23px;min-width:75px;padding:0 10px;background:linear-gradient(180deg,#f5f3ee,#dbd8d0);border-top:1px solid var(--win-border-lt);border-left:1px solid var(--win-border-lt);border-right:1px solid var(--win-border-sh);border-bottom:1px solid var(--win-border-sh);font-size:11px;font-family:var(--font);cursor:pointer;color:var(--win-text);white-space:nowrap;}
+.pbtn:hover{background:linear-gradient(180deg,#fff,#e8e4dc);}
+.pbtn:active{border-top-color:var(--win-border-sh);border-left-color:var(--win-border-sh);border-right-color:var(--win-border-lt);border-bottom-color:var(--win-border-lt);background:var(--win-bg-dark);}
+.pbtn.def{border:2px solid var(--win-sel);background:linear-gradient(180deg,#4A90D9,#2160B0);color:#fff;border-top-color:#6AA8E8;border-left-color:#6AA8E8;border-right-color:#0A3D91;border-bottom-color:#0A3D91;}
+.pbtn.def:hover{background:linear-gradient(180deg,#5CA0E9,#3170C0);}
+.pbtn.sm{height:19px;min-width:30px;padding:0 5px;font-size:10px;}
+
+/* STATUS BAR */
+.statusbar{height:22px;background:var(--win-bg-dark);border-top:1px solid var(--win-border-sh);display:flex;align-items:center;padding:0 4px;gap:2px;flex-shrink:0;}
+.sbp{height:16px;padding:0 7px;border-top:1px solid var(--win-border-sh);border-left:1px solid var(--win-border-sh);border-right:1px solid var(--win-border-lt);border-bottom:1px solid var(--win-border-lt);font-size:10px;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.sbp.grow{flex:1;}
+.sb-led{width:8px;height:8px;border-radius:50%;border:1px solid rgba(0,0,0,.3);}
+.led-g{background:radial-gradient(circle at 35% 35%,#4EE34E,#1A7A1A);}
+.led-r{background:radial-gradient(circle at 35% 35%,#FF6060,#C00000);animation:blink 1s infinite;}
+.led-y{background:radial-gradient(circle at 35% 35%,#FFE060,#C0880A);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* SCROLLBAR - WinXP style */
+::-webkit-scrollbar{width:16px;height:16px;}
+::-webkit-scrollbar-track{background:var(--win-bg-dark);}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#E0DDD5,#C4C1B9);border-top:1px solid var(--win-border-lt);border-left:1px solid var(--win-border-lt);border-right:1px solid var(--win-border-sh);border-bottom:1px solid var(--win-border-sh);min-height:20px;}
+::-webkit-scrollbar-button{background:linear-gradient(180deg,#EAE7DF,#D4D0C8);border-top:1px solid var(--win-border-lt);border-left:1px solid var(--win-border-lt);border-right:1px solid var(--win-border-sh);border-bottom:1px solid var(--win-border-sh);height:16px;width:16px;}
+
+/* TREEVIEW */
+.tvrow{display:flex;align-items:center;height:19px;padding:0 4px;gap:2px;cursor:pointer;font-size:11px;}
+.tvrow:hover{background:var(--row-hover);}
+.tvrow.sel{background:var(--win-sel);color:#fff;}
+.tvexp{width:13px;height:13px;border:1px solid var(--win-border-sh);background:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;}
+.tvchildren{padding-left:16px;border-left:1px dotted var(--grid-border);margin-left:7px;}
+
+/* TAB STRIP */
+.tabstrip{display:flex;border-bottom:2px solid var(--win-border-sh);padding:3px 4px 0;background:var(--win-bg-dark);flex-shrink:0;}
+.tabbtn{padding:2px 10px;font-size:11px;font-family:var(--font);cursor:pointer;border-top:1px solid var(--win-border-sh);border-left:1px solid var(--win-border-sh);border-right:1px solid var(--win-border-sh);border-bottom:none;background:var(--win-bg-dark);color:var(--win-text);margin-right:2px;margin-bottom:-2px;position:relative;z-index:1;}
+.tabbtn.act{background:var(--win-bg);border-top:2px solid #3A5FA8;padding-top:1px;font-weight:500;color:var(--mil-blue);}
+
+/* TASK ROWS */
+.trow{display:flex;align-items:center;height:21px;padding:0 5px;gap:5px;border-bottom:1px solid var(--grid-border);cursor:pointer;font-size:11px;}
+.trow:nth-child(even){background:var(--row-alt);}
+.trow:hover{background:var(--row-hover);}
+.trow.sel{background:var(--row-sel);}
+.t-num{width:22px;color:var(--win-text-dim);font-size:10px;text-align:center;flex-shrink:0;}
+.t-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;}
+.t-type{width:42px;flex-shrink:0;}
+.t-target{width:36px;flex-shrink:0;color:var(--win-text-dim);font-family:var(--mono);}
+.t-time{width:82px;flex-shrink:0;color:var(--win-text-dim);font-family:var(--mono);font-size:10px;}
+.t-uav{flex-shrink:0;color:var(--mil-blue);font-size:10px;font-family:var(--mono);}
+
+/* ALLOC */
+.arow{display:flex;align-items:center;gap:5px;border-bottom:1px solid var(--grid-border);padding:3px 5px;font-size:11px;}
+.arow:nth-child(even){background:var(--row-alt);}
+.arow:hover{background:var(--row-hover);}
+.atask{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.actrl{display:flex;align-items:center;gap:2px;flex-shrink:0;}
+.spbtn{width:15px;height:15px;background:linear-gradient(180deg,#f0ede8,#d8d5ce);border-top:1px solid var(--win-border-lt);border-left:1px solid var(--win-border-lt);border-right:1px solid var(--win-border-sh);border-bottom:1px solid var(--win-border-sh);font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--mono);}
+.spbtn:active{border-top-color:var(--win-border-sh);border-left-color:var(--win-border-sh);border-right-color:var(--win-border-lt);border-bottom-color:var(--win-border-lt);}
+.spval{width:22px;height:15px;border:1px solid var(--win-border-sh);background:#fff;text-align:center;font-family:var(--mono);font-size:11px;line-height:15px;}
+.chips{display:flex;flex-wrap:wrap;gap:2px;flex:1;min-width:0;}
+.chip{padding:0 4px;border:1px solid var(--win-border-sh);background:var(--win-bg);font-size:10px;font-family:var(--mono);cursor:pointer;height:15px;line-height:15px;}
+.chip:hover{background:var(--row-hover);border-color:var(--win-sel);}
+.chip.on{background:var(--win-sel);color:#fff;border-color:#1B4FA8;}
+
+/* CALC */
+.ccell{display:flex;align-items:center;height:20px;padding:0 4px;gap:4px;border-bottom:1px solid var(--grid-border);font-size:11px;}
+.ccell:nth-child(even){background:var(--row-alt);}
+.cc-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cc-val{font-family:var(--mono);font-weight:600;color:var(--mil-blue);width:22px;text-align:right;flex-shrink:0;}
+.cc-ctrl{display:flex;gap:2px;align-items:center;flex-shrink:0;}
+
+/* ACTION LIST */
+.aritem{border-bottom:1px solid var(--grid-border);padding:4px 5px;}
+.aritem:nth-child(even){background:var(--row-alt);}
+.aritem:hover{background:var(--row-hover);}
+.ar-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;}
+.ar-uav{font-weight:600;color:var(--mil-blue);font-family:var(--mono);font-size:11px;}
+.ar-btns{display:flex;gap:2px;}
+.ar-info{display:flex;gap:12px;font-size:10px;color:var(--win-text-dim);}
+.ar-info b{color:var(--win-text);font-weight:normal;font-family:var(--mono);}
+
+/* SPECTRUM */
+#spec-wrap{height:60px;background:#0D1117;border:1px solid #444;display:flex;align-items:flex-end;padding:2px;gap:1px;}
+.sbar{flex:1;border-radius:1px 1px 0 0;transition:height .6s ease;min-width:5px;}
+
+/* DIALOG */
+.dlg-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;}
+.dlg-ov.open{display:flex;}
+.dlg{background:var(--win-bg);border-top:2px solid var(--win-border-lt);border-left:2px solid var(--win-border-lt);border-right:2px solid var(--win-border-dk);border-bottom:2px solid var(--win-border-dk);min-width:400px;max-width:600px;box-shadow:4px 4px 12px rgba(0,0,0,.55);display:flex;flex-direction:column;}
+.dlg-ttl{height:24px;background:linear-gradient(180deg,#1565C0,#0A246A);display:flex;align-items:center;padding:0 6px 0 8px;gap:6px;}
+.dlg-ttl-txt{flex:1;color:#fff;font-size:12px;font-weight:500;}
+.dlg-x{width:18px;height:14px;background:linear-gradient(180deg,#ddd,#bbb);border-top:1px solid #eee;border-left:1px solid #eee;border-right:1px solid #888;border-bottom:1px solid #888;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:var(--mono);}
+.dlg-x:hover{background:#c00;color:#fff;}
+.dlg-body{padding:12px;flex:1;overflow-y:auto;}
+.dlg-foot{padding:6px 10px;border-top:1px solid var(--win-border-sh);display:flex;justify-content:flex-end;gap:6px;background:var(--win-bg-dark);}
+
+.scroll-y{overflow-y:auto;overflow-x:hidden;}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<!-- TITLE BAR -->
+<div class="titlebar">
+  <span style="font-size:14px;margin-right:2px;">🎯</span>
+  <span class="titlebar-text">反辐射无人机协同任务规划系统 v2.0  —  [作战方案A · 压制防空]</span>
+  <div class="titlebar-btns">
+    <div class="tb-btn">─</div>
+    <div class="tb-btn">□</div>
+    <div class="tb-btn close">✕</div>
+  </div>
+</div>
+
+<!-- MENU BAR -->
+<div class="menubar">
+  <div class="menu-item"><span class="ul">文</span>件(F)</div>
+  <div class="menu-item"><span class="ul">编</span>辑(E)</div>
+  <div class="menu-item"><span class="ul">视</span>图(V)</div>
+  <div class="menu-item"><span class="ul">任</span>务(T)</div>
+  <div class="menu-item"><span class="ul">兵</span>力(R)</div>
+  <div class="menu-item" onclick="openDlg('dlg-settings')"><span class="ul">工</span>具(L)</div>
+  <div class="menu-item"><span class="ul">帮</span>助(H)</div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <button class="tbtn pri" onclick="openDlg('dlg-task');taskMode('new')">📄 新建任务</button>
+  <button class="tbtn" onclick="openDlg('dlg-task');taskMode('edit')">✎ 编辑</button>
+  <button class="tbtn" onclick="toast('任务已保存')">💾 保存</button>
+  <button class="tbtn dan" onclick="toast('任务已删除')">🗑 删除</button>
+  <div class="tb-sep"></div>
+  <button class="tbtn" onclick="calcForce();toast('兵力计算完成')">⚙ 计算兵力</button>
+  <button class="tbtn suc" onclick="autoAlloc();toast('自动分配完成')">▶ 自动分配</button>
+  <div class="tb-sep"></div>
+  <button class="tbtn" onclick="toast('GIS已在独立窗口打开')">🗺 打开GIS地图</button>
+  <div class="tb-sep"></div>
+  <button class="tbtn" onclick="openDlg('dlg-rules')">🛡 威胁规则</button>
+  <button class="tbtn" onclick="openDlg('dlg-fire')">⊕ 火力显控</button>
+  <button class="tbtn" onclick="openDlg('dlg-settings')">⚙ 系统设置</button>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+    <span style="font-size:10px;color:var(--win-text-dim);">作战方案:</span>
+    <select class="csel" style="width:120px;height:20px;font-size:10px;">
+      <option>方案A-压制防空</option><option>方案B-纵深打击</option><option>方案C-联合作战</option>
+    </select>
+    <span style="font-size:10px;color:var(--win-text-dim);">|</span>
+    <span style="font-size:11px;font-family:var(--mono);min-width:54px;" id="clock">--:--:--</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-content">
+
+<!-- ══ LEFT: 情况研判 ══ -->
+<div class="col-left">
+
+  <!-- 辐射源列表 -->
+  <div style="flex:0 0 200px;display:flex;flex-direction:column;border-bottom:2px solid var(--win-border-sh);overflow:hidden;">
+    <div class="sec-hdr">
+      情况研判 · 辐射源列表
+      <div class="hbtns">
+        <button class="hbtn" onclick="toast('数据已刷新')">↻ 刷新</button>
+        <button class="hbtn" onclick="toast('筛选')">▼ 筛选</button>
+      </div>
+    </div>
+    <div class="panel-sunken scroll-y" style="flex:1;">
+      <table class="dgrid">
+        <thead>
+          <tr>
+            <th class="rn" style="width:22px;"></th>
+            <th style="width:40px;">编号</th>
+            <th style="width:64px;">类型</th>
+            <th style="width:66px;">中心频率</th>
+            <th style="width:50px;">功率</th>
+            <th style="width:36px;">威胁</th>
+            <th style="width:36px;">优先</th>
+          </tr>
+        </thead>
+        <tbody id="emitter-tbody">
+          <tr class="sel" onclick="selEmitter(this,0)">
+            <td class="rn">1</td><td>E-001</td><td>制导雷达</td>
+            <td style="font-family:var(--mono)">9.5 GHz</td><td style="font-family:var(--mono)">2.5MW</td>
+            <td><span class="badge br">高</span></td><td><span class="badge br">P1</span></td>
+          </tr>
+          <tr onclick="selEmitter(this,1)">
+            <td class="rn">2</td><td>E-002</td><td>通信干扰</td>
+            <td style="font-family:var(--mono)">450 MHz</td><td style="font-family:var(--mono)">500kW</td>
+            <td><span class="badge bo">中</span></td><td><span class="badge bo">P2</span></td>
+          </tr>
+          <tr onclick="selEmitter(this,2)">
+            <td class="rn">3</td><td>E-003</td><td>预警雷达</td>
+            <td style="font-family:var(--mono)">3.2 GHz</td><td style="font-family:var(--mono)">1.8MW</td>
+            <td><span class="badge br">高</span></td><td><span class="badge br">P1</span></td>
+          </tr>
+          <tr onclick="selEmitter(this,3)">
+            <td class="rn">4</td><td>E-004</td><td>雷达干扰</td>
+            <td style="font-family:var(--mono)">1.3 GHz</td><td style="font-family:var(--mono)">300kW</td>
+            <td><span class="badge bo">中</span></td><td><span class="badge bo">P2</span></td>
+          </tr>
+          <tr onclick="selEmitter(this,4)">
+            <td class="rn">5</td><td>E-005</td><td>地面电台</td>
+            <td style="font-family:var(--mono)">30 MHz</td><td style="font-family:var(--mono)">50kW</td>
+            <td><span class="badge by">低</span></td><td><span class="badge by">P3</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 参数详情 + 频谱 -->
+  <div style="flex:0 0 138px;display:flex;flex-direction:column;border-bottom:2px solid var(--win-border-sh);overflow:hidden;">
+    <div class="sec-hdr">参数详情 — <span id="sel-eid" style="font-family:var(--mono);font-weight:400;">E-001 制导雷达</span></div>
+    <div style="display:flex;flex:1;overflow:hidden;">
+      <div class="scroll-y" style="flex:1;border-right:1px solid var(--grid-border);">
+        <table class="pgrid" id="pgrid">
+          <tbody>
+            <tr class="pcat"><td colspan="2">📡 电磁参数</td></tr>
+            <tr><td>中心频率</td><td class="pr">9.5 GHz</td></tr>
+            <tr><td>频率范围</td><td>8.5 ~ 10.5 GHz</td></tr>
+            <tr><td>发射功率</td><td class="pr">2.5 MW</td></tr>
+            <tr><td>脉冲宽度</td><td>1.2 μs</td></tr>
+            <tr class="pcat"><td colspan="2">📊 工作参数</td></tr>
+            <tr><td>扫描周期</td><td>3.0 s</td></tr>
+            <tr><td>天线增益</td><td>34 dBi</td></tr>
+            <tr><td>探测距离</td><td class="po">120 km</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="width:130px;padding:4px 5px;display:flex;flex-direction:column;gap:3px;flex-shrink:0;">
+        <div style="font-size:10px;color:var(--win-text-dim);">频谱分析视图</div>
+        <div id="spec-wrap"></div>
+        <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--win-text-dim);font-family:var(--mono);">
+          <span>HF</span><span>VHF</span><span>L</span><span>S</span><span>C</span><span>X</span><span>Ku</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 威胁评估 / 防控火力 Tabs -->
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+    <div class="tabstrip" id="left-tabs">
+      <div class="tabbtn act" onclick="switchTab('threat',this)">威胁评估</div>
+      <div class="tabbtn" onclick="switchTab('fire',this)">防控火力</div>
+    </div>
+
+    <!-- 威胁评估 -->
+    <div id="pane-threat" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 6px;flex-shrink:0;border-bottom:1px solid var(--grid-border);background:var(--win-bg-dark);">
+        <span style="font-size:10px;color:var(--win-text-dim);">综合评估（权重算法）</span>
+        <button class="pbtn sm" onclick="openDlg('dlg-rules')">威胁规则...</button>
+      </div>
+      <div class="scroll-y" style="flex:1;padding:5px 8px;" id="threat-gauges"></div>
+    </div>
+
+    <!-- 防控火力 -->
+    <div id="pane-fire" style="flex:1;display:none;flex-direction:column;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:4px;padding:3px 5px;flex-shrink:0;border-bottom:1px solid var(--grid-border);background:var(--win-bg-dark);">
+        <button class="pbtn sm" onclick="openDlg('dlg-fire')">显控设置...</button>
+        <button class="pbtn sm" style="opacity:.5;" title="后续功能">区域合并</button>
+        <span style="font-size:10px;color:var(--win-text-dim);margin-left:2px;">5个单元</span>
+      </div>
+      <div class="panel-sunken scroll-y" style="flex:1;margin:3px;">
+        <table class="dgrid">
+          <thead><tr>
+            <th class="rn"></th><th>编号</th><th>类型</th><th>射程</th><th>坐标(N)</th><th>状态</th>
+          </tr></thead>
+          <tbody>
+            <tr><td class="rn">1</td><td>SAM-01</td><td>地空导弹</td><td style="font-family:var(--mono)">120km</td><td style="font-family:var(--mono)">39.75</td><td style="color:var(--mil-green);font-weight:600;">就绪</td></tr>
+            <tr><td class="rn">2</td><td>SAM-02</td><td>地空导弹</td><td style="font-family:var(--mono)">80km</td><td style="font-family:var(--mono)">39.81</td><td style="color:var(--mil-green);font-weight:600;">就绪</td></tr>
+            <tr><td class="rn">3</td><td>AAA-01</td><td>自行高炮</td><td style="font-family:var(--mono)">12km</td><td style="font-family:var(--mono)">39.78</td><td style="color:var(--mil-orange);font-weight:600;">待命</td></tr>
+            <tr><td class="rn">4</td><td>EW-01</td><td>电子对抗</td><td style="font-family:var(--mono)">60km</td><td style="font-family:var(--mono)">39.83</td><td style="color:var(--mil-green);font-weight:600;">就绪</td></tr>
+            <tr><td class="rn">5</td><td>MANPAD-01</td><td>单兵防空</td><td style="font-family:var(--mono)">8km</td><td style="font-family:var(--mono)">39.76</td><td style="color:var(--mil-red);font-weight:600;">故障</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /col-left -->
+
+<!-- ══ CENTER: 任务管理 + 兵力计算 + 任务分配 ══ -->
+<div class="col-mid">
+
+  <!-- 协同任务管理 -->
+  <div style="flex:0 0 188px;display:flex;flex-direction:column;border-bottom:2px solid var(--win-border-sh);overflow:hidden;">
+    <div class="sec-hdr">
+      协同任务管理
+      <div class="hbtns">
+        <button class="hbtn" onclick="openDlg('dlg-task');taskMode('new')">+ 新建</button>
+        <button class="hbtn" onclick="openDlg('dlg-task');taskMode('edit')">✎ 编辑</button>
+        <button class="hbtn" onclick="toast('已保存')">💾</button>
+        <button class="hbtn" onclick="toast('已删除')">✕ 删除</button>
+      </div>
+    </div>
+    <!-- Column header -->
+    <div style="display:flex;align-items:center;height:20px;padding:0 5px;gap:5px;background:linear-gradient(180deg,#EAE7DF,#D4D0C8);border-bottom:2px solid var(--win-border-sh);flex-shrink:0;font-size:11px;font-weight:500;">
+      <div class="t-num">#</div>
+      <div class="t-name">任务名称</div>
+      <div class="t-type">类型</div>
+      <div class="t-target">目标</div>
+      <div class="t-time">时间段</div>
+      <div class="t-uav" style="width:70px;">分配无人机</div>
+    </div>
+    <div class="scroll-y" style="flex:1;">
+      <div class="trow sel" onclick="selTask(this)">
+        <div class="t-num">1</div><div class="t-name">打击雷达阵地-α</div>
+        <div class="t-type"><span class="badge br">打击</span></div>
+        <div class="t-target">E-001</div><div class="t-time">08:30~09:15</div>
+        <div class="t-uav" style="width:70px;">A1,A2</div>
+      </div>
+      <div class="trow" onclick="selTask(this)">
+        <div class="t-num">2</div><div class="t-name">压制通信干扰站-β</div>
+        <div class="t-type"><span class="badge bo">压制</span></div>
+        <div class="t-target">E-002</div><div class="t-time">08:45~09:30</div>
+        <div class="t-uav" style="width:70px;">B1</div>
+      </div>
+      <div class="trow" onclick="selTask(this)">
+        <div class="t-num">3</div><div class="t-name">摧毁预警雷达阵地-γ</div>
+        <div class="t-type"><span class="badge br">打击</span></div>
+        <div class="t-target">E-003</div><div class="t-time">09:00~09:45</div>
+        <div class="t-uav" style="width:70px;">C1,C2</div>
+      </div>
+      <div class="trow" onclick="selTask(this)">
+        <div class="t-num">4</div><div class="t-name">侦察后方通信节点</div>
+        <div class="t-type"><span class="badge bb">侦察</span></div>
+        <div class="t-target">E-005</div><div class="t-time">08:00~10:00</div>
+        <div class="t-uav" style="width:70px;">D1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 兵力需求计算 -->
+  <div style="flex:0 0 148px;display:flex;flex-direction:column;border-bottom:2px solid var(--win-border-sh);overflow:hidden;">
+    <div class="sec-hdr">
+      兵力需求计算
+      <div class="hbtns">
+        <button class="hbtn" onclick="calcForce();toast('计算完成')">⚙ 重新计算</button>
+      </div>
+    </div>
+    <!-- Header row -->
+    <div style="display:flex;align-items:center;height:20px;padding:0 4px;gap:4px;background:linear-gradient(180deg,#EAE7DF,#D4D0C8);border-bottom:2px solid var(--win-border-sh);flex-shrink:0;font-size:11px;font-weight:500;">
+      <div style="flex:1;">任务</div>
+      <div style="width:30px;text-align:center;font-size:10px;color:var(--win-text-dim);">推算</div>
+      <div style="width:72px;text-align:center;font-size:10px;color:var(--win-text-dim);">调整数量</div>
+    </div>
+    <div class="scroll-y" style="flex:1;">
+      <div class="ccell"><div class="cc-name">打击雷达阵地-α</div><div class="cc-val" id="cv1">2</div><div class="cc-ctrl"><div class="spbtn" onclick="adjC('sv1',-1)">▼</div><div class="spval" id="sv1">2</div><div class="spbtn" onclick="adjC('sv1',1)">▲</div></div></div>
+      <div class="ccell"><div class="cc-name">压制通信干扰站-β</div><div class="cc-val" id="cv2">1</div><div class="cc-ctrl"><div class="spbtn" onclick="adjC('sv2',-1)">▼</div><div class="spval" id="sv2">1</div><div class="spbtn" onclick="adjC('sv2',1)">▲</div></div></div>
+      <div class="ccell"><div class="cc-name">摧毁预警雷达阵地-γ</div><div class="cc-val" id="cv3">2</div><div class="cc-ctrl"><div class="spbtn" onclick="adjC('sv3',-1)">▼</div><div class="spval" id="sv3">2</div><div class="spbtn" onclick="adjC('sv3',1)">▲</div></div></div>
+      <div class="ccell"><div class="cc-name">侦察后方通信节点</div><div class="cc-val" id="cv4">1</div><div class="cc-ctrl"><div class="spbtn" onclick="adjC('sv4',-1)">▼</div><div class="spval" id="sv4">1</div><div class="spbtn" onclick="adjC('sv4',1)">▲</div></div></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-top:2px solid var(--win-border-sh);background:var(--win-bg-dark);flex-shrink:0;">
+      <span style="font-size:11px;font-weight:600;">合计需求无人机</span>
+      <div style="display:flex;align-items:center;gap:3px;">
+        <div class="spbtn" style="width:18px;height:18px;" onclick="adjTotal(-1)">▼</div>
+        <div id="total-val" style="width:30px;height:18px;line-height:18px;font-family:var(--mono);font-size:14px;font-weight:bold;color:var(--mil-blue);text-align:center;background:#fff;border:1px solid var(--win-border-sh);">6</div>
+        <div class="spbtn" style="width:18px;height:18px;" onclick="adjTotal(1)">▲</div>
+        <span style="font-size:12px;font-weight:600;color:var(--mil-blue);margin-left:2px;">架</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 协同任务分配 -->
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="sec-hdr">
+      协同任务分配
+      <div class="hbtns">
+        <button class="hbtn" onclick="autoAlloc();toast('自动分配完成')">▶ 自动分配</button>
+        <button class="hbtn" onclick="toast('分配已保存')">💾 保存</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;height:20px;padding:0 5px;gap:5px;background:linear-gradient(180deg,#EAE7DF,#D4D0C8);border-bottom:2px solid var(--win-border-sh);flex-shrink:0;font-size:10px;color:var(--win-text-dim);">
+      <div style="flex:1;">任务</div><div style="width:74px;text-align:center;">数量调整</div><div style="flex:1;">无人机编号选配</div>
+    </div>
+    <div class="scroll-y" style="flex:1;">
+      <div class="arow">
+        <div class="atask"><span class="badge br">打</span> 打击雷达阵地-α</div>
+        <div class="actrl"><div class="spbtn" onclick="adjA(this,-1)">▼</div><div class="spval">2</div><div class="spbtn" onclick="adjA(this,1)">▲</div></div>
+        <div class="chips"><div class="chip on" onclick="this.classList.toggle('on')">A1</div><div class="chip on" onclick="this.classList.toggle('on')">A2</div><div class="chip" onclick="this.classList.toggle('on')">A3</div></div>
+      </div>
+      <div class="arow">
+        <div class="atask"><span class="badge bo">压</span> 压制通信干扰站-β</div>
+        <div class="actrl"><div class="spbtn" onclick="adjA(this,-1)">▼</div><div class="spval">1</div><div class="spbtn" onclick="adjA(this,1)">▲</div></div>
+        <div class="chips"><div class="chip on" onclick="this.classList.toggle('on')">B1</div><div class="chip" onclick="this.classList.toggle('on')">B2</div></div>
+      </div>
+      <div class="arow">
+        <div class="atask"><span class="badge br">打</span> 摧毁预警雷达阵地-γ</div>
+        <div class="actrl"><div class="spbtn" onclick="adjA(this,-1)">▼</div><div class="spval">2</div><div class="spbtn" onclick="adjA(this,1)">▲</div></div>
+        <div class="chips"><div class="chip on" onclick="this.classList.toggle('on')">C1</div><div class="chip on" onclick="this.classList.toggle('on')">C2</div><div class="chip" onclick="this.classList.toggle('on')">C3</div></div>
+      </div>
+      <div class="arow">
+        <div class="atask"><span class="badge bb">侦</span> 侦察后方通信节点</div>
+        <div class="actrl"><div class="spbtn" onclick="adjA(this,-1)">▼</div><div class="spval">1</div><div class="spbtn" onclick="adjA(this,1)">▲</div></div>
+        <div class="chips"><div class="chip on" onclick="this.classList.toggle('on')">D1</div><div class="chip" onclick="this.classList.toggle('on')">D2</div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /col-mid -->
+
+<!-- ══ RIGHT: 作战行动设置 ══ -->
+<div class="col-right">
+
+  <!-- 兵力编成树 -->
+  <div style="flex:0 0 210px;display:flex;flex-direction:column;border-bottom:2px solid var(--win-border-sh);overflow:hidden;">
+    <div class="sec-hdr">
+      无人机兵力编成
+      <div class="hbtns"><button class="hbtn" onclick="toast('编成已刷新')">↻</button></div>
+    </div>
+    <div class="scroll-y" style="flex:1;background:#fff;">
+      <!-- Group 1 -->
+      <div class="tvrow" style="background:var(--win-bg-dark);font-weight:600;"><div class="tvexp">−</div><span>📁</span><span style="color:var(--mil-blue);">第一打击编队</span></div>
+      <div class="tvchildren">
+        <div class="tvrow sel" onclick="selUav(this,'ARM-A1')"><span>✈</span><span style="font-family:var(--mono);">ARM-A1</span><span class="badge br" style="margin-left:4px;">打击</span></div>
+        <div class="tvrow" onclick="selUav(this,'ARM-A2')"><span>✈</span><span style="font-family:var(--mono);">ARM-A2</span><span class="badge br" style="margin-left:4px;">打击</span></div>
+      </div>
+      <!-- Group 2 -->
+      <div class="tvrow" style="background:var(--win-bg-dark);font-weight:600;"><div class="tvexp">−</div><span>📁</span><span style="color:var(--mil-blue);">第二压制编队</span></div>
+      <div class="tvchildren">
+        <div class="tvrow" onclick="selUav(this,'ARM-B1')"><span>✈</span><span style="font-family:var(--mono);">ARM-B1</span><span class="badge bo" style="margin-left:4px;">压制</span></div>
+      </div>
+      <!-- Group 3 -->
+      <div class="tvrow" style="background:var(--win-bg-dark);font-weight:600;"><div class="tvexp">−</div><span>📁</span><span style="color:var(--mil-blue);">第三打击编队</span></div>
+      <div class="tvchildren">
+        <div class="tvrow" onclick="selUav(this,'ARM-C1')"><span>✈</span><span style="font-family:var(--mono);">ARM-C1</span><span class="badge br" style="margin-left:4px;">打击</span></div>
+        <div class="tvrow" onclick="selUav(this,'ARM-C2')"><span>✈</span><span style="font-family:var(--mono);">ARM-C2</span><span class="badge br" style="margin-left:4px;">打击</span></div>
+      </div>
+      <!-- Group 4 -->
+      <div class="tvrow" style="background:var(--win-bg-dark);font-weight:600;"><div class="tvexp">−</div><span>📁</span><span style="color:var(--mil-blue);">侦察编队</span></div>
+      <div class="tvchildren">
+        <div class="tvrow" onclick="selUav(this,'ARM-D1')"><span>✈</span><span style="font-family:var(--mono);">ARM-D1</span><span class="badge bb" style="margin-left:4px;">侦察</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 行动参数（选中无人机） -->
+  <div style="flex:0 0 160px;display:flex;flex-direction:column;border-bottom:2px solid var(--win-border-sh);overflow:hidden;">
+    <div class="sec-hdr">
+      行动参数 — <span id="sel-uav" style="font-family:var(--mono);font-weight:400;">ARM-A1</span>
+      <div class="hbtns">
+        <button class="hbtn" onclick="openDlg('dlg-path');pathMode('cruise')">巡航路径</button>
+        <button class="hbtn" onclick="openDlg('dlg-path');pathMode('search')">搜索路径</button>
+        <button class="hbtn" onclick="openDlg('dlg-path');pathMode('target')">目标装订</button>
+      </div>
+    </div>
+    <div class="scroll-y" style="flex:1;">
+      <table class="pgrid" id="uav-pgrid">
+        <tbody>
+          <tr class="pcat"><td colspan="2">✈ 飞行参数</td></tr>
+          <tr><td>巡航路径</td><td>WP01→WP02→WP03</td></tr>
+          <tr><td>巡航高度</td><td>1500 m</td></tr>
+          <tr><td>巡航速度</td><td>320 km/h</td></tr>
+          <tr class="pcat"><td colspan="2">🔍 搜索参数</td></tr>
+          <tr><td>搜索区域W</td><td style="font-family:var(--mono)">116.30°E</td></tr>
+          <tr><td>搜索区域E</td><td style="font-family:var(--mono)">116.50°E</td></tr>
+          <tr><td>搜索模式</td><td>平行扫描</td></tr>
+          <tr class="pcat"><td colspan="2">🎯 目标装订</td></tr>
+          <tr><td>装订目标</td><td class="pr">E-001</td></tr>
+          <tr><td>制导频率</td><td class="pr">9.5 GHz</td></tr>
+          <tr><td>制导方式</td><td>被动雷达制导</td></tr>
+          <tr><td>引信模式</td><td>近炸引信</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 作战行动总览 -->
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="sec-hdr">作战行动总览</div>
+    <div class="scroll-y" style="flex:1;">
+      <div class="aritem">
+        <div class="ar-hdr">
+          <span class="ar-uav">ARM-A1</span>
+          <div class="ar-btns">
+            <button class="pbtn sm" onclick="selUavAndPath('ARM-A1','cruise')">巡航</button>
+            <button class="pbtn sm" onclick="selUavAndPath('ARM-A1','search')">搜索</button>
+            <button class="pbtn sm" onclick="selUavAndPath('ARM-A1','target')">装订</button>
+          </div>
+        </div>
+        <div class="ar-info">
+          <span>路径 <b>WP01→WP02→WP03</b></span>
+          <span>目标 <b style="color:var(--mil-red)">E-001 9.5GHz</b></span>
+        </div>
+      </div>
+      <div class="aritem">
+        <div class="ar-hdr"><span class="ar-uav">ARM-A2</span><div class="ar-btns"><button class="pbtn sm" onclick="selUavAndPath('ARM-A2','cruise')">巡航</button><button class="pbtn sm" onclick="selUavAndPath('ARM-A2','search')">搜索</button><button class="pbtn sm" onclick="selUavAndPath('ARM-A2','target')">装订</button></div></div>
+        <div class="ar-info"><span>路径 <b>WP04→WP05→WP06</b></span><span>目标 <b style="color:var(--mil-red)">E-001 9.5GHz</b></span></div>
+      </div>
+      <div class="aritem">
+        <div class="ar-hdr"><span class="ar-uav" style="color:var(--mil-orange)">ARM-B1</span><div class="ar-btns"><button class="pbtn sm" onclick="selUavAndPath('ARM-B1','cruise')">巡航</button><button class="pbtn sm" onclick="selUavAndPath('ARM-B1','search')">搜索</button><button class="pbtn sm" onclick="selUavAndPath('ARM-B1','target')">装订</button></div></div>
+        <div class="ar-info"><span>路径 <b>WP07→WP08</b></span><span>目标 <b style="color:var(--mil-orange)">E-002 450MHz</b></span></div>
+      </div>
+      <div class="aritem">
+        <div class="ar-hdr"><span class="ar-uav">ARM-C1</span><div class="ar-btns"><button class="pbtn sm" onclick="selUavAndPath('ARM-C1','cruise')">巡航</button><button class="pbtn sm" onclick="selUavAndPath('ARM-C1','search')">搜索</button><button class="pbtn sm" onclick="selUavAndPath('ARM-C1','target')">装订</button></div></div>
+        <div class="ar-info"><span>路径 <b>WP09→WP10→WP11</b></span><span>目标 <b style="color:var(--mil-red)">E-003 3.2GHz</b></span></div>
+      </div>
+      <div class="aritem">
+        <div class="ar-hdr"><span class="ar-uav">ARM-C2</span><div class="ar-btns"><button class="pbtn sm" onclick="selUavAndPath('ARM-C2','cruise')">巡航</button><button class="pbtn sm" onclick="selUavAndPath('ARM-C2','search')">搜索</button><button class="pbtn sm" onclick="selUavAndPath('ARM-C2','target')">装订</button></div></div>
+        <div class="ar-info"><span>路径 <b>WP12→WP13</b></span><span>目标 <b style="color:var(--mil-red)">E-003 3.2GHz</b></span></div>
+      </div>
+      <div class="aritem">
+        <div class="ar-hdr"><span class="ar-uav" style="color:var(--mil-blue)">ARM-D1</span><div class="ar-btns"><button class="pbtn sm" onclick="selUavAndPath('ARM-D1','cruise')">巡航</button><button class="pbtn sm" onclick="selUavAndPath('ARM-D1','search')">搜索</button><button class="pbtn sm" onclick="selUavAndPath('ARM-D1','target')">装订</button></div></div>
+        <div class="ar-info"><span>路径 <b>WP14→WP15→WP16</b></span><span>目标 <b style="color:var(--mil-yellow)">E-005 30MHz</b></span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /col-right -->
+</div><!-- /main-content -->
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="sbp"><div class="sb-led led-g"></div>数据链路: 正常</div>
+  <div class="sbp"><div class="sb-led led-g"></div>定位: 锁定</div>
+  <div class="sbp"><div class="sb-led led-y"></div>侦察链路: 降级</div>
+  <div class="sbp"><div class="sb-led led-r"></div>告警: 1条</div>
+  <div class="sbp grow">方案A-压制防空 | 辐射源: 5 | 任务: 4 | 无人机: 6架 | GIS: 独立窗口运行</div>
+  <div class="sbp" id="sb-clk" style="font-family:var(--mono);">--:--:--</div>
+</div>
+
+</div><!-- /app-shell -->
+
+
+<!-- ════ DIALOGS ════ -->
+
+<!-- 任务设置 -->
+<div class="dlg-ov" id="dlg-task">
+  <div class="dlg">
+    <div class="dlg-ttl"><span>🎯</span><span class="dlg-ttl-txt" id="dlg-task-ttl">新建协同任务</span><div class="dlg-x" onclick="closeDlg('dlg-task')">✕</div></div>
+    <div class="dlg-body">
+      <div class="frow">
+        <div class="fcol"><label class="clbl">任务名称</label><input class="cinput" value="打击雷达阵地-α"></div>
+        <div class="fcol" style="max-width:100px;"><label class="clbl">任务类型</label><select class="csel"><option>打击</option><option>压制</option><option>侦察</option><option>佯攻</option></select></div>
+      </div>
+      <div class="frow">
+        <div class="fcol"><label class="clbl">任务目标（辐射源）</label><select class="csel"><option>E-001 制导雷达 9.5GHz</option><option>E-002 通信干扰 450MHz</option><option>E-003 预警雷达 3.2GHz</option><option>E-004 雷达干扰 1.3GHz</option><option>E-005 地面电台 30MHz</option></select></div>
+        <div class="fcol" style="max-width:120px;"><label class="clbl">目标类型</label><select class="csel"><option>制导雷达</option><option>预警雷达</option><option>通信干扰机</option><option>雷达干扰机</option><option>地面电台</option></select></div>
+      </div>
+      <div class="frow">
+        <div class="fcol"><label class="clbl">开始时间</label><input class="cinput" type="time" value="08:30"></div>
+        <div class="fcol"><label class="clbl">结束时间</label><input class="cinput" type="time" value="09:15"></div>
+      </div>
+      <div class="frow"><div class="fcol"><label class="clbl">任务备注</label><textarea class="ctxt" rows="3">优先打击，高威胁目标，协同B编队同步压制</textarea></div></div>
+    </div>
+    <div class="dlg-foot">
+      <button class="pbtn" onclick="closeDlg('dlg-task')">取消</button>
+      <button class="pbtn def" onclick="closeDlg('dlg-task');toast('任务已保存')">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 威胁规则 -->
+<div class="dlg-ov" id="dlg-rules">
+  <div class="dlg">
+    <div class="dlg-ttl"><span>🛡</span><span class="dlg-ttl-txt">威胁评估规则设置</span><div class="dlg-x" onclick="closeDlg('dlg-rules')">✕</div></div>
+    <div class="dlg-body">
+      <div style="margin-bottom:8px;">
+        <table class="dgrid" style="width:100%;">
+          <thead><tr><th>等级</th><th>适用目标类型</th><th>评分范围</th><th>标识色</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge br">高威胁</span></td><td>制导/跟踪雷达，功率≥1MW</td><td style="font-family:var(--mono)">80~100</td><td style="color:var(--mil-red);">■ 红色</td></tr>
+            <tr><td><span class="badge bo">中威胁</span></td><td>干扰设备，功率100kW~1MW</td><td style="font-family:var(--mono)">50~79</td><td style="color:var(--mil-orange);">■ 橙色</td></tr>
+            <tr><td><span class="badge by">低威胁</span></td><td>通信电台，功率＜100kW</td><td style="font-family:var(--mono)">0~49</td><td style="color:var(--mil-yellow);">■ 黄色</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;font-weight:600;margin-bottom:4px;">评分权重配置（合计应为100%）:</div>
+      <div class="frow">
+        <div class="fcol"><label class="clbl">发射功率权重(%)</label><input class="cinput" type="number" value="35" min="0" max="100"></div>
+        <div class="fcol"><label class="clbl">目标类型权重(%)</label><input class="cinput" type="number" value="25" min="0" max="100"></div>
+      </div>
+      <div class="frow">
+        <div class="fcol"><label class="clbl">频率覆盖权重(%)</label><input class="cinput" type="number" value="20" min="0" max="100"></div>
+        <div class="fcol"><label class="clbl">位置威胁权重(%)</label><input class="cinput" type="number" value="20" min="0" max="100"></div>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button class="pbtn" onclick="closeDlg('dlg-rules')">取消</button>
+      <button class="pbtn def" onclick="closeDlg('dlg-rules');toast('威胁规则已应用')">应用</button>
+    </div>
+  </div>
+</div>
+
+<!-- 防控火力显控 -->
+<div class="dlg-ov" id="dlg-fire">
+  <div class="dlg" style="min-width:300px;max-width:340px;">
+    <div class="dlg-ttl"><span>⊕</span><span class="dlg-ttl-txt">防控火力显示控制</span><div class="dlg-x" onclick="closeDlg('dlg-fire')">✕</div></div>
+    <div class="dlg-body">
+      <div style="display:flex;flex-direction:column;gap:1px;">
+        <label style="display:flex;align-items:center;gap:5px;height:20px;padding:0 4px;cursor:pointer;font-size:11px;"><input type="checkbox" checked style="accent-color:var(--win-sel);"> 显示地空导弹阵地</label>
+        <label style="display:flex;align-items:center;gap:5px;height:20px;padding:0 4px;cursor:pointer;font-size:11px;"><input type="checkbox" checked style="accent-color:var(--win-sel);"> 显示自行高炮阵地</label>
+        <label style="display:flex;align-items:center;gap:5px;height:20px;padding:0 4px;cursor:pointer;font-size:11px;"><input type="checkbox" checked style="accent-color:var(--win-sel);"> 显示电子对抗阵地</label>
+        <label style="display:flex;align-items:center;gap:5px;height:20px;padding:0 4px;cursor:pointer;font-size:11px;"><input type="checkbox" style="accent-color:var(--win-sel);"> 显示火力覆盖范围（GIS）</label>
+        <label style="display:flex;align-items:center;gap:5px;height:20px;padding:0 4px;cursor:pointer;font-size:11px;opacity:.5;"><input type="checkbox" disabled style="accent-color:var(--win-sel);"> 区域合并显示（后续添加）</label>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button class="pbtn" onclick="closeDlg('dlg-fire')">取消</button>
+      <button class="pbtn def" onclick="closeDlg('dlg-fire');toast('显示设置已更新')">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 路径设置 -->
+<div class="dlg-ov" id="dlg-path">
+  <div class="dlg">
+    <div class="dlg-ttl"><span>✈</span><span class="dlg-ttl-txt" id="dlg-path-ttl">巡航路径设置</span><div class="dlg-x" onclick="closeDlg('dlg-path')">✕</div></div>
+    <div class="dlg-body" id="dlg-path-body"></div>
+    <div class="dlg-foot">
+      <button class="pbtn" onclick="closeDlg('dlg-path')">取消</button>
+      <button class="pbtn def" onclick="closeDlg('dlg-path');toast('路径设置已保存')">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 系统设置 -->
+<div class="dlg-ov" id="dlg-settings">
+  <div class="dlg">
+    <div class="dlg-ttl"><span>⚙</span><span class="dlg-ttl-txt">系统设置</span><div class="dlg-x" onclick="closeDlg('dlg-settings')">✕</div></div>
+    <div class="dlg-body">
+      <div class="frow">
+        <div class="fcol"><label class="clbl">数据刷新频率</label><select class="csel"><option>1秒</option><option selected>2秒</option><option>5秒</option></select></div>
+        <div class="fcol"><label class="clbl">坐标系统</label><select class="csel"><option>WGS-84</option><option>CGCS2000</option><option>北京54</option></select></div>
+      </div>
+      <div class="frow">
+        <div class="fcol"><label class="clbl">数据链协议</label><select class="csel"><option>Link-16</option><option>Link-11</option><option>自定义</option></select></div>
+        <div class="fcol"><label class="clbl">时间同步源</label><select class="csel"><option>GPS授时</option><option>北斗授时</option><option>本地时钟</option></select></div>
+      </div>
+      <div class="frow"><div class="fcol"><label class="clbl">GIS服务地址（独立窗口）</label><input class="cinput" value="http://192.168.1.100:8080/gis"></div></div>
+      <div class="frow"><div class="fcol"><label class="clbl">作战方案文件路径</label><input class="cinput" value="D:\MissionData\PlanA_2024.xml"></div></div>
+    </div>
+    <div class="dlg-foot">
+      <button class="pbtn" onclick="closeDlg('dlg-settings')">取消</button>
+      <button class="pbtn def" onclick="closeDlg('dlg-settings');toast('设置已保存')">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast-el" style="position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(50px);opacity:0;transition:all .25s;background:var(--win-bg);border-top:1px solid var(--win-border-lt);border-left:1px solid var(--win-border-lt);border-right:1px solid var(--win-border-sh);border-bottom:1px solid var(--win-border-sh);box-shadow:3px 3px 6px rgba(0,0,0,.4);padding:5px 14px;font-size:12px;z-index:9999;font-family:var(--font);white-space:nowrap;"></div>
+
+<script>
+// Clock
+function tick(){const t=new Date().toTimeString().slice(0,8);document.getElementById('clock').textContent=t;document.getElementById('sb-clk').textContent=t;}
+setInterval(tick,1000);tick();
+
+// Spectrum bars
+const sd=[{h:18,c:'#8B6914'},{h:14,c:'#8B6914'},{h:32,c:'#B85A00'},{h:28,c:'#B85A00'},{h:45,c:'#9B1C0A'},{h:55,c:'#9B1C0A'},{h:72,c:'#9B1C0A'},{h:22,c:'#1B4F8A'}];
+const sw=document.getElementById('spec-wrap');
+sd.forEach(d=>{const b=document.createElement('div');b.className='sbar';b.style.height=d.h+'%';b.style.background=d.c;sw.appendChild(b);});
+setInterval(()=>{sw.querySelectorAll('.sbar').forEach((b,i)=>{const n=Math.max(5,Math.min(95,sd[i].h+(Math.random()-.5)*14));b.style.height=n+'%';});},700);
+
+// Threat gauges
+const threats=[{n:'E-001 制导雷达',p:92,c:'#9B1C0A'},{n:'E-003 预警雷达',p:85,c:'#9B1C0A'},{n:'E-002 通信干扰',p:61,c:'#B85A00'},{n:'E-004 雷达干扰',p:58,c:'#B85A00'},{n:'E-005 地面电台',p:22,c:'#8B6914'}];
+const tg=document.getElementById('threat-gauges');
+threats.forEach(t=>{tg.innerHTML+=`<div class="gauge-row"><div class="gauge-lbl" title="${t.n}">${t.n}</div><div class="gauge-track"><div class="gauge-fill" style="width:${t.p}%;background:${t.c};"></div></div><div class="gauge-pct" style="color:${t.c};">${t.p}%</div></div>`;});
+
+// Emitter data
+const eData=[
+  {id:'E-001',type:'制导雷达',f:'9.5 GHz',r:'8.5~10.5 GHz',p:'2.5 MW',pw:'1.2 μs',s:'3.0 s',g:'34 dBi',d:'120 km',cls:'pr'},
+  {id:'E-002',type:'通信干扰',f:'450 MHz',r:'430~470 MHz',p:'500 kW',pw:'N/A',s:'—',g:'12 dBi',d:'60 km',cls:'po'},
+  {id:'E-003',type:'预警雷达',f:'3.2 GHz',r:'2.9~3.5 GHz',p:'1.8 MW',pw:'2.5 μs',s:'6.0 s',g:'28 dBi',d:'200 km',cls:'pr'},
+  {id:'E-004',type:'雷达干扰',f:'1.3 GHz',r:'1.0~1.5 GHz',p:'300 kW',pw:'N/A',s:'—',g:'15 dBi',d:'80 km',cls:'po'},
+  {id:'E-005',type:'地面电台',f:'30 MHz',r:'25~35 MHz',p:'50 kW',pw:'N/A',s:'—',g:'6 dBi',d:'30 km',cls:''},
+];
+function selEmitter(row,idx){
+  document.querySelectorAll('#emitter-tbody tr').forEach(r=>r.classList.remove('sel'));
+  row.classList.add('sel');
+  const d=eData[idx];
+  document.getElementById('sel-eid').textContent=d.id+' '+d.type;
+  document.getElementById('pgrid').querySelector('tbody').innerHTML=`
+    <tr class="pcat"><td colspan="2">📡 电磁参数</td></tr>
+    <tr><td>中心频率</td><td class="${d.cls}">${d.f}</td></tr>
+    <tr><td>频率范围</td><td>${d.r}</td></tr>
+    <tr><td>发射功率</td><td class="${d.cls}">${d.p}</td></tr>
+    <tr><td>脉冲宽度</td><td>${d.pw}</td></tr>
+    <tr class="pcat"><td colspan="2">📊 工作参数</td></tr>
+    <tr><td>扫描周期</td><td>${d.s}</td></tr>
+    <tr><td>天线增益</td><td>${d.g}</td></tr>
+    <tr><td>探测距离</td><td class="po">${d.d}</td></tr>
+    <tr><td>信号样式</td><td>${d.pw==='N/A'?'连续波':'脉冲连续波'}</td></tr>`;
+}
+
+// Tab switch
+function switchTab(tab,btn){
+  document.querySelectorAll('#left-tabs .tabbtn').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+  document.getElementById('pane-threat').style.display=tab==='threat'?'flex':'none';
+  const fp=document.getElementById('pane-fire');
+  fp.style.display=tab==='fire'?'flex':'none';
+}
+
+// Task selection
+function selTask(row){document.querySelectorAll('.trow').forEach(r=>r.classList.remove('sel'));row.classList.add('sel');}
+
+// UAV selection
+function selUav(row,id){
+  document.querySelectorAll('.tvrow').forEach(r=>r.classList.remove('sel'));
+  row.classList.add('sel');
+  document.getElementById('sel-uav').textContent=id;
+}
+function selUavAndPath(id,mode){
+  document.getElementById('sel-uav').textContent=id;
+  openDlg('dlg-path');pathMode(mode);
+}
+
+// Force calc
+let totalV=6;
+function calcForce(){[1,2,3,4].forEach(i=>{const v=document.getElementById('cv'+i).textContent;document.getElementById('sv'+i).textContent=v;});updateTotal();}
+function adjC(id,d){const el=document.getElementById(id);el.textContent=Math.max(0,parseInt(el.textContent)+d);updateTotal();}
+function updateTotal(){let s=0;[1,2,3,4].forEach(i=>s+=parseInt(document.getElementById('sv'+i).textContent));totalV=s;document.getElementById('total-val').textContent=s;}
+function adjTotal(d){totalV=Math.max(0,totalV+d);document.getElementById('total-val').textContent=totalV;}
+
+// Alloc
+function adjA(btn,d){const el=btn.parentElement.querySelector('.spval');el.textContent=Math.max(0,parseInt(el.textContent)+d);}
+function autoAlloc(){document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',Math.random()>.4));}
+
+// Task mode
+function taskMode(m){document.getElementById('dlg-task-ttl').textContent=m==='new'?'新建协同任务':'编辑协同任务';}
+
+// Path modal
+const pc={
+  cruise:`<div class="frow"><div class="fcol"><label class="clbl">起始航路点</label><input class="cinput" value="WP01 (116.20°E, 39.80°N)"></div><div class="fcol" style="max-width:120px;"><label class="clbl">巡航高度(m)</label><input class="cinput" type="number" value="1500"></div></div><div class="frow"><div class="fcol"><label class="clbl">中间航路点</label><input class="cinput" value="WP02 (116.35°E, 39.85°N)"></div><div class="fcol" style="max-width:120px;"><label class="clbl">巡航速度(km/h)</label><input class="cinput" type="number" value="320"></div></div><div class="frow"><div class="fcol"><label class="clbl">终止航路点</label><input class="cinput" value="WP03 (116.42°E, 39.92°N)"></div><div class="fcol" style="max-width:120px;"><label class="clbl">预计时间(min)</label><input class="cinput" type="number" value="45"></div></div>`,
+  search:`<div class="frow"><div class="fcol"><label class="clbl">区域西边界(°E)</label><input class="cinput" value="116.30"></div><div class="fcol"><label class="clbl">区域东边界(°E)</label><input class="cinput" value="116.50"></div></div><div class="frow"><div class="fcol"><label class="clbl">区域南边界(°N)</label><input class="cinput" value="39.82"></div><div class="fcol"><label class="clbl">区域北边界(°N)</label><input class="cinput" value="39.95"></div></div><div class="frow"><div class="fcol" style="max-width:140px;"><label class="clbl">搜索高度(m)</label><input class="cinput" type="number" value="800"></div><div class="fcol"><label class="clbl">搜索模式</label><select class="csel"><option>平行扫描</option><option>扇形扫描</option><option>定点盘旋</option></select></div></div>`,
+  target:`<div class="frow"><div class="fcol"><label class="clbl">装订目标编号</label><select class="csel"><option>E-001 制导雷达 9.5GHz</option><option>E-002 通信干扰 450MHz</option><option>E-003 预警雷达 3.2GHz</option></select></div><div class="fcol" style="max-width:130px;"><label class="clbl">制导频率(GHz)</label><input class="cinput" type="number" step="0.1" value="9.5"></div></div><div class="frow"><div class="fcol"><label class="clbl">目标坐标</label><input class="cinput" value="116.42°E, 39.93°N"></div><div class="fcol" style="max-width:130px;"><label class="clbl">制导方式</label><select class="csel"><option>被动雷达制导</option><option>复合制导</option><option>INS+GPS</option></select></div></div><div class="frow"><div class="fcol" style="max-width:130px;"><label class="clbl">引信模式</label><select class="csel"><option>近炸引信</option><option>碰炸引信</option><option>延时引信</option></select></div><div class="fcol" style="max-width:130px;"><label class="clbl">攻击优先级</label><select class="csel"><option>一级（最高）</option><option>二级</option><option>三级</option></select></div></div>`
+};
+const pt={cruise:'巡航路径设置',search:'搜索路径设置',target:'目标装订设置'};
+function pathMode(m){
+  document.getElementById('dlg-path-ttl').textContent=pt[m]+' — '+document.getElementById('sel-uav').textContent;
+  document.getElementById('dlg-path-body').innerHTML=pc[m];
+}
+
+// Dialog
+function openDlg(id){document.getElementById(id).classList.add('open');}
+function closeDlg(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.dlg-ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// Toast
+let tt;
+function toast(msg,dur=2000){
+  const el=document.getElementById('toast-el');
+  el.textContent=msg;
+  el.style.transform='translateX(-50%) translateY(0)';
+  el.style.opacity='1';
+  clearTimeout(tt);
+  tt=setTimeout(()=>{el.style.transform='translateX(-50%) translateY(50px)';el.style.opacity='0';},dur);
+}
+</script>
+</body>
+</html>
