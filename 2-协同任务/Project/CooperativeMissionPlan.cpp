@@ -1,16 +1,23 @@
 ﻿#include "CooperativeMissionPlan.h"
 #include "ui_CooperativeMissionPlan.h"
+#include "StructData.h"
 #include <QDateTime>
 #include <QTimer>
 #include <QMessageBox>
 #include <QTableWidgetItem>
 #include <QTreeWidgetItem>
 #include <QHeaderView>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QFileDialog>
 
 CooperativeMissionPlan::CooperativeMissionPlan(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::CooperativeMissionPlan)
     , selectedTaskIndex(0)
+    , currentFilePath("")
 {
     ui->setupUi(this);
     
@@ -59,6 +66,7 @@ void CooperativeMissionPlan::setupConnections()
     connect(ui->editTaskButton, &QPushButton::clicked, this, &CooperativeMissionPlan::onEditTask);
     connect(ui->deleteTaskButton, &QPushButton::clicked, this, &CooperativeMissionPlan::onDeleteTask);
     connect(ui->calculateForceButton, &QPushButton::clicked, this, &CooperativeMissionPlan::onCalculateForce);
+    connect(ui->calculateForceButton1, &QPushButton::clicked, this, &CooperativeMissionPlan::onCalculateForce);
     connect(ui->manualAdjustButton, &QPushButton::clicked, this, &CooperativeMissionPlan::onAutoAllocate);
     connect(ui->addForceButton, &QPushButton::clicked, this, &CooperativeMissionPlan::onAddForce);
     connect(ui->deleteForceButton, &QPushButton::clicked, this, &CooperativeMissionPlan::onDeleteForce);
@@ -174,65 +182,15 @@ void CooperativeMissionPlan::setupStyles()
 
 void CooperativeMissionPlan::initializeTables()
 {
-    // Initialize task table with sample data
-    QStringList taskData = {
-        "打击雷达阵地α|打击|点目标|E-001|08:30~09:15|ARM-A1, ARM-A2",
-        "压制通信干扰β|压制|点目标|E-002|08:45~09:30|ARM-B1",
-        "摧毁预警阵地γ|打击|点目标|E-003|09:00~09:45|ARM-C1, ARM-C2",
-        "压制北部干扰区|压制|区域目标|ZONE-A|09:00~10:30|ARM-D1, ARM-D2"
-    };
-    ui->taskTable->setRowCount(taskData.size());
-    for (int row = 0; row < taskData.size(); ++row) {
-        QStringList columns = taskData[row].split('|');
-        for (int col = 0; col < columns.size(); ++col) {
-            QTableWidgetItem *item = new QTableWidgetItem(columns[col]);
-            ui->taskTable->setItem(row, col, item);
-        }
-    }
     
-    // Initialize force calculation table
-    QStringList forceCalcData = {
-        "打击雷达阵地α|E-001|高|P1|2|2",
-        "压制通信干扰β|E-002|中|P2|1|1",
-        "摧毁预警阵地γ|E-003|高|P1|2|2",
-        "压制北部干扰区|ZONE-A|中|P2|2|2"
-    };
-    ui->forceCalculationTable->setRowCount(forceCalcData.size());
-    for (int row = 0; row < forceCalcData.size(); ++row) {
-        QStringList columns = forceCalcData[row].split('|');
-        for (int col = 0; col < columns.size(); ++col) {
-            QTableWidgetItem *item = new QTableWidgetItem(columns[col]);
-            ui->forceCalculationTable->setItem(row, col, item);
-        }
-    }
-    
-    // Initialize resource table
-    QStringList resourceData = {
-        "A-编组|ARM-A|3|2 就绪, 1 待命",
-        "B-编组|ARM-B|3|2 就绪, 1 故障",
-        "C-编组|ARM-C|2|2 就绪",
-        "D-编组|ARM-D|2|2 就绪"
-    };
-    
-    
-    // Initialize allocation table
-    QStringList allocationData = {
-        "打击雷达阵地α|点目标|E-001|高|ARM-A1, ARM-A2|A-编组",
-        "压制通信干扰β|点目标|E-002|中|ARM-B1|B-编组",
-        "摧毁预警阵地γ|点目标|E-003|高|ARM-C1, ARM-C2|C-编组",
-        "压制北部干扰区|区域目标|ZONE-A|中|ARM-D1, ARM-D2|D-编组"
-    };
-    ui->allocationTable->setRowCount(allocationData.size());
-    for (int row = 0; row < allocationData.size(); ++row) {
-        QStringList columns = allocationData[row].split('|');
-        for (int col = 0; col < columns.size(); ++col) {
-            QTableWidgetItem *item = new QTableWidgetItem(columns[col]);
-            ui->allocationTable->setItem(row, col, item);
-        }
-    }
 }
 
 void CooperativeMissionPlan::initializeTree()
+{
+    
+}
+
+void CooperativeMissionPlan::updateForceTree()
 {
     // 清空现有内容
     ui->forceTree->clear();
@@ -241,86 +199,36 @@ void CooperativeMissionPlan::initializeTree()
     ui->forceTree->setColumnWidth(0, 280);
     ui->forceTree->setColumnWidth(1, 80);
     
-    // 创建第1编组 — 打击队
-    QTreeWidgetItem* group1 = new QTreeWidgetItem(ui->forceTree);
-    group1->setText(0, "📁 第1编组 — 打击队");
-    group1->setText(1, "4/6");
-    group1->setExpanded(true);
-    
-    // ARM-A 型反辐射无人机
-    QTreeWidgetItem* armAGroup = new QTreeWidgetItem(group1);
-    armAGroup->setText(0, "📂 ARM-A 型反辐射无人机");
-    armAGroup->setText(1, "2/3");
-    armAGroup->setExpanded(true);
-    
-    // ARM-A1
-    QTreeWidgetItem* armA1 = new QTreeWidgetItem(armAGroup);
-    armA1->setText(0, "● ARM-A1");
-    armA1->setText(1, "就绪");
-    
-    // ARM-A2
-    QTreeWidgetItem* armA2 = new QTreeWidgetItem(armAGroup);
-    armA2->setText(0, "● ARM-A2");
-    armA2->setText(1, "就绪");
-    
-    // ARM-A3
-    QTreeWidgetItem* armA3 = new QTreeWidgetItem(armAGroup);
-    armA3->setText(0, "● ARM-A3");
-    armA3->setText(1, "待命");
-    
-    // ARM-B 型反辐射无人机
-    QTreeWidgetItem* armBGroup = new QTreeWidgetItem(group1);
-    armBGroup->setText(0, "📂 ARM-B 型反辐射无人机");
-    armBGroup->setText(1, "2/3");
-    armBGroup->setExpanded(true);
-    
-    // ARM-B1
-    QTreeWidgetItem* armB1 = new QTreeWidgetItem(armBGroup);
-    armB1->setText(0, "● ARM-B1");
-    armB1->setText(1, "就绪");
-    
-    // ARM-B2
-    QTreeWidgetItem* armB2 = new QTreeWidgetItem(armBGroup);
-    armB2->setText(0, "● ARM-B2");
-    armB2->setText(1, "就绪");
-    
-    // ARM-B3
-    QTreeWidgetItem* armB3 = new QTreeWidgetItem(armBGroup);
-    armB3->setText(0, "● ARM-B3");
-    armB3->setText(1, "故障");
-    
-    // 创建第2编组 — 压制队
-    QTreeWidgetItem* group2 = new QTreeWidgetItem(ui->forceTree);
-    group2->setText(0, "📁 第2编组 — 压制队");
-    group2->setText(1, "3/6");
-    group2->setExpanded(true);
-    
-    // ARM-C 型反辐射无人机
-    QTreeWidgetItem* armCGroup = new QTreeWidgetItem(group2);
-    armCGroup->setText(0, "📂 ARM-C 型反辐射无人机");
-    armCGroup->setText(1, "2/3");
-    armCGroup->setExpanded(true);
-    
-    // ARM-C1
-    QTreeWidgetItem* armC1 = new QTreeWidgetItem(armCGroup);
-    armC1->setText(0, "● ARM-C1");
-    armC1->setText(1, "就绪");
-    
-    // ARM-C2
-    QTreeWidgetItem* armC2 = new QTreeWidgetItem(armCGroup);
-    armC2->setText(0, "● ARM-C2");
-    armC2->setText(1, "就绪");
-    
-    // ARM-D 型反辐射无人机
-    QTreeWidgetItem* armDGroup = new QTreeWidgetItem(group2);
-    armDGroup->setText(0, "📂 ARM-D 型反辐射无人机");
-    armDGroup->setText(1, "1/3");
-    armDGroup->setExpanded(true);
-    
-    // ARM-D1
-    QTreeWidgetItem* armD1 = new QTreeWidgetItem(armDGroup);
-    armD1->setText(0, "● ARM-D1");
-    armD1->setText(1, "就绪");
+    // 遍历所有编组
+    for (const auto& group : groupList) {
+        QTreeWidgetItem* groupItem = new QTreeWidgetItem(ui->forceTree);
+        int available = group.getAvailableUAVCount();
+        int total = group.getTotalUAVCount();
+        groupItem->setText(0, "� " + group.groupName);
+        groupItem->setText(1, QString("%1/%2").arg(available).arg(total));
+        groupItem->setExpanded(true);
+        
+        // 遍历该编组下的所有装备型号
+        for (const auto& equipment : group.equipmentList) {
+            QTreeWidgetItem* equipmentItem = new QTreeWidgetItem(groupItem);
+            int eqAvailable = 0;
+            for (const auto& uav : equipment.uavList) {
+                if (uav.status == "就绪") {
+                    eqAvailable++;
+                }
+            }
+            equipmentItem->setText(0, "📂 " + equipment.equipmentName);
+            equipmentItem->setText(1, QString("%1/%2").arg(eqAvailable).arg(equipment.uavList.size()));
+            equipmentItem->setExpanded(true);
+            
+            // 遍历该装备型号下的所有无人机
+            for (const auto& uav : equipment.uavList) {
+                QTreeWidgetItem* uavItem = new QTreeWidgetItem(equipmentItem);
+                uavItem->setText(0, "● " + uav.uavName);
+                uavItem->setText(1, uav.status);
+            }
+        }
+    }
 }
 
 void CooperativeMissionPlan::onAddForce()
@@ -386,7 +294,141 @@ void CooperativeMissionPlan::onEditTargetParam()
 
 void CooperativeMissionPlan::onSaveAllocation()
 {
-    showToast("分配已保存");
+    showToast("任务分配已保存");
+}
+
+// 接收任务添加信号的槽函数
+void CooperativeMissionPlan::onTaskAdded(const TaskInfo& taskInfo)
+{
+    // 将任务添加到内部数据列表
+    taskList.append(taskInfo);
+    
+    // 更新表格显示
+    DisplayTaskTableToData(taskList);
+    
+    // 显示提示信息
+    showToast("协同任务已添加");
+}
+
+// 接收任务更新信号的槽函数
+void CooperativeMissionPlan::onTaskUpdated(int index, const TaskInfo& taskInfo)
+{
+    // 检查索引是否有效
+    if (index >= 0 && index < taskList.size()) {
+        // 更新内部数据列表
+        taskList[index] = taskInfo;
+        
+        // 更新表格显示
+        DisplayTaskTableToData(taskList);
+        
+        // 显示提示信息
+        showToast("协同任务已更新");
+    }
+}
+
+// 显示任务表格数据
+void CooperativeMissionPlan::DisplayTaskTableToData(const QList<TaskInfo>& taskList)
+{
+    // 更新内部数据列表
+    this->taskList = taskList;
+    
+    // 清空表格
+    ui->taskTable->clearContents();
+    ui->taskTable->setRowCount(0);
+    
+    // 添加数据行
+    for (const TaskInfo& task : taskList) {
+        int row = ui->taskTable->rowCount();
+        ui->taskTable->insertRow(row);
+        
+        ui->taskTable->setItem(row, 0, new QTableWidgetItem(task.taskName));
+        ui->taskTable->setItem(row, 1, new QTableWidgetItem(task.taskType));
+        ui->taskTable->setItem(row, 2, new QTableWidgetItem(task.targetType));
+        ui->taskTable->setItem(row, 3, new QTableWidgetItem(task.taskTarget));
+        ui->taskTable->setItem(row, 4, new QTableWidgetItem(task.getTimeRange()));
+        ui->taskTable->setItem(row, 5, new QTableWidgetItem(task.allocatedUAVs));
+    }
+}
+
+// 显示兵力需求计算表格数据
+void CooperativeMissionPlan::DisplayForceCalculationTableToData(const QList<ForceCalculation>& forceList)
+{
+    // 清空表格
+    ui->forceCalculationTable->clearContents();
+    ui->forceCalculationTable->setRowCount(0);
+    
+    // 添加数据行
+    for (const ForceCalculation& force : forceList) {
+        int row = ui->forceCalculationTable->rowCount();
+        ui->forceCalculationTable->insertRow(row);
+        
+        ui->forceCalculationTable->setItem(row, 0, new QTableWidgetItem(force.taskName));
+        ui->forceCalculationTable->setItem(row, 1, new QTableWidgetItem(force.taskTarget));
+        ui->forceCalculationTable->setItem(row, 2, new QTableWidgetItem(force.threatLevel));
+        ui->forceCalculationTable->setItem(row, 3, new QTableWidgetItem(force.priority));
+        ui->forceCalculationTable->setItem(row, 4, new QTableWidgetItem(QString::number(force.calculatedCount)));
+        ui->forceCalculationTable->setItem(row, 5, new QTableWidgetItem(QString::number(force.adjustedCount)));
+    }
+}
+
+// 显示任务分配表格数据
+void CooperativeMissionPlan::DisplayAllocationTableToData(const QList<TaskAllocation>& allocationList)
+{
+    // 清空表格
+    ui->allocationTable->clearContents();
+    ui->allocationTable->setRowCount(0);
+    
+    // 添加数据行
+    for (const TaskAllocation& allocation : allocationList) {
+        int row = ui->allocationTable->rowCount();
+        ui->allocationTable->insertRow(row);
+        
+        ui->allocationTable->setItem(row, 0, new QTableWidgetItem(allocation.taskName));
+        ui->allocationTable->setItem(row, 1, new QTableWidgetItem(allocation.targetType));
+        ui->allocationTable->setItem(row, 2, new QTableWidgetItem(allocation.taskTarget));
+        ui->allocationTable->setItem(row, 3, new QTableWidgetItem(allocation.threatLevel));
+        ui->allocationTable->setItem(row, 4, new QTableWidgetItem(allocation.allocatedUAVs));
+        ui->allocationTable->setItem(row, 5, new QTableWidgetItem(allocation.formation));
+    }
+}
+
+// 显示路径规划表格数据
+void CooperativeMissionPlan::DisplayPathTableToData(const QList<PathPlanning>& pathList)
+{
+    // 清空表格
+    ui->pathTable->clearContents();
+    ui->pathTable->setRowCount(0);
+    
+    // 添加数据行
+    for (const PathPlanning& path : pathList) {
+        int row = ui->pathTable->rowCount();
+        ui->pathTable->insertRow(row);
+        
+        ui->pathTable->setItem(row, 0, new QTableWidgetItem(path.uavName));
+        ui->pathTable->setItem(row, 1, new QTableWidgetItem(path.relatedTask));
+        ui->pathTable->setItem(row, 2, new QTableWidgetItem(QString::number(path.pathPointCount)));
+        ui->pathTable->setItem(row, 3, new QTableWidgetItem(path.status));
+    }
+}
+
+// 显示目标参数表格数据
+void CooperativeMissionPlan::DisplayTargetTableToData(const QList<TargetParam>& targetList)
+{
+    // 清空表格
+    ui->targetTable->clearContents();
+    ui->targetTable->setRowCount(0);
+    
+    // 添加数据行
+    for (const TargetParam& target : targetList) {
+        int row = ui->targetTable->rowCount();
+        ui->targetTable->insertRow(row);
+        
+        ui->targetTable->setItem(row, 0, new QTableWidgetItem(target.targetId));
+        ui->targetTable->setItem(row, 1, new QTableWidgetItem(target.frequencyRange));
+        ui->targetTable->setItem(row, 2, new QTableWidgetItem(target.pulseWidthRange));
+        ui->targetTable->setItem(row, 3, new QTableWidgetItem(target.repetitionPeriod));
+        ui->targetTable->setItem(row, 4, new QTableWidgetItem(target.workingMode));
+    }
 }
 
 void CooperativeMissionPlan::showToast(const QString& message)
@@ -394,50 +436,155 @@ void CooperativeMissionPlan::showToast(const QString& message)
     QMessageBox::information(this, "提示", message);
 }
 
+// 保存任务到文件（辅助函数）
+bool CooperativeMissionPlan::saveTasksToFile(const QString& filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        return false;
+    }
+    
+    QJsonObject rootObject;
+    QJsonArray taskArray;
+    
+    // 遍历所有任务，转换为JSON对象
+    for (const TaskInfo& task : taskList) {
+        QJsonObject taskObject;
+        taskObject["taskName"] = task.taskName;
+        taskObject["taskType"] = task.taskType;
+        taskObject["targetType"] = task.targetType;
+        taskObject["taskTarget"] = task.taskTarget;
+        taskObject["startTime"] = task.startTime.toString("HH:mm");
+        taskObject["endTime"] = task.endTime.toString("HH:mm");
+        taskObject["allocatedUAVs"] = task.allocatedUAVs;
+        
+        taskArray.append(taskObject);
+    }
+    
+    rootObject["tasks"] = taskArray;
+    
+    // 生成JSON文档
+    QJsonDocument doc(rootObject);
+    
+    // 写入文件
+    if (file.write(doc.toJson()) == -1) {
+        return false;
+    }
+    
+    file.close();
+    return true;
+}
+
+// 从文件加载任务（辅助函数）
+bool CooperativeMissionPlan::loadTasksFromFile(const QString& filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return false;
+    }
+    
+    // 读取文件内容
+    QByteArray jsonData = file.readAll();
+    file.close();
+    
+    // 解析JSON文档
+    QJsonDocument doc = QJsonDocument::fromJson(jsonData);
+    if (doc.isNull()) {
+        return false;
+    }
+    
+    QJsonObject rootObject = doc.object();
+    QJsonArray taskArray = rootObject["tasks"].toArray();
+    
+    // 清空当前任务列表
+    taskList.clear();
+    
+    // 解析所有任务
+    for (const QJsonValue& value : taskArray) {
+        if (value.isObject()) {
+            QJsonObject taskObject = value.toObject();
+            TaskInfo task;
+            task.taskName = taskObject["taskName"].toString();
+            task.taskType = taskObject["taskType"].toString();
+            task.targetType = taskObject["targetType"].toString();
+            task.taskTarget = taskObject["taskTarget"].toString();
+            task.startTime = QTime::fromString(taskObject["startTime"].toString(), "HH:mm");
+            task.endTime = QTime::fromString(taskObject["endTime"].toString(), "HH:mm");
+            task.allocatedUAVs = taskObject["allocatedUAVs"].toString();
+            
+            taskList.append(task);
+        }
+    }
+    
+    // 更新表格显示
+    DisplayTaskTableToData(taskList);
+    
+    return true;
+}
+
 void CooperativeMissionPlan::onNewTask()
 {
-    TaskDialog dialog(this);
-    if (dialog.exec() == QDialog::Accepted) {
-        // 获取表单数据
-        QString taskName = dialog.getTaskName();
-        QString taskType = dialog.getTaskType();
-        QString targetType = dialog.getTargetType();
-        QString taskTarget = dialog.getTaskTarget();
-        QString allocatedUAVs = dialog.getAllocatedUAVs();
-        QTime startTime = dialog.getStartTime();
-        QTime endTime = dialog.getEndTime();
-        
-        // 将时间转换为字符串格式
-        QString timeRange = startTime.toString("HH:mm") + "~" + endTime.toString("HH:mm");
-        
-        // 这里可以添加将新任务添加到表格的逻辑
-        // 示例：在任务表格中添加一行
-        int rowCount = ui->taskTable->rowCount();
-        ui->taskTable->insertRow(rowCount);
-        ui->taskTable->setItem(rowCount, 0, new QTableWidgetItem(taskName));
-        ui->taskTable->setItem(rowCount, 1, new QTableWidgetItem(taskType));
-        ui->taskTable->setItem(rowCount, 2, new QTableWidgetItem(targetType));
-        ui->taskTable->setItem(rowCount, 3, new QTableWidgetItem(taskTarget));
-        ui->taskTable->setItem(rowCount, 4, new QTableWidgetItem(timeRange));
-        ui->taskTable->setItem(rowCount, 5, new QTableWidgetItem(allocatedUAVs));
-        
-        showToast("任务已创建");
+    TaskDialog dialog;
+    
+    // 连接任务添加信号到槽函数
+    connect(&dialog, &TaskDialog::taskAdded, this, &CooperativeMissionPlan::onTaskAdded);
+    
+    // 显示对话框
+    dialog.exec();
+}
+
+// 打开任务文件
+void CooperativeMissionPlan::onOpenTask()
+{
+    // 打开文件对话框
+    QString filePath = QFileDialog::getOpenFileName(
+        this, "打开任务文件", "", "JSON文件 (*.json);;所有文件 (*.*)");
+    
+    if (!filePath.isEmpty()) {
+        // 从文件加载任务
+        if (loadTasksFromFile(filePath)) {
+            // 更新当前文件路径
+            currentFilePath = filePath;
+            showToast("任务文件已打开");
+        } else {
+            showToast("打开文件失败");
+        }
     }
 }
 
-void CooperativeMissionPlan::onOpenTask()
-{
-    showToast("已打开任务文件");
-}
-
+// 保存任务到文件
 void CooperativeMissionPlan::onSaveTask()
 {
-    showToast("任务已保存");
+    // 如果没有当前文件路径，则调用另存为
+    if (currentFilePath.isEmpty()) {
+        onSaveAs();
+    } else {
+        // 保存到当前文件
+        if (saveTasksToFile(currentFilePath)) {
+            showToast("任务已保存");
+        } else {
+            showToast("保存失败");
+        }
+    }
 }
 
+// 另存为新文件
 void CooperativeMissionPlan::onSaveAs()
 {
-    showToast("已另存为新文件");
+    // 打开文件对话框
+    QString filePath = QFileDialog::getSaveFileName(
+        this, "保存任务文件", "", "JSON文件 (*.json);;所有文件 (*.*)");
+    
+    if (!filePath.isEmpty()) {
+        // 保存到选择的文件
+        if (saveTasksToFile(filePath)) {
+            // 更新当前文件路径
+            currentFilePath = filePath;
+            showToast("任务已另存为新文件");
+        } else {
+            showToast("保存失败");
+        }
+    }
 }
 
 void CooperativeMissionPlan::onExport()
@@ -447,17 +594,105 @@ void CooperativeMissionPlan::onExport()
 
 void CooperativeMissionPlan::onEditTask()
 {
-    showToast("编辑任务");
+    // 获取当前选中的行
+    int selectedRow = ui->taskTable->currentRow();
+    
+    // 检查是否有选中的行
+    if (selectedRow < 0) {
+        showToast("请先选择一个任务");
+        return;
+    }
+    
+    // 检查索引是否有效
+    if (selectedRow >= taskList.size()) {
+        showToast("任务数据错误");
+        return;
+    }
+    
+    // 获取选中的任务信息
+    TaskInfo taskInfo = taskList[selectedRow];
+    
+    // 创建编辑任务对话框
+    TaskDialog dialog(selectedRow, taskInfo, this);
+    
+    // 连接任务更新信号到槽函数
+    connect(&dialog, &TaskDialog::taskUpdated, this, &CooperativeMissionPlan::onTaskUpdated);
+    
+    // 显示对话框
+    dialog.exec();
 }
 
 void CooperativeMissionPlan::onDeleteTask()
 {
+    // 获取当前选中的行
+    int selectedRow = ui->taskTable->currentRow();
+    
+    // 检查是否有选中的行
+    if (selectedRow < 0) {
+        showToast("请先选择一个任务");
+        return;
+    }
+    
+    // 检查索引是否有效
+    if (selectedRow >= taskList.size()) {
+        showToast("任务数据错误");
+        return;
+    }
+    
+    // 从内部数据列表中删除任务
+    taskList.removeAt(selectedRow);
+    
+    // 更新表格显示
+    DisplayTaskTableToData(taskList);
+    
+    // 显示提示信息
     showToast("任务已删除");
 }
 
 void CooperativeMissionPlan::onCalculateForce()
 {
-    showToast("兵力需求计算完成，合计 7 架");
+    // 清空现有兵力需求计算列表
+    forceList.clear();
+    
+    // 计算每个任务的兵力需求
+    int totalRequired = 0;
+    for (const auto& task : taskList) {
+        ForceCalculation force;
+        force.taskName = task.taskName;
+        force.taskTarget = task.taskTarget;
+        
+        // 根据任务类型和目标类型计算兵力需求
+        // 这里使用简化的计算逻辑，实际应用中可能需要更复杂的算法
+        if (task.taskType == "打击") {
+            force.threatLevel = "高";
+            force.priority = "P1";
+            force.calculatedCount = 2; // 打击任务需要2架无人机
+        } else if (task.taskType == "压制") {
+            force.threatLevel = "中";
+            force.priority = "P2";
+            force.calculatedCount = 1; // 压制任务需要1架无人机
+        } else {
+            force.threatLevel = "低";
+            force.priority = "P3";
+            force.calculatedCount = 1; // 其他任务需要1架无人机
+        }
+        
+        // 调整数量（这里简单设为计算数量）
+        force.adjustedCount = force.calculatedCount;
+        
+        forceList.append(force);
+        totalRequired += force.adjustedCount;
+    }
+    
+    // 更新兵力计算表格显示
+    DisplayForceCalculationTableToData(forceList);
+    
+    // 更新兵力资源管理树
+    // 这里简单地更新树的显示，实际应用中可能需要根据计算结果调整无人机状态
+    updateForceTree();
+    
+    // 显示计算结果
+    showToast(QString("兵力需求计算完成，合计 %1 架").arg(totalRequired));
 }
 
 void CooperativeMissionPlan::onAutoAllocate()

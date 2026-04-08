@@ -25,6 +25,17 @@ public:
     void showToast(const QString& message);
     void initializeTables(); // 添加函数声明
     void initializeTree();   // 添加函数声明
+    
+    // 表格数据显示接口
+    void DisplayTaskTableToData(const QList<TaskInfo>& taskList);
+    void DisplayForceCalculationTableToData(const QList<ForceCalculation>& forceList);
+    void DisplayAllocationTableToData(const QList<TaskAllocation>& allocationList);
+    void DisplayPathTableToData(const QList<PathPlanning>& pathList);
+    void DisplayTargetTableToData(const QList<TargetParam>& targetList);
+    
+    // 文件操作函数
+    bool saveTasksToFile(const QString& filePath);
+    bool loadTasksFromFile(const QString& filePath);
 
 private slots:
     void updateClock();
@@ -54,9 +65,30 @@ private slots:
     void onAddTargetParam();
     void onEditTargetParam();
     void onSaveAllocation();
+    
+    // 接收任务添加信号的槽函数
+    void onTaskAdded(const TaskInfo& taskInfo);
+    
+    // 接收任务更新信号的槽函数
+    void onTaskUpdated(int index, const TaskInfo& taskInfo);
 
 private:
     Ui::CooperativeMissionPlan *ui;
+    
+    // 任务数据列表
+    QList<TaskInfo> taskList;
+    
+    // 兵力需求计算列表
+    QList<ForceCalculation> forceList;
+    
+    // 编组信息列表
+    QList<GroupInfo> groupList;
+    
+    // 当前文件路径
+    QString currentFilePath;
+    
+    // 更新兵力资源管理树
+    void updateForceTree();
 };
 
 #endif // CooperativeMissionPlan_H

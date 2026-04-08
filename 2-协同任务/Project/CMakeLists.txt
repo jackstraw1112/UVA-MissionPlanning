@@ -11,26 +11,16 @@ set(CMAKE_PREFIX_PATH "C:/Qt/Qt5.12.12/5.12.12/msvc2017_64")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
 
 # 查找Qt库
-find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Core Widgets  REQUIRED)
 
-# 源文件列表
-set(SOURCES
-    main.cpp
-    CooperativeMissionPlan.cpp
-    taskdialog.cpp
-)
+# 源文件列表（包含当前路径下所有.cpp文件）
+file(GLOB SOURCES "*.cpp")
 
-# 头文件列表
-set(HEADERS
-    CooperativeMissionPlan.h
-    taskdialog.h
-)
+# 头文件列表（包含当前路径下所有.h文件）
+file(GLOB HEADERS "*.h")
 
-# UI文件列表
-set(FORMS
-    CooperativeMissionPlan.ui
-    taskdialog.ui
-)
+# UI文件列表（包含当前路径下所有.ui文件）
+file(GLOB FORMS "*.ui")
 
 # 资源文件
 set(RESOURCES resources.qrc)
