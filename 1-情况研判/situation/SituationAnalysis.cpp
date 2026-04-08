@@ -207,6 +207,10 @@ SituationAnalysis::SituationAnalysis(QWidget *parent)
     , leftPanel(nullptr)
     , radarSourceGroup(nullptr)
     , radarSourceTabs(nullptr)
+    , radarTabBtn(nullptr)
+    , commTabBtn(nullptr)
+    , commJammerTabBtn(nullptr)
+    , radarJammerTabBtn(nullptr)
     , radarSourceTable(nullptr)
     , commSourceTable(nullptr)
     , commJammerTable(nullptr)
@@ -241,9 +245,6 @@ SituationAnalysis::SituationAnalysis(QWidget *parent)
     createFirepowerData();
     
     // 连接信号槽（确保UI组件已初始化）
-    if (radarSourceTabs) {
-        connect(radarSourceTabs, &QTabWidget::currentChanged, this, &SituationAnalysis::onRadarTabChanged);
-    }
     if (showRadarCheck) {
         connect(showRadarCheck, &QCheckBox::toggled, this, &SituationAnalysis::onToggleRadar);
     }
@@ -271,7 +272,6 @@ void SituationAnalysis::setupUI()
 {
     // 设置窗口标题和大小
     setWindowTitle("反辐射无人机仿真系统 - 态势分析");
-    resize(1600, 900);
     
     // 设置深蓝色背景
     setStyleSheet(
@@ -285,6 +285,10 @@ void SituationAnalysis::setupUI()
         "    color: #eef2ff;"
         "}"
     );
+    
+    // 设置窗口大小为1200x1200
+    resize(1200, 1200);
+    setMinimumSize(1200, 1200);
     
     // 创建滚动区域
     scrollArea = new QScrollArea(this);
@@ -309,52 +313,31 @@ void SituationAnalysis::setupUI()
     setupHeader();
     mainLayout->addWidget(headerWidget);
     
-    // 创建左右两列布局
-    QHBoxLayout *contentLayout = new QHBoxLayout();
-    contentLayout->setSpacing(16);
-    
-    // 左侧面板
-    QWidget *leftPanelWidget = new QWidget();
-    leftPanelWidget->setStyleSheet("QWidget { background: transparent; }");
-    QVBoxLayout *leftLayout = new QVBoxLayout(leftPanelWidget);
-    leftLayout->setSpacing(16);
-    leftLayout->setContentsMargins(0, 0, 0, 0);
-    
     // 设置辐射源列表
     setupRadarSourceList();
-    leftLayout->addWidget(radarSourceGroup, 1);
+    mainLayout->addWidget(radarSourceGroup);
     
     // 设置态势控制模块
     setupSituationControl();
-    leftLayout->addWidget(situationControlGroup, 0);
-    
-    // 右侧面板
-    QWidget *rightPanelWidget = new QWidget();
-    rightPanelWidget->setStyleSheet("QWidget { background: transparent; }");
-    QVBoxLayout *rightLayout = new QVBoxLayout(rightPanelWidget);
-    rightLayout->setSpacing(16);
-    rightLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->addWidget(situationControlGroup);
     
     // 设置频谱分析图
     setupSpectrumAnalysis();
-    rightLayout->addWidget(spectrumGroup, 0);
+    mainLayout->addWidget(spectrumGroup);
     
     // 设置火力控制模块
     setupFirepowerControl();
-    rightLayout->addWidget(firepowerGroup, 0);
+    mainLayout->addWidget(firepowerGroup);
     
     // 设置威胁评估模块
     setupThreatAssessment();
-    rightLayout->addWidget(threatGroup, 1);
+    mainLayout->addWidget(threatGroup);
     
-    // 将左右面板添加到内容布局
-    contentLayout->addWidget(leftPanelWidget, 1);
-    contentLayout->addWidget(rightPanelWidget, 1);
-    
-    mainLayout->addLayout(contentLayout, 1);
+    // 添加弹性空间
+    mainLayout->addStretch();
     
     // 设置滚动区域的最小高度
-    scrollWidget->setMinimumHeight(1200);
+    scrollWidget->setMinimumHeight(1400);
 }
 
 void SituationAnalysis::setupHeader()
@@ -439,35 +422,40 @@ void SituationAnalysis::setupHeader()
     );
 }
 
+/**
+ * @brief setupRadarSourceList - 初始化辐射源列表UI组件
+ *
+ * 该函数创建辐射源列表的完整UI布局，包括：
+ * - 卡片头部（包含图标、标题和目标计数）
+ * - 标签按钮区域（雷达、电台、通信对抗、雷达对抗）
+ * - 表格区域（使用QStackedWidget管理四种类型的表格）
+ * - 样式设置（与HTML页面保持一致）
+ * - 信号槽连接（按钮点击切换表格）
+ */
 void SituationAnalysis::setupRadarSourceList()
 {
-    // 创建辐射源列表的GroupBox
+    // 创建辐射源列表的 GroupBox 容器，设置背景色和边框样式（与 HTML 一致）
     radarSourceGroup = new QGroupBox();
     radarSourceGroup->setStyleSheet(
         "QGroupBox {"
-        "    background: rgba(8, 16, 30, 190);"
+        "    background: rgba(8, 16, 30, 0.75);"
         "    border: 1px solid rgba(72, 187, 255, 77);"
         "    border-radius: 16px;"
-        "    margin-top: 10px;"
-        "    padding-top: 0px;"
-        "}"
-        "QGroupBox::title {"
-        "    subcontrol-origin: margin;"
-        "    subcontrol-position: top left;"
-        "    padding: 0px;"
-        "    background: transparent;"
         "}"
     );
     
+    // 创建垂直布局，用于排列卡片头部、标签按钮区域和表格区域
     QVBoxLayout *radarSourceGroupLayout = new QVBoxLayout(radarSourceGroup);
-    radarSourceGroupLayout->setContentsMargins(0, 0, 0, 0);
     radarSourceGroupLayout->setSpacing(0);
+    radarSourceGroupLayout->setContentsMargins(0, 0, 0, 0);
     
-    // 创建卡片头部（模拟HTML中的.card-header）
+    // ========== 卡片头部 ==========
+    // 创建卡片头部组件，包含图标、标题和目标计数（与 HTML 一致）
     QWidget *cardHeaderWidget = new QWidget();
     cardHeaderWidget->setStyleSheet(
         "QWidget {"
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgba(20, 40, 65, 230), stop:1 rgba(10, 22, 45, 180));"
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "        stop:0 rgba(20, 40, 65, 0.9), stop:1 rgba(10, 22, 45, 0.7));"
         "    border-bottom: 1px solid rgba(72, 187, 255, 77);"
         "    border-top-left-radius: 16px;"
         "    border-top-right-radius: 16px;"
@@ -478,9 +466,11 @@ void SituationAnalysis::setupRadarSourceList()
     cardHeaderLayout->setContentsMargins(12, 16, 12, 16);
     cardHeaderLayout->setSpacing(10);
     
+    // 图标 - HTML: color: #5BC0FF
     QLabel *iconLabel = new QLabel("📡");
     iconLabel->setStyleSheet("font-size: 18px; color: #5BC0FF;");
     
+    // 标题
     QLabel *titleLabel = new QLabel("辐射源列表");
     titleLabel->setStyleSheet(
         "QLabel {"
@@ -490,10 +480,11 @@ void SituationAnalysis::setupRadarSourceList()
         "}"
     );
     
-    QLabel *countLabel = new QLabel("12个目标");
+    // 目标计数 - HTML: background: rgba(0,0,0,0.3)
+    QLabel *countLabel = new QLabel("12 个目标");
     countLabel->setStyleSheet(
         "QLabel {"
-        "    background: rgba(0, 0, 0, 77);"
+        "    background: rgba(0, 0, 0, 0.3);"
         "    padding: 4px 10px;"
         "    border-radius: 20px;"
         "    font-size: 11px;"
@@ -506,63 +497,193 @@ void SituationAnalysis::setupRadarSourceList()
     cardHeaderLayout->addStretch();
     cardHeaderLayout->addWidget(countLabel);
     
+    // 将卡片头部添加到GroupBox布局中
     radarSourceGroupLayout->addWidget(cardHeaderWidget);
     
-    // 创建辐射源列表表格
-    radarSourceTable = new QTableWidget();
-    radarSourceTable->setColumnCount(5);
-    radarSourceTable->setHorizontalHeaderLabels(QStringList() << "名称" << "类型" << "频率" << "功率" << "威胁等级");
-    radarSourceTable->horizontalHeader()->setStretchLastSection(true);
-    
-    commSourceTable = new QTableWidget();
-    commSourceTable->setColumnCount(5);
-    commSourceTable->setHorizontalHeaderLabels(QStringList() << "名称" << "类型" << "频率" << "功率" << "威胁等级");
-    commSourceTable->horizontalHeader()->setStretchLastSection(true);
-    
-    commJammerTable = new QTableWidget();
-    commJammerTable->setColumnCount(5);
-    commJammerTable->setHorizontalHeaderLabels(QStringList() << "名称" << "类型" << "频率" << "功率" << "威胁等级");
-    commJammerTable->horizontalHeader()->setStretchLastSection(true);
-    
-    radarJammerTable = new QTableWidget();
-    radarJammerTable->setColumnCount(5);
-    radarJammerTable->setHorizontalHeaderLabels(QStringList() << "名称" << "类型" << "频率" << "功率" << "威胁等级");
-    radarJammerTable->horizontalHeader()->setStretchLastSection(true);
-    
-    // 创建标签页
-    radarSourceTabs = new QTabWidget();
-    radarSourceTabs->addTab(radarSourceTable, "雷达");
-    radarSourceTabs->addTab(commSourceTable, "电台");
-    radarSourceTabs->addTab(commJammerTable, "通信对抗");
-    radarSourceTabs->addTab(radarJammerTable, "雷达对抗");
-    
-    // 设置卡片样式
-    radarSourceTabs->setStyleSheet(
-        "QTabWidget::pane {"
-        "    background: transparent;"
-        "    border: none;"
-        "    border-radius: 0px 0px 16px 16px;"
-        "}"
-        "QTabBar::tab {"
-        "    background: rgba(30, 50, 70, 128);"
-        "    color: #bbd9ff;"
-        "    padding: 8px 10px;"
-        "    margin: 6px 3px;"
-        "    border-radius: 8px;"
-        "    font-size: 12px;"
-        "    font-weight: 500;"
-        "}"
-        "QTabBar::tab:selected {"
-        "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2c577c, stop:1 #1a3a55);"
-        "    color: #fff;"
-        "    box-shadow: 0 2px 8px rgba(91, 192, 255, 77);"
-        "}"
-        "QTabBar::tab:hover {"
-        "    background: rgba(50, 80, 110, 153);"
+    // ========== 标签按钮区域 ==========
+    // 创建标签按钮容器（与 HTML 一致）
+    QWidget *tabsWidget = new QWidget();
+    tabsWidget->setStyleSheet(
+        "QWidget {"
+        "    background: rgba(0, 0, 0, 0.2);"
         "}"
     );
     
-    radarSourceGroupLayout->addWidget(radarSourceTabs);
+    QHBoxLayout *tabsLayout = new QHBoxLayout(tabsWidget);
+    tabsLayout->setSpacing(6);
+    tabsLayout->setContentsMargins(12, 10, 12, 10);
+    
+    // Lambda 函数：创建标签按钮（与 HTML 样式一致）
+    auto createSourceTab = [this, &tabsLayout](const QString& text, const QString& icon, QPushButton*& btn) -> QPushButton* {
+        btn = new QPushButton(icon + " " + text);
+        btn->setCheckable(true);
+        btn->setCursor(Qt::PointingHandCursor);
+        btn->setStyleSheet(
+            "QPushButton {"
+            "    background: rgba(30, 50, 70, 0.5);"
+            "    color: #bbd9ff;"
+            "    padding: 8px 10px;"
+            "    border-radius: 8px;"
+            "    font-size: 12px;"
+            "    font-weight: 500;"
+            "    border: none;"
+            "    min-width: 70px;"
+            "}"
+            "QPushButton:checked {"
+            "    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2c577c, stop:1 #1a3a55);"
+            "    color: #fff;"
+            "    box-shadow: 0 2px 8px rgba(91, 192, 255, 77);"
+            "}"
+            "QPushButton:hover {"
+            "    background: rgba(50, 80, 110, 0.6);"
+            "}"
+        );
+        tabsLayout->addWidget(btn);
+        return btn;
+    };
+    
+    // 创建四个类型的标签按钮
+    createSourceTab("雷达", "📡", radarTabBtn);
+    createSourceTab("电台", "📻", commTabBtn);
+    createSourceTab("通信对抗", "📶", commJammerTabBtn);
+    createSourceTab("雷达对抗", "🛡️", radarJammerTabBtn);
+    
+    // 默认选中雷达标签
+    radarTabBtn->setChecked(true);
+    
+    // 将标签按钮区域添加到GroupBox布局中
+    radarSourceGroupLayout->addWidget(tabsWidget);
+    
+    // ========== 表格内容区域 ==========
+    // 创建表格容器，用于放置QStackedWidget和各个表格
+    QWidget *contentWidget = new QWidget();
+    contentWidget->setStyleSheet(
+        "QWidget {"
+        "    background: rgba(5, 10, 20, 204);"
+        "    padding: 16px;"
+        "    border-bottom-left-radius: 16px;"
+        "    border-bottom-right-radius: 16px;"
+        "}"
+    );
+    
+    QVBoxLayout *contentLayout = new QVBoxLayout(contentWidget);
+    contentLayout->setContentsMargins(0, 0, 0, 0);
+    contentLayout->setSpacing(0);
+    
+    // 使用 QStackedWidget 管理四种类型的表格，一次只显示一个
+    QStackedWidget *tableStack = new QStackedWidget();
+    tableStack->setStyleSheet("QStackedWidget { background: transparent; }");
+    
+    // ========== 雷达表格 ==========
+    radarSourceTable = new QTableWidget();
+    radarSourceTable->setColumnCount(6);
+    radarSourceTable->setHorizontalHeaderLabels(QStringList() << "目标名称" << "工作频率" << "脉冲重频" << "脉宽" << "扫描方式" << "威胁等级");
+    radarSourceTable->horizontalHeader()->setStretchLastSection(true);
+    radarSourceTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    radarSourceTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    radarSourceTable->setFixedHeight(220);
+    tableStack->addWidget(radarSourceTable);
+    
+    // ========== 电台表格 ==========
+    commSourceTable = new QTableWidget();
+    commSourceTable->setColumnCount(6);
+    commSourceTable->setHorizontalHeaderLabels(QStringList() << "目标名称" << "工作频率" << "调制方式" << "码速率" << "功率/波形" << "威胁等级");
+    commSourceTable->horizontalHeader()->setStretchLastSection(true);
+    commSourceTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    commSourceTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    commSourceTable->setFixedHeight(220);
+    tableStack->addWidget(commSourceTable);
+    
+    // ========== 通信对抗表格 ==========
+    commJammerTable = new QTableWidget();
+    commJammerTable->setColumnCount(6);
+    commJammerTable->setHorizontalHeaderLabels(QStringList() << "目标名称" << "干扰样式" << "覆盖频段" << "有效辐射功率" << "威胁等级" << "类型");
+    commJammerTable->horizontalHeader()->setStretchLastSection(true);
+    commJammerTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    commJammerTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    commJammerTable->setFixedHeight(220);
+    tableStack->addWidget(commJammerTable);
+    
+    // ========== 雷达对抗表格 ==========
+    radarJammerTable = new QTableWidget();
+    radarJammerTable->setColumnCount(6);
+    radarJammerTable->setHorizontalHeaderLabels(QStringList() << "目标名称" << "对抗类型" << "工作频段" << "技术体制" << "威胁等级" << "类型");
+    radarJammerTable->horizontalHeader()->setStretchLastSection(true);
+    radarJammerTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    radarJammerTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    radarJammerTable->setFixedHeight(220);
+    tableStack->addWidget(radarJammerTable);
+    
+    QString tableStyle = 
+        "QTableWidget {"
+        "    background: transparent;"
+        "    border: none;"
+        "    gridline-color: rgba(72, 120, 160, 38);"
+        "}"
+        "QHeaderView::section {"
+        "    background: rgba(20, 40, 65, 128);"
+        "    color: #8E9CB9;"
+        "    padding: 10px;"
+        "    border: none;"
+        "    border-bottom: 2px solid rgba(72, 120, 160, 80);"
+        "    font-size: 12px;"
+        "    font-weight: 600;"
+        "}"
+        "QTableWidget::item {"
+        "    padding: 10px;"
+        "    border: none;"
+        "    color: #eef2ff;"
+        "}"
+        "QTableWidget::item:selected {"
+        "    background: rgba(30, 70, 110, 77);"
+        "}";
+    
+    radarSourceTable->setStyleSheet(tableStyle);
+    commSourceTable->setStyleSheet(tableStyle);
+    commJammerTable->setStyleSheet(tableStyle);
+    radarJammerTable->setStyleSheet(tableStyle);
+    
+    contentLayout->addWidget(tableStack);
+    radarSourceGroupLayout->addWidget(contentWidget);
+    
+    // ========== 信号槽连接 ==========
+    // 连接标签按钮的点击信号，实现表格切换功能
+    
+    // 雷达按钮点击 - 显示雷达表格（索引0）
+    connect(radarTabBtn, &QPushButton::clicked, [this, tableStack]() {
+        radarTabBtn->setChecked(true);
+        commTabBtn->setChecked(false);
+        commJammerTabBtn->setChecked(false);
+        radarJammerTabBtn->setChecked(false);
+        tableStack->setCurrentIndex(0);
+    });
+    
+    // 电台按钮点击 - 显示电台表格（索引1）
+    connect(commTabBtn, &QPushButton::clicked, [this, tableStack]() {
+        radarTabBtn->setChecked(false);
+        commTabBtn->setChecked(true);
+        commJammerTabBtn->setChecked(false);
+        radarJammerTabBtn->setChecked(false);
+        tableStack->setCurrentIndex(1);
+    });
+    
+    // 通信对抗按钮点击 - 显示通信对抗表格（索引2）
+    connect(commJammerTabBtn, &QPushButton::clicked, [this, tableStack]() {
+        radarTabBtn->setChecked(false);
+        commTabBtn->setChecked(false);
+        commJammerTabBtn->setChecked(true);
+        radarJammerTabBtn->setChecked(false);
+        tableStack->setCurrentIndex(2);
+    });
+    
+    // 雷达对抗按钮点击 - 显示雷达对抗表格（索引3）
+    connect(radarJammerTabBtn, &QPushButton::clicked, [this, tableStack]() {
+        radarTabBtn->setChecked(false);
+        commTabBtn->setChecked(false);
+        commJammerTabBtn->setChecked(false);
+        radarJammerTabBtn->setChecked(true);
+        tableStack->setCurrentIndex(3);
+    });
 }
 
 void SituationAnalysis::setupSpectrumAnalysis()
@@ -1168,49 +1289,142 @@ void SituationAnalysis::setupSituationControl()
     mainLayout->addWidget(firepowerGroup);
 }
 
+/**
+ * @brief createRadarSourceData - 填充辐射源列表数据
+ *
+ * 该函数根据HTML中的数据填充四个表格：
+ * - 雷达表格（3个目标）
+ * - 电台表格（3个目标）
+ * - 通信对抗表格（3个目标）
+ * - 雷达对抗表格（3个目标）
+ *
+ * 每个表格都会根据威胁等级设置相应的颜色：
+ * - 高威胁：红色
+ * - 中威胁：黄色
+ * - 低威胁：绿色
+ */
 void SituationAnalysis::createRadarSourceData()
 {
-    // 安全检查
-    if (!radarSourceTable) {
-        qWarning() << "radarSourceTable is null, skipping data creation";
-        return;
-    }
-    
-    // 创建雷达源数据
-    radarSourceTable->setRowCount(6);
-    
-    // 雷达数据
-    QStringList radarData = {
-        "预警雷达-01", "预警雷达", "3.5GHz", "100kW", "高",
-        "火控雷达-02", "火控雷达", "9.5GHz", "50kW", "高",
-        "搜索雷达-03", "搜索雷达", "2.8GHz", "80kW", "中",
-        "导航雷达-04", "导航雷达", "1.2GHz", "30kW", "低",
-        "气象雷达-05", "气象雷达", "5.6GHz", "20kW", "低",
-        "跟踪雷达-06", "跟踪雷达", "10.5GHz", "60kW", "高"
+    // 辅助函数：根据威胁等级设置单元格的背景色和文字色
+    auto setThreatColor = [](QTableWidgetItem* item, const QString& threat) {
+        if (threat == "高") {
+            item->setBackground(QColor(255, 90, 70, 60));
+            item->setForeground(QColor(255, 100, 100));
+            item->setTextAlignment(Qt::AlignCenter);
+        } else if (threat == "中") {
+            item->setBackground(QColor(255, 180, 60, 60));
+            item->setForeground(QColor(255, 200, 100));
+            item->setTextAlignment(Qt::AlignCenter);
+        } else {
+            item->setBackground(QColor(100, 200, 130, 60));
+            item->setForeground(QColor(100, 255, 150));
+            item->setTextAlignment(Qt::AlignCenter);
+        }
     };
     
-    for (int i = 0; i < 6; ++i) {
-        for (int j = 0; j < 5; ++j) {
-            QTableWidgetItem *item = new QTableWidgetItem(radarData[i * 5 + j]);
-            radarSourceTable->setItem(i, j, item);
-            
-            // 设置威胁等级颜色
-            if (j == 4) {
-                if (radarData[i * 5 + j] == "高") {
-                    item->setBackground(QColor(255, 90, 70, 80));
-                    item->setForeground(QColor(255, 138, 122));
-                } else if (radarData[i * 5 + j] == "中") {
-                    item->setBackground(QColor(255, 180, 60, 80));
-                    item->setForeground(QColor(255, 217, 102));
-                } else {
-                    item->setBackground(QColor(100, 200, 130, 80));
-                    item->setForeground(QColor(111, 207, 151));
-                }
-            }
+    // ========== 雷达数据 ==========
+    if (radarSourceTable) {
+        radarSourceTable->setRowCount(3);
+        
+        // 定义雷达数据结构
+        struct RadarData { QString name, freq, prf, pw, scan, threat; };
+        QList<RadarData> radarItems = {
+            {"AN/MPQ-53 相控阵雷达", "5.2~6.1GHz", "200~500Hz", "0.5~25μs", "电子扫描", "高"},
+            {"P-18 预警雷达", "150~170MHz", "300Hz", "8μs", "6rpm", "中"},
+            {"MPQ-64 哨兵雷达", "8~12GHz", "可变", "-", "旋转扫描", "高"}
+        };
+        
+        // 遍历填充雷达表格
+        for (int i = 0; i < radarItems.size(); ++i) {
+            const auto& item = radarItems[i];
+            radarSourceTable->setItem(i, 0, new QTableWidgetItem(item.name));
+            radarSourceTable->setItem(i, 1, new QTableWidgetItem(item.freq));
+            radarSourceTable->setItem(i, 2, new QTableWidgetItem(item.prf));
+            radarSourceTable->setItem(i, 3, new QTableWidgetItem(item.pw));
+            radarSourceTable->setItem(i, 4, new QTableWidgetItem(item.scan));
+            QTableWidgetItem* threatItem = new QTableWidgetItem(item.threat);
+            setThreatColor(threatItem, item.threat);
+            radarSourceTable->setItem(i, 5, threatItem);
         }
     }
     
-    // 其他表格的示例数据...
+    // ========== 电台数据 ==========
+    if (commSourceTable) {
+        commSourceTable->setRowCount(3);
+        
+        // 定义电台数据结构
+        struct CommData { QString name, freq, mod, rate, power, threat; };
+        QList<CommData> commItems = {
+            {"Link-16 战术数据链", "960~1215MHz", "MSK/扩频", "1.0Mbps", "JTIDS", "高"},
+            {"VHF 战术电台", "30~88MHz", "FM/跳频", "-", "25W", "中"},
+            {"卫星通信终端", "Ku波段", "QPSK", "5Msps", "同步卫星", "中"}
+        };
+        
+        // 遍历填充电台表格
+        for (int i = 0; i < commItems.size(); ++i) {
+            const auto& item = commItems[i];
+            commSourceTable->setItem(i, 0, new QTableWidgetItem(item.name));
+            commSourceTable->setItem(i, 1, new QTableWidgetItem(item.freq));
+            commSourceTable->setItem(i, 2, new QTableWidgetItem(item.mod));
+            commSourceTable->setItem(i, 3, new QTableWidgetItem(item.rate));
+            commSourceTable->setItem(i, 4, new QTableWidgetItem(item.power));
+            QTableWidgetItem* threatItem = new QTableWidgetItem(item.threat);
+            setThreatColor(threatItem, item.threat);
+            commSourceTable->setItem(i, 5, threatItem);
+        }
+    }
+    
+    // ========== 通信对抗数据 ==========
+    if (commJammerTable) {
+        commJammerTable->setRowCount(3);
+        
+        // 定义通信对抗数据结构
+        struct CommJammerData { QString name, jamType, coverage, erp, threat, type; };
+        QList<CommJammerData> commJammerItems = {
+            {"R-330Zh 通信干扰系统", "噪声调频/梳状谱", "20~100MHz", "1kW", "高", "大功率宽带压制"},
+            {"便携式通信干扰机", "单音/扫频", "400~470MHz", "50W", "低", "近距离战术干扰"},
+            {"车载智能干扰站", "协议伪造/随机脉冲", "225~400MHz", "200W", "中", "自适应干扰"}
+        };
+        
+        // 遍历填充通信对抗表格
+        for (int i = 0; i < commJammerItems.size(); ++i) {
+            const auto& item = commJammerItems[i];
+            commJammerTable->setItem(i, 0, new QTableWidgetItem(item.name));
+            commJammerTable->setItem(i, 1, new QTableWidgetItem(item.jamType));
+            commJammerTable->setItem(i, 2, new QTableWidgetItem(item.coverage));
+            commJammerTable->setItem(i, 3, new QTableWidgetItem(item.erp));
+            QTableWidgetItem* threatItem = new QTableWidgetItem(item.threat);
+            setThreatColor(threatItem, item.threat);
+            commJammerTable->setItem(i, 4, threatItem);
+            commJammerTable->setItem(i, 5, new QTableWidgetItem(item.type));
+        }
+    }
+    
+    // ========== 雷达对抗数据 ==========
+    if (radarJammerTable) {
+        radarJammerTable->setRowCount(3);
+        
+        // 定义雷达对抗数据结构
+        struct RadarJammerData { QString name, jamType, band, tech, threat, type; };
+        QList<RadarJammerData> radarJammerItems = {
+            {"SPECTRAL 侦察干扰吊舱", "距离门拖引/速度欺骗", "2~18GHz", "DRFM转发", "高", "先进数字射频存储"},
+            {"Pelena-1 地面干扰站", "噪声压制/假目标", "8~12GHz", "模拟转发", "高", "火控雷达对抗"},
+            {"战术侦察/干扰模块", "测频/测向+间歇采样", "S/C波段", "数字接收", "中", "小型化电子攻击"}
+        };
+        
+        // 遍历填充雷达对抗表格
+        for (int i = 0; i < radarJammerItems.size(); ++i) {
+            const auto& item = radarJammerItems[i];
+            radarJammerTable->setItem(i, 0, new QTableWidgetItem(item.name));
+            radarJammerTable->setItem(i, 1, new QTableWidgetItem(item.jamType));
+            radarJammerTable->setItem(i, 2, new QTableWidgetItem(item.band));
+            radarJammerTable->setItem(i, 3, new QTableWidgetItem(item.tech));
+            QTableWidgetItem* threatItem = new QTableWidgetItem(item.threat);
+            setThreatColor(threatItem, item.threat);
+            radarJammerTable->setItem(i, 4, threatItem);
+            radarJammerTable->setItem(i, 5, new QTableWidgetItem(item.type));
+        }
+    }
 }
 
 void SituationAnalysis::createThreatData()

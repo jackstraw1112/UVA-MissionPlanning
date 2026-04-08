@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include "TaskDialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class CooperativeMissionPlan; }

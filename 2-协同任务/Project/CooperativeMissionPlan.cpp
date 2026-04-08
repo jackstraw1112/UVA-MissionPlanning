@@ -56,7 +56,6 @@ void CooperativeMissionPlan::setupConnections()
     connect(ui->settingsButton, &QPushButton::clicked, this, &CooperativeMissionPlan::onSettings);
     
     // Panel buttons
-    connect(ui->addTaskButton, &QPushButton::clicked, this, &CooperativeMissionPlan::onNewTask);
     connect(ui->editTaskButton, &QPushButton::clicked, this, &CooperativeMissionPlan::onEditTask);
     connect(ui->deleteTaskButton, &QPushButton::clicked, this, &CooperativeMissionPlan::onDeleteTask);
     connect(ui->calculateForceButton, &QPushButton::clicked, this, &CooperativeMissionPlan::onCalculateForce);
@@ -116,14 +115,7 @@ void CooperativeMissionPlan::setupStyles()
     ui->taskTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->taskTable->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->taskTable->setAlternatingRowColors(false);
-    ui->taskTable->setStyleSheet(
-        "QTableWidget { background: rgba(8,24,48,0.92); border: none; }"
-        "QTableWidget::item { color: #c8e8ff;background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(0,140,220,0.12); }"
-        "QTableWidget::item:hover { background: rgba(0,180,255,0.08); }"
-        "QTableWidget::item:selected { background: rgba(0,180,255,0.18); color: #e8f4ff; }"
-        "QHeaderView::section { background: rgba(0,120,200,0.25); border-bottom: 1px solid rgba(0,160,255,0.35); border-right: 1px solid rgba(0,140,220,0.12); padding: 5px 8px; font-size: 11px; font-weight: 500; color: rgba(120,180,230,0.6); text-align: left; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }"
-        "QHeaderView::section:horizontal:last { border-right: none; }"
-    );
+
    
     
     QStringList forceCalcHeaders = {"任务名称", "任务目标", "威胁等级", "优先级", "计算数量", "调整数量"};
@@ -135,15 +127,9 @@ void CooperativeMissionPlan::setupStyles()
     ui->forceCalculationTable->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft); // Align header text to left
     ui->forceCalculationTable->horizontalHeader()->setMinimumHeight(24); // Ensure header has sufficient height
     ui->forceCalculationTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->forceCalculationTable->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->forceCalculationTable->setAlternatingRowColors(false);
-    ui->forceCalculationTable->setStyleSheet(
-        "QTableWidget { background: rgba(8,24,48,0.92); border: none; }" 
-        "QTableWidget::item { color: #c8e8ff;background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(0,140,220,0.12); }" 
-        "QTableWidget::item:hover { background: rgba(0,180,255,0.08); }" 
-        "QTableWidget::item:selected { background: rgba(0,180,255,0.18); color: #e8f4ff; }" 
-        "QHeaderView::section { background: rgba(0,120,200,0.25); border-bottom: 1px solid rgba(0,160,255,0.35); border-right: 1px solid rgba(0,140,220,0.12); padding: 5px 8px; font-size: 11px; font-weight: 500; color: rgba(120,180,230,0.6); text-align: left; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }" 
-        "QHeaderView::section:horizontal:last { border-right: none; }"
-    );
+
 
 
     QStringList allocationHeaders = {"任务名称", "目标类型", "任务目标", "威胁等级", "分配无人机", "编队"};
@@ -155,15 +141,9 @@ void CooperativeMissionPlan::setupStyles()
     ui->allocationTable->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft); // Align header text to left
     ui->allocationTable->horizontalHeader()->setMinimumHeight(24); // Ensure header has sufficient height
     ui->allocationTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->allocationTable->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->allocationTable->setAlternatingRowColors(false);
-    ui->allocationTable->setStyleSheet(
-        "QTableWidget { background: rgba(8,24,48,0.92); border: none; }" 
-        "QTableWidget::item { color: #c8e8ff;background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(0,140,220,0.12); }" 
-        "QTableWidget::item:hover { background: rgba(0,180,255,0.08); }" 
-        "QTableWidget::item:selected { background: rgba(0,180,255,0.18); color: #e8f4ff; }" 
-        "QHeaderView::section { background: rgba(0,120,200,0.25); border-bottom: 1px solid rgba(0,160,255,0.35); border-right: 1px solid rgba(0,140,220,0.12); padding: 5px 8px; font-size: 11px; font-weight: 500; color: rgba(120,180,230,0.6); text-align: left; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }" 
-        "QHeaderView::section:horizontal:last { border-right: none; }"
-    );
+
 
     QStringList pathHeaders = {"无人机名称", "关联任务", "路径点数", "状态"};
     ui->pathTable->setColumnCount(4); // Ensure we have 4 columns
@@ -174,15 +154,9 @@ void CooperativeMissionPlan::setupStyles()
     ui->pathTable->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft); // Align header text to left
     ui->pathTable->horizontalHeader()->setMinimumHeight(24); // Ensure header has sufficient height
     ui->pathTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->pathTable->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->pathTable->setAlternatingRowColors(false);
-    ui->pathTable->setStyleSheet(
-        "QTableWidget { background: rgba(8,24,48,0.92); border: none; }" 
-         "QTableWidget::item { color: #c8e8ff;background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(0,140,220,0.12); }" 
-        "QTableWidget::item:hover { background: rgba(0,180,255,0.08); }" 
-        "QTableWidget::item:selected { background: rgba(0,180,255,0.18); color: #e8f4ff; }" 
-        "QHeaderView::section { background: rgba(0,120,200,0.25); border-bottom: 1px solid rgba(0,160,255,0.35); border-right: 1px solid rgba(0,140,220,0.12); padding: 5px 8px; font-size: 11px; font-weight: 500; color: rgba(120,180,230,0.6); text-align: left; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }" 
-        "QHeaderView::section:horizontal:last { border-right: none; }"
-    );
+
 
     QStringList targetHeaders = {"目标编号", "频率范围(MHz)", "脉宽范围(μs)", "重复周期(ms)", "工作模式"};
     ui->targetTable->setColumnCount(5); // Ensure we have 5 columns
@@ -193,15 +167,9 @@ void CooperativeMissionPlan::setupStyles()
     ui->targetTable->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft); // Align header text to left
     ui->targetTable->horizontalHeader()->setMinimumHeight(24); // Ensure header has sufficient height
     ui->targetTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->targetTable->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->targetTable->setAlternatingRowColors(false);
-    ui->targetTable->setStyleSheet(
-        "QTableWidget { background: rgba(8,24,48,0.92); border: none; }" 
-        "QTableWidget::item { color: #c8e8ff;background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(0,140,220,0.12); }" 
-        "QTableWidget::item:hover { background: rgba(0,180,255,0.08); }" 
-        "QTableWidget::item:selected { background: rgba(0,180,255,0.18); color: #e8f4ff; }" 
-        "QHeaderView::section { background: rgba(0,120,200,0.25); border-bottom: 1px solid rgba(0,160,255,0.35); border-right: 1px solid rgba(0,140,220,0.12); padding: 5px 8px; font-size: 11px; font-weight: 500; color: rgba(120,180,230,0.6); text-align: left; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }" 
-        "QHeaderView::section:horizontal:last { border-right: none; }"
-    );
+
 }
 
 void CooperativeMissionPlan::initializeTables()
@@ -428,7 +396,33 @@ void CooperativeMissionPlan::showToast(const QString& message)
 
 void CooperativeMissionPlan::onNewTask()
 {
-    showToast("新建任务");
+    TaskDialog dialog(this);
+    if (dialog.exec() == QDialog::Accepted) {
+        // 获取表单数据
+        QString taskName = dialog.getTaskName();
+        QString taskType = dialog.getTaskType();
+        QString targetType = dialog.getTargetType();
+        QString taskTarget = dialog.getTaskTarget();
+        QString allocatedUAVs = dialog.getAllocatedUAVs();
+        QTime startTime = dialog.getStartTime();
+        QTime endTime = dialog.getEndTime();
+        
+        // 将时间转换为字符串格式
+        QString timeRange = startTime.toString("HH:mm") + "~" + endTime.toString("HH:mm");
+        
+        // 这里可以添加将新任务添加到表格的逻辑
+        // 示例：在任务表格中添加一行
+        int rowCount = ui->taskTable->rowCount();
+        ui->taskTable->insertRow(rowCount);
+        ui->taskTable->setItem(rowCount, 0, new QTableWidgetItem(taskName));
+        ui->taskTable->setItem(rowCount, 1, new QTableWidgetItem(taskType));
+        ui->taskTable->setItem(rowCount, 2, new QTableWidgetItem(targetType));
+        ui->taskTable->setItem(rowCount, 3, new QTableWidgetItem(taskTarget));
+        ui->taskTable->setItem(rowCount, 4, new QTableWidgetItem(timeRange));
+        ui->taskTable->setItem(rowCount, 5, new QTableWidgetItem(allocatedUAVs));
+        
+        showToast("任务已创建");
+    }
 }
 
 void CooperativeMissionPlan::onOpenTask()

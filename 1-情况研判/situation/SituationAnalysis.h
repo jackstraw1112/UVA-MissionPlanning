@@ -20,6 +20,8 @@
 #include <QGraphicsRectItem>
 #include <QGraphicsTextItem>
 #include <QScrollArea>
+#include <QPushButton>
+#include <QStackedWidget>
 
 // 频谱分析图自定义控件 - 基于QGraphicsView
 class SpectrumChart : public QGraphicsView
@@ -100,6 +102,10 @@ private:
     QWidget *leftPanel;
     QGroupBox *radarSourceGroup;
     QTabWidget *radarSourceTabs;
+    QPushButton *radarTabBtn;
+    QPushButton *commTabBtn;
+    QPushButton *commJammerTabBtn;
+    QPushButton *radarJammerTabBtn;
     QTableWidget *radarSourceTable;
     QTableWidget *commSourceTable;
     QTableWidget *commJammerTable;
