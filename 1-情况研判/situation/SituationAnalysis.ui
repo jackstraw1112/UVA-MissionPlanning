@@ -1,0 +1,592 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SituationAnalysis</class>
+ <widget class="QMainWindow" name="SituationAnalysis">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1000</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>反辐射无人机仿真系统 - 态势分析</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0a0f1e, stop:1 #03060c);
+    color: #eef2ff;
+    font-family: 'Inter', 'Microsoft YaHei', sans-serif;
+}
+
+/* 卡片样式 */
+QGroupBox {
+    background: rgba(8, 16, 30, 190);
+    border: 1px solid rgba(72, 187, 255, 77);
+    border-radius: 16px;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 12px 16px;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgba(20, 40, 65, 230), stop:1 rgba(10, 22, 45, 180));
+    color: #eef2ff;
+    font-weight: 600;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(72, 187, 255, 77);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+}
+
+/* 表格样式 */
+QTableWidget {
+    background: rgba(12, 22, 40, 77);
+    border: none;
+    gridline-color: rgba(72, 120, 160, 51);
+    selection-background-color: rgba(30, 70, 110, 102);
+    font-size: 13px;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+}
+
+QTableWidget::item {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(72, 120, 160, 51);
+}
+
+QTableWidget::item:selected {
+    background-color: rgba(30, 70, 110, 153);
+}
+
+QTableWidget::item:hover {
+    background-color: rgba(30, 70, 110, 102);
+}
+
+QHeaderView::section {
+    background: rgba(12, 26, 45, 230);
+    color: #c2e0ff;
+    font-weight: 600;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(72, 187, 255, 102);
+    font-size: 12px;
+}
+
+/* 标签页样式 */
+QTabWidget::pane {
+    border: 1px solid rgba(72, 187, 255, 77);
+    border-radius: 16px;
+    background: rgba(8, 16, 30, 190);
+}
+
+QTabBar::tab {
+    background: rgba(30, 50, 70, 128);
+    color: #bbd9ff;
+    padding: 8px 10px;
+    margin: 6px 3px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+QTabBar::tab:selected {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2c577c, stop:1 #1a3a55);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(91, 192, 255, 77);
+}
+
+QTabBar::tab:hover {
+    background: rgba(50, 80, 110, 153);
+}
+
+QTabBar::QToolButton {
+    background: rgba(30, 50, 70, 130);
+    color: #bbd9ff;
+}
+
+/* 按钮样式 */
+QPushButton {
+    background: rgba(30, 50, 70, 128);
+    color: #bbd9ff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 11px;
+}
+
+QPushButton:hover {
+    background: rgba(50, 80, 110, 153);
+}
+
+QPushButton:pressed {
+    background: rgba(20, 40, 60, 204);
+}
+
+/* 复选框样式 - 开关样式 */
+QCheckBox {
+    color: #eef2ff;
+    font-size: 13px;
+    spacing: 6px;
+}
+
+QCheckBox::indicator {
+    width: 40px;
+    height: 20px;
+    border-radius: 10px;
+    background: rgba(30, 50, 70, 204);
+}
+
+QCheckBox::indicator:unchecked {
+    background: rgba(30, 50, 70, 204);
+}
+
+QCheckBox::indicator:checked {
+    background: rgba(91, 192, 255, 128);
+}
+
+QCheckBox::indicator:checked:hover {
+    background: rgba(91, 192, 255, 153);
+}
+
+QCheckBox::indicator::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    left: 3px;
+    bottom: 3px;
+    background: #8E9CB9;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+QCheckBox::indicator:checked::after {
+    left: 23px;
+    background: #5BC0FF;
+}
+
+/* 进度条样式 */
+QProgressBar {
+    border: none;
+    background: rgba(0, 0, 0, 77);
+    border-radius: 3px;
+    text-align: center;
+    color: #5BC0FF;
+    font-weight: 500;
+}
+
+QProgressBar::chunk {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #5BC0FF, stop:1 #2E8B57);
+    border-radius: 3px;
+}
+
+/* 标签样式 */
+QLabel {
+    color: #eef2ff;
+    font-size: 12px;
+}
+
+QLabel[objectName^="stat"] {
+    font-size: 22px;
+    font-weight: 700;
+    color: #5BC0FF;
+}
+
+QLabel[objectName^="title"] {
+    font-size: 24px;
+    font-weight: 600;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #FFFFFF, stop:1 #80CFFF);
+    color: transparent;
+    background-clip: text;
+}
+
+/* 滚动条样式 */
+QScrollBar:vertical {
+    width: 6px;
+    background: rgba(0, 0, 0, 51);
+    border-radius: 3px;
+}
+
+QScrollBar::handle:vertical {
+    background: rgba(91, 192, 255, 77);
+    border-radius: 3px;
+    min-height: 30px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: rgba(91, 192, 255, 128);
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar:horizontal {
+    height: 6px;
+    background: rgba(0, 0, 0, 51);
+    border-radius: 3px;
+}
+
+QScrollBar::handle:horizontal {
+    background: rgba(91, 192, 255, 77);
+    border-radius: 3px;
+    min-width: 30px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: rgba(91, 192, 255, 128);
+}
+
+/* 分组标题样式 */
+QWidget[objectName="headerWidget"] {
+    background: rgba(12, 20, 35, 204);
+    border: 1px solid rgba(72, 187, 255, 77);
+    border-radius: 16px;
+}</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="spacing">
+     <number>16</number>
+    </property>
+    <property name="leftMargin">
+     <number>16</number>
+    </property>
+    <property name="topMargin">
+     <number>16</number>
+    </property>
+    <property name="rightMargin">
+     <number>16</number>
+    </property>
+    <property name="bottomMargin">
+     <number>16</number>
+    </property>
+    <!-- 头部区域 -->
+    <item row="0" column="0" colspan="2">
+     <widget class="QWidget" name="headerWidget" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="titleLabel">
+         <property name="text">
+          <string>反辐射无人机仿真系统</string>
+         </property>
+         <property name="objectName">
+          <string>titleLabel</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="totalTargetsLabel">
+         <property name="text">
+          <string>12</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="objectName">
+          <string>statLabel</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="highThreatLabel">
+         <property name="text">
+          <string>4</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="objectName">
+          <string>statLabel</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="firepowerCountLabel">
+         <property name="text">
+          <string>5</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="objectName">
+          <string>statLabel</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="currentTimeLabel">
+         <property name="text">
+          <string>--:--:--</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="objectName">
+          <string>statLabel</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <!-- 左侧区域 -->
+    <item row="1" column="0">
+     <layout class="QVBoxLayout" name="leftLayout">
+      <property name="spacing">
+       <number>16</number>
+      </property>
+      <!-- 辐射源列表 -->
+      <item>
+       <widget class="QGroupBox" name="radarSourceGroup">
+        <property name="title">
+         <string>辐射源列表</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QTabWidget" name="radarSourceTabs">
+           <property name="tabPosition">
+            <enum>QTabWidget::North</enum>
+           </property>
+           <property name="tabShape">
+            <enum>QTabWidget::Rounded</enum>
+           </property>
+           <widget class="QWidget" name="radarTab">
+            <attribute name="title">
+             <string>雷达</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <item>
+              <widget class="QTableWidget" name="radarSourceTable">
+               <property name="rowCount">
+                <number>6</number>
+               </property>
+               <property name="columnCount">
+                <number>5</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="commTab">
+            <attribute name="title">
+             <string>电台</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_4">
+             <item>
+              <widget class="QTableWidget" name="commSourceTable">
+               <property name="rowCount">
+                <number>3</number>
+               </property>
+               <property name="columnCount">
+                <number>5</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="commJammerTab">
+            <attribute name="title">
+             <string>通信对抗</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_5">
+             <item>
+              <widget class="QTableWidget" name="commJammerTable">
+               <property name="rowCount">
+                <number>2</number>
+               </property>
+               <property name="columnCount">
+                <number>5</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="radarJammerTab">
+            <attribute name="title">
+             <string>雷达对抗</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <item>
+              <widget class="QTableWidget" name="radarJammerTable">
+               <property name="rowCount">
+                <number>1</number>
+               </property>
+               <property name="columnCount">
+                <number>5</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <!-- 态势控制 -->
+      <item>
+       <widget class="QGroupBox" name="situationControlGroup">
+        <property name="title">
+         <string>态势控制</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_7">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>辐射源威力范围</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="showRadarCheck">
+           <property name="text">
+            <string>雷达</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="showCommCheck">
+           <property name="text">
+            <string>电台</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="showCommJammerCheck">
+           <property name="text">
+            <string>通信对抗</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="showRadarJammerCheck">
+           <property name="text">
+            <string>雷达对抗</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>防控火力</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="showFirepowerCheck">
+           <property name="text">
+            <string>防控火力显示</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <!-- 右侧区域 -->
+    <item row="1" column="1">
+     <layout class="QVBoxLayout" name="rightLayout">
+      <property name="spacing">
+       <number>16</number>
+      </property>
+      <!-- 频谱分析 -->
+      <item>
+       <widget class="QGroupBox" name="spectrumGroup">
+        <property name="title">
+         <string>频谱分析</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_8">
+         <item>
+          <widget class="QWidget" name="spectrumWidget" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>200</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <!-- 威胁评估 -->
+      <item>
+       <widget class="QGroupBox" name="threatGroup">
+        <property name="title">
+         <string>威胁评估</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_9">
+         <item>
+          <widget class="QWidget" name="threatWidget" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>150</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <!-- 防控火力 -->
+      <item>
+       <widget class="QGroupBox" name="firepowerGroup">
+        <property name="title">
+         <string>防控火力</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_10">
+         <item>
+          <widget class="QWidget" name="firepowerWidget" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>200</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
