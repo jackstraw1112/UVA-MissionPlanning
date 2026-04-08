@@ -21,6 +21,7 @@
 bld/
 [Bb]in/
 [Oo]bj/
+cmake-build-relwithdebinfo/
 
 # 笔记配置文件夹
 .obsidian
