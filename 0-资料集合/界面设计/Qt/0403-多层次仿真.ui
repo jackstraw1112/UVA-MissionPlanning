@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MultiLevelSimulationWidget</class>
+ <widget class="QWidget" name="MultiLevelSimulationWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1000</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>多层次仿真 - 反辐射无人机仿真系统</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <!-- 顶部工具栏 -->
+   <item>
+    <widget class="QToolBar" name="toolBar">
+     <property name="iconSize">
+      <size>
+       <width>24</width>
+       <height>24</height>
+      </size>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonTextUnderIcon</enum>
+     </property>
+     <addaction name="actionLoadScenario"/>
+     <addaction name="actionLoadPlan"/>
+     <addaction name="separator"/>
+     <addaction name="actionStart"/>
+     <addaction name="actionPause"/>
+     <addaction name="actionStop"/>
+     <addaction name="separator"/>
+     <addaction name="actionSpeedUp"/>
+     <addaction name="actionSpeedDown"/>
+     <addaction name="actionResetSpeed"/>
+    </widget>
+   </item>
+   <!-- 主分割区域 -->
+   <item>
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <!-- 左侧控制面板 -->
+     <widget class="QWidget" name="leftPanel" native="true">
+      <property name="minimumWidth">
+       <number>300</number>
+      </property>
+      <property name="maximumWidth">
+       <number>400</number>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <!-- 仿真层次选择 -->
+       <item>
+        <widget class="QGroupBox" name="groupBoxLevel">
+         <property name="title">
+          <string>仿真层次</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <widget class="QRadioButton" name="radioEngagement">
+            <property name="text">
+             <string>交战级 (高保真度)</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioMission">
+            <property name="text">
+             <string>任务级 (聚合模型)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkMixed">
+            <property name="text">
+             <string>混合模式（关键区域交战级）</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <!-- 作战场景类型 -->
+       <item>
+        <widget class="QGroupBox" name="groupBoxScene">
+         <property name="title">
+          <string>作战场景</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <widget class="QComboBox" name="comboSceneType">
+            <item>
+             <property name="text">
+              <string>反辐射攻击</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>火力防空</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>电子对抗</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>空中打击</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>综合场景</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <!-- 综合场景序列编辑器（仅当选择综合场景时可见） -->
+          <item>
+           <widget class="QWidget" name="widgetSceneSequence" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QListWidget" name="listSceneSequence">
+               <property name="minimumHeight">
+                <number>100</number>
+               </property>
+               <item>
+                <property name="text">
+                 <string>0-300s: 电子对抗</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>300-600s: 反辐射攻击</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>600-900s: 空中打击</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_5">
+               <item>
+                <widget class="QPushButton" name="btnAddScene">
+                 <property name="text">
+                  <string>添加</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="btnEditScene">
+                 <property name="text">
+                  <string>编辑</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="btnRemoveScene">
+                 <property name="text">
+                  <string>删除</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <!-- 仿真参数 -->
+       <item>
+        <widget class="QGroupBox" name="groupBoxParams">
+         <property name="title">
+          <string>仿真参数</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelTimeStep">
+            <property name="text">
+             <string>时间步长(s)：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="spinTimeStep">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>0.001000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>10.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="labelEndTime">
+            <property name="text">
+             <string>结束时间(s)：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="spinEndTime">
+            <property name="maximum">
+             <double>86400.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>3600.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <!-- 统计信息 -->
+       <item>
+        <widget class="QGroupBox" name="groupBoxStats">
+         <property name="title">
+          <string>统计信息</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_2">
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelEntityCount">
+            <property name="text">
+             <string>实体数量：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="labelEntityCountValue">
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="labelCurrentScene">
+            <property name="text">
+             <string>当前场景：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="labelCurrentSceneValue">
+            <property name="text">
+             <string>电子对抗</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="labelProgress">
+            <property name="text">
+             <string>仿真进度：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QProgressBar" name="progressBar">
+            <property name="value">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <!-- 右侧可视化区域 -->
+     <widget class="QTabWidget" name="tabWidgetVisual">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <!-- 二维态势 -->
+      <widget class="QWidget" name="tab2D">
+       <attribute name="title">
+        <string>二维态势</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_6">
+        <item>
+         <widget class="QLabel" name="label2DPlaceholder">
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt; font-weight:600; color:#808080;&quot;&gt;二维态势图&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; color:#808080;&quot;&gt;此处嵌入二维地图、兵力部署图等。&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: #1a1a2a; color: white; border: 1px solid #333;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <!-- 三维态势 -->
+      <widget class="QWidget" name="tab3D">
+       <attribute name="title">
+        <string>三维态势</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_7">
+        <item>
+         <widget class="QLabel" name="label3DPlaceholder">
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt; font-weight:600; color:#808080;&quot;&gt;三维态势图&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; color:#808080;&quot;&gt;此处嵌入三维战场环境、实体模型等。&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: #1a1a2a; color: white; border: 1px solid #333;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <!-- 统计图表 -->
+      <widget class="QWidget" name="tabChart">
+       <attribute name="title">
+        <string>统计图表</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_8">
+        <item>
+         <widget class="QLabel" name="labelChartPlaceholder">
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt; font-weight:600; color:#808080;&quot;&gt;统计图表&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; color:#808080;&quot;&gt;此处显示任务级指标曲线、对比报告等。&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: #1a1a2a; color: white; border: 1px solid #333;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </widget>
+   </item>
+   <!-- 底部状态栏 -->
+   <item>
+    <widget class="QStatusBar" name="statusBar">
+     <property name="sizeGripEnabled">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+  </layout>
+  <!-- 动作定义 -->
+  <action name="actionLoadScenario">
+   <property name="text">
+    <string>加载场景</string>
+   </property>
+   <property name="toolTip">
+    <string>加载作战场景文件</string>
+   </property>
+  </action>
+  <action name="actionLoadPlan">
+   <property name="text">
+    <string>加载方案</string>
+   </property>
+   <property name="toolTip">
+    <string>加载规划方案文件</string>
+   </property>
+  </action>
+  <action name="actionStart">
+   <property name="text">
+    <string>开始</string>
+   </property>
+   <property name="toolTip">
+    <string>开始仿真</string>
+   </property>
+  </action>
+  <action name="actionPause">
+   <property name="text">
+    <string>暂停</string>
+   </property>
+   <property name="toolTip">
+    <string>暂停仿真</string>
+   </property>
+  </action>
+  <action name="actionStop">
+   <property name="text">
+    <string>停止</string>
+   </property>
+   <property name="toolTip">
+    <string>停止仿真</string>
+   </property>
+  </action>
+  <action name="actionSpeedUp">
+   <property name="text">
+    <string>加速</string>
+   </property>
+   <property name="toolTip">
+    <string>增加仿真速度</string>
+   </property>
+  </action>
+  <action name="actionSpeedDown">
+   <property name="text">
+    <string>减速</string>
+   </property>
+   <property name="toolTip">
+    <string>降低仿真速度</string>
+   </property>
+  </action>
+  <action name="actionResetSpeed">
+   <property name="text">
+    <string>重置速度</string>
+   </property>
+   <property name="toolTip">
+    <string>恢复为1倍速</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

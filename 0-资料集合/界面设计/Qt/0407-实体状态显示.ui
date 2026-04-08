@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>EntityStatusWidget</class>
+ <widget class="QWidget" name="EntityStatusWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>实体状态显示</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <!-- 标题栏 -->
+   <item>
+    <widget class="QLabel" name="labelTitle">
+     <property name="text">
+      <string>实体状态监控</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+       <weight>75</weight>
+      </font>
+     </property>
+    </widget>
+   </item>
+   <!-- 工具栏 -->
+   <item>
+    <widget class="QToolBar" name="toolBar">
+     <property name="iconSize">
+      <size>
+       <width>16</width>
+       <height>16</height>
+      </size>
+     </property>
+     <addaction name="actionRefresh"/>
+     <addaction name="actionSettings"/>
+     <addaction name="separator"/>
+     <addaction name="actionExpandAll"/>
+     <addaction name="actionCollapseAll"/>
+    </widget>
+   </item>
+   <!-- 实体状态表格 -->
+   <item>
+    <widget class="QTableWidget" name="tableEntityStatus">
+     <property name="columnCount">
+      <number>4</number>
+     </property>
+     <attribute name="horizontalHeaderStretchLastSection">
+      <bool>true</bool>
+     </attribute>
+     <column>
+      <property name="text">
+       <string>ID</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>类型</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>状态</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>视觉提醒</string>
+      </property>
+     </column>
+     <row>
+      <property name="text">
+       <string>UAV-001</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>UAV-002</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>RAD-01</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>SAM-01</string>
+      </property>
+     </row>
+    </widget>
+   </item>
+   <!-- 状态显示控制组 -->
+   <item>
+    <widget class="QGroupBox" name="groupBoxControl">
+     <property name="title">
+      <string>显示控制</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelColor">
+        <property name="text">
+         <string>颜色提醒：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="checkColor">
+        <property name="text">
+         <string>启用</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelText">
+        <property name="text">
+         <string>文字标签：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="checkText">
+        <property name="text">
+         <string>启用</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelEffect">
+        <property name="text">
+         <string>特效提醒：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="checkEffect">
+        <property name="text">
+         <string>启用</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="labelOpacity">
+        <property name="text">
+         <string>透明度：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSlider" name="sliderOpacity">
+        <property name="minimum">
+         <number>20</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>80</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- 实时状态更新日志（可选） -->
+   <item>
+    <widget class="QGroupBox" name="groupBoxLog">
+     <property name="title">
+      <string>状态变更日志</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QListWidget" name="listLog">
+        <item>
+         <property name="text">
+          <string>[12:34:56] UAV-001 导引头开机</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>[12:35:02] RAD-01 雷达开机</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>[12:35:10] UAV-002 受损 (30%)</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnClearLog">
+        <property name="text">
+         <string>清空日志</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+  <!-- 动作定义 -->
+  <action name="actionRefresh">
+   <property name="text">
+    <string>刷新</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>设置</string>
+   </property>
+  </action>
+  <action name="actionExpandAll">
+   <property name="text">
+    <string>展开全部</string>
+   </property>
+  </action>
+  <action name="actionCollapseAll">
+   <property name="text">
+    <string>折叠全部</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

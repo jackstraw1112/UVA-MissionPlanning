@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反辐射无人机 · 区域压制节点摧毁系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #0a0f1e;
+            color: #e0e4f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background-color: #151e2d;
+            border-radius: 24px;
+            border: 1px solid #2a3548;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        /* 头部 */
+        .header {
+            background-color: #101826;
+            padding: 16px 24px;
+            border-bottom: 1px solid #2a3a50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 500;
+            background: linear-gradient(135deg, #aaccff, #5f8ec9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mission-badge {
+            background-color: #1e4f8a;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #1e3144;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 13px;
+        }
+
+        .dot-green {
+            width: 10px;
+            height: 10px;
+            background-color: #2ecc71;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #2ecc71;
+        }
+
+        .dot-red {
+            width: 10px;
+            height: 10px;
+            background-color: #e74c3c;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #e74c3c;
+        }
+
+        .dot-yellow {
+            width: 10px;
+            height: 10px;
+            background-color: #f39c12;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #f39c12;
+        }
+
+        /* 场景导航 */
+        .scene-nav {
+            display: flex;
+            background-color: #101826;
+            padding: 8px 24px;
+            gap: 4px;
+            border-bottom: 1px solid #2a3a50;
+            overflow-x: auto;
+        }
+
+        .scene-item {
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            color: #8fa5cf;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .scene-item:hover {
+            background-color: #1e3144;
+        }
+
+        .scene-item.active {
+            background-color: #1e4f8a;
+            color: white;
+        }
+
+        /* 主布局 - 三列 */
+        .main-layout {
+            display: flex;
+            height: calc(100vh - 160px);
+            min-height: 700px;
+        }
+
+        /* 左侧配置面板 */
+        .left-panel {
+            width: 360px;
+            background-color: #101826;
+            border-right: 1px solid #2a3a50;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .section {
+            background-color: #1a2538;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #2f405a;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #aaccff;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-row {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .form-row label {
+            width: 90px;
+            font-size: 13px;
+            color: #b0c8f0;
+        }
+
+        .form-row input, .form-row select {
+            flex: 1;
+            background-color: #1f2b3c;
+            border: 1px solid #3f556d;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: white;
+            font-size: 13px;
+        }
+
+        .range-slider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .range-slider input[type="range"] {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #2f405a;
+            border-radius: 2px;
+        }
+
+        .range-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #5f8ec9;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .value-badge {
+            background-color: #1e4f8a;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 8px 0;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+
+        .radio-item input[type="radio"] {
+            accent-color: #5f8ec9;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            background-color: #1f2b3c;
+            padding: 5px 12px;
+            border-radius: 30px;
+            border: 1px solid #3f556d;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            accent-color: #5f8ec9;
+        }
+
+        /* 威胁等级标签 */
+        .threat-high {
+            background-color: #8a2e2e;
+            color: #ffb3b3;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+
+        .threat-medium {
+            background-color: #8a5f1e;
+            color: #ffd966;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+
+        .threat-low {
+            background-color: #1e6f5c;
+            color: #a3e4d7;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+
+        /* 中央可视化面板 */
+        .center-panel {
+            flex: 1;
+            background-color: #0f1622;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .view-tabs {
+            display: flex;
+            background-color: #101826;
+            padding: 8px 16px;
+            gap: 8px;
+            border-bottom: 1px solid #2a3a50;
+        }
+
+        .view-tab {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #8fa5cf;
+            cursor: pointer;
+        }
+
+        .view-tab.active {
+            background-color: #1e4f8a;
+            color: white;
+        }
+
+        .visualization-container {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 40px);
+            overflow: hidden;
+        }
+
+        /* 地图容器 */
+        .map-container {
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(74, 158, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(74, 158, 255, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            position: relative;
+        }
+
+        /* 目标节点样式 */
+        .target-node {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .target-fixed {
+            background-color: #e74c3c;
+            border: 2px solid #ff9999;
+        }
+
+        .target-mobile {
+            background-color: #f39c12;
+            border: 2px solid #ffd966;
+        }
+
+        .target-decoy {
+            background-color: #9b59b6;
+            border: 2px solid #d7bde2;
+        }
+
+        .target-command {
+            background-color: #3498db;
+            border: 2px solid #a9cce3;
+        }
+
+        /* 无人机图标 */
+        .uav-icon {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #2ecc71;
+            border: 2px solid white;
+            border-radius: 30px 30px 0 30px;
+            transform: rotate(45deg) translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 20;
+        }
+
+        .uav-icon::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            top: 5px;
+            left: 5px;
+        }
+
+        .uav-attack {
+            background-color: #e74c3c;
+        }
+
+        .uav-decoy {
+            background-color: #9b59b6;
+        }
+
+        .uav-recon {
+            background-color: #3498db;
+        }
+
+        /* 攻击路径 */
+        .attack-path {
+            position: absolute;
+            border-top: 2px dashed #f39c12;
+            height: 2px;
+            transform-origin: 0 0;
+            z-index: 5;
+        }
+
+        /* 威胁区域 */
+        .threat-zone {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(231, 76, 60, 0.15);
+            border: 1px dashed #e74c3c;
+            z-index: 1;
+        }
+
+        /* 信息卡片 */
+        .info-card {
+            position: absolute;
+            background-color: rgba(16, 24, 38, 0.95);
+            border: 1px solid #2f405a;
+            border-radius: 12px;
+            padding: 16px;
+            backdrop-filter: blur(5px);
+            z-index: 30;
+            min-width: 280px;
+        }
+
+        .scene-info {
+            top: 20px;
+            left: 20px;
+        }
+
+        .attack-plan-info {
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .metrics-info {
+            top: 20px;
+            right: 20px;
+        }
+
+        .info-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #aaccff;
+            margin-bottom: 8px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .info-label {
+            color: #8fa5cf;
+        }
+
+        .info-value {
+            color: white;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: #2f405a;
+            border-radius: 3px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #5f8ec9, #2ecc71);
+        }
+
+        /* 地图控件 */
+        .map-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 40;
+        }
+
+        .map-btn {
+            width: 40px;
+            height: 40px;
+            background-color: #1a2538;
+            border: 1px solid #3f556d;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .map-btn:hover {
+            background-color: #2f4058;
+        }
+
+        /* 右侧结果面板 */
+        .right-panel {
+            width: 360px;
+            background-color: #101826;
+            border-left: 1px solid #2a3a50;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .attack-card {
+            background-color: #1a2538;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #2f405a;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .target-name {
+            font-weight: 600;
+            color: #aaccff;
+        }
+
+        .target-type-badge {
+            background-color: #1e4f8a;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+
+        .uav-allocation {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .uav-badge {
+            background-color: #1f2b3c;
+            border: 1px solid #3f556d;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .uav-badge.attack {
+            border-color: #e74c3c;
+        }
+
+        .uav-badge.decoy {
+            border-color: #9b59b6;
+        }
+
+        .attack-detail {
+            font-size: 12px;
+            color: #8fa5cf;
+            margin: 8px 0;
+        }
+
+        .attack-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .metric-item {
+            background-color: #1f2b3c;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #5f8ec9;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: #8fa5cf;
+        }
+
+        .damage-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .damage-bar {
+            flex: 1;
+            height: 8px;
+            background-color: #2f405a;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .damage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f39c12, #e74c3c);
+        }
+
+        .damage-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: #e74c3c;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid #3f556d;
+            background-color: #263445;
+            color: #e0e8ff;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            margin-top: 8px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn:hover {
+            background-color: #2f4058;
+            border-color: #5f8ec9;
+        }
+
+        .btn-primary {
+            background-color: #1e4f8a;
+            border-color: #4280c0;
+        }
+
+        .btn-danger {
+            background-color: #8a2e2e;
+            border-color: #c05555;
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e2b3c;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3f556d;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 头部 -->
+    <div class="header">
+        <h1>
+            <span>💥 区域压制节点摧毁系统</span>
+            <span class="mission-badge">任务: 区域压制-007</span>
+        </h1>
+        <div class="status">
+            <span class="dot-green"></span>
+            作战阶段: 攻击执行中 | 摧毁率 65%
+        </div>
+    </div>
+
+    <!-- 场景导航 -->
+    <div class="scene-nav">
+        <span class="scene-item active" data-scene="fixed">单一固定目标</span>
+        <span class="scene-item" data-scene="mobile">单一低速机动目标</span>
+        <span class="scene-item" data-scene="decoy">配有诱饵的固定目标</span>
+        <span class="scene-item" data-scene="small">小区域多目标</span>
+        <span class="scene-item" data-scene="large">大区域多目标</span>
+    </div>
+
+    <!-- 主布局 -->
+    <div class="main-layout">
+        <!-- 左侧配置面板 -->
+        <div class="left-panel">
+            <!-- 场景识别结果 -->
+            <div class="section">
+                <div class="section-title">🔍 场景识别结果</div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>场景类型</span>
+                    <span style="color: #aaccff;">小区域多目标 (5个目标)</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>置信度</span>
+                    <span style="color: #2ecc71;">94%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>推荐策略</span>
+                    <span style="color: #f39c12;">中心开花 + 饱和攻击</span>
+                </div>
+            </div>
+
+            <!-- 目标信息 -->
+            <div class="section">
+                <div class="section-title">🎯 目标列表</div>
+                <div style="margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                        <span><span class="target-fixed" style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px;"></span>火控雷达A</span>
+                        <span class="threat-high">威胁高</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                        <span><span class="target-fixed" style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px;"></span>火控雷达B</span>
+                        <span class="threat-high">威胁高</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                        <span><span class="target-command" style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px;"></span>指挥中心</span>
+                        <span class="threat-high">威胁高</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                        <span><span class="target-fixed" style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px;"></span>预警雷达</span>
+                        <span class="threat-medium">威胁中</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                        <span><span class="target-decoy" style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px;"></span>诱饵系统</span>
+                        <span class="threat-low">威胁低</span>
+                    </div>
+                </div>
+                <div style="margin-top: 8px;">
+                    <div class="form-row">
+                        <label>区域半径</label>
+                        <div class="range-slider">
+                            <input type="range" min="5" max="50" value="18">
+                            <span class="value-badge">18 km</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 攻击策略 -->
+            <div class="section">
+                <div class="section-title">⚔️ 攻击策略</div>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" name="attackStrategy" checked> 中心开花
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="attackStrategy"> 饱和攻击
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" name="attackStrategy"> 逐次清除
+                    </div>
+                </div>
+                
+                <div style="margin-top: 12px;">
+                    <div class="form-row">
+                        <label>攻击波次</label>
+                        <select>
+                            <option>单波次攻击</option>
+                            <option selected>双波次攻击 (间隔30s)</option>
+                            <option>三波次攻击 (间隔20s)</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label>协同模式</label>
+                        <select>
+                            <option>同时到达</option>
+                            <option selected>时序错开</option>
+                            <option>多方向进入</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 资源分配 -->
+            <div class="section">
+                <div class="section-title">🛩️ 资源分配</div>
+                <div class="form-row">
+                    <label>可用无人机</label>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <input type="number" value="12" min="1" max="50" style="width: 60px;">
+                        <span>架</span>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>主攻编队</span>
+                        <span>8架</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>诱饵编队</span>
+                        <span>2架</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>干扰编队</span>
+                        <span>1架</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>评估编队</span>
+                        <span>1架</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 引信配置 -->
+            <div class="section">
+                <div class="section-title">💣 引信配置</div>
+                <div class="form-row">
+                    <label>攻击目标</label>
+                    <select>
+                        <option>天线 (近炸 8m)</option>
+                        <option selected>方舱 (碰炸+延时20ms)</option>
+                        <option>电源车 (碰炸)</option>
+                        <option>指挥中心 (碰炸+延时30ms)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <button class="btn btn-primary">生成攻击方案</button>
+            <button class="btn" style="margin-top: 8px;">保存方案</button>
+            <button class="btn btn-danger" style="margin-top: 8px;">执行攻击</button>
+        </div>
+
+        <!-- 中央可视化面板 -->
+        <div class="center-panel">
+            <div class="view-tabs">
+                <span class="view-tab active">2D 战场态势</span>
+                <span class="view-tab">3D 攻击视图</span>
+                <span class="view-tab">节点网络</span>
+                <span class="view-tab">毁伤评估</span>
+            </div>
+
+            <div class="visualization-container">
+                <!-- 地图容器 -->
+                <div class="map-container" id="mapContainer">
+                    <!-- 威胁区域 -->
+                    <div class="threat-zone" style="left: 400px; top: 250px; width: 120px; height: 120px;"></div>
+                    <div class="threat-zone" style="left: 600px; top: 350px; width: 80px; height: 80px;"></div>
+
+                    <!-- 目标节点 -->
+                    <div class="target-node target-fixed" style="left: 350px; top: 200px;" title="火控雷达A">R1</div>
+                    <div class="target-node target-fixed" style="left: 450px; top: 180px;" title="火控雷达B">R2</div>
+                    <div class="target-node target-command" style="left: 400px; top: 250px;" title="指挥中心">CC</div>
+                    <div class="target-node target-fixed" style="left: 500px; top: 300px;" title="预警雷达">EW</div>
+                    <div class="target-node target-decoy" style="left: 300px; top: 300px;" title="诱饵系统">DY</div>
+
+                    <!-- 无人机图标 -->
+                    <div class="uav-icon uav-attack" style="left: 200px; top: 150px;">1</div>
+                    <div class="uav-icon uav-attack" style="left: 220px; top: 180px;">2</div>
+                    <div class="uav-icon uav-attack" style="left: 250px; top: 200px;">3</div>
+                    <div class="uav-icon uav-attack" style="left: 280px; top: 220px;">4</div>
+                    <div class="uav-icon uav-attack" style="left: 300px; top: 240px;">5</div>
+                    <div class="uav-icon uav-attack" style="left: 320px; top: 260px;">6</div>
+                    <div class="uav-icon uav-decoy" style="left: 350px; top: 350px;">D1</div>
+                    <div class="uav-icon uav-recon" style="left: 450px; top: 400px;">E1</div>
+
+                    <!-- 攻击路径 (使用CSS线条) -->
+                    <div class="attack-path" style="left: 200px; top: 150px; width: 180px; transform: rotate(30deg);"></div>
+                    <div class="attack-path" style="left: 220px; top: 180px; width: 200px; transform: rotate(25deg);"></div>
+                    <div class="attack-path" style="left: 250px; top: 200px; width: 190px; transform: rotate(20deg);"></div>
+                    <div class="attack-path" style="left: 280px; top: 220px; width: 170px; transform: rotate(15deg);"></div>
+                    <div class="attack-path" style="left: 300px; top: 240px; width: 160px; transform: rotate(10deg);"></div>
+                    <div class="attack-path" style="left: 320px; top: 260px; width: 150px; transform: rotate(5deg);"></div>
+
+                    <!-- 场景信息卡片 -->
+                    <div class="info-card scene-info">
+                        <div class="info-title">🎯 当前场景: 小区域多目标</div>
+                        <div class="info-row">
+                            <span class="info-label">目标数量</span>
+                            <span class="info-value">5个</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">识别结果</span>
+                            <span class="info-value">火控雷达×2, 指挥中心×1, 预警雷达×1, 诱饵×1</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">威胁排序</span>
+                            <span class="info-value">指挥中心 > 火控雷达 > 预警雷达 > 诱饵</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:65%"></div>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">攻击进度</span>
+                            <span class="info-value">65%</span>
+                        </div>
+                    </div>
+
+                    <!-- 攻击计划信息卡片 -->
+                    <div class="info-card attack-plan-info">
+                        <div class="info-title">⚔️ 攻击计划 - 波次1</div>
+                        <div class="info-row">
+                            <span class="info-label">目标</span>
+                            <span class="info-value">指挥中心 (优先)</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">分配无人机</span>
+                            <span class="info-value">UAV-01,02,03 (主攻), UAV-D1 (诱饵)</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">攻击角度</span>
+                            <span class="info-value">30°, 150°, 270° (分散)</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">预计命中时间</span>
+                            <span class="info-value">T+30s, T+31s, T+32s</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">引信设置</span>
+                            <span class="info-value">碰炸+延时20ms</span>
+                        </div>
+                    </div>
+
+                    <!-- 效能指标卡片 -->
+                    <div class="info-card metrics-info">
+                        <div class="info-title">📊 作战效能</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; color: #2ecc71;">65%</div>
+                                <div style="font-size: 11px; color: #8fa5cf;">当前摧毁率</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; color: #5f8ec9;">92%</div>
+                                <div style="font-size: 11px; color: #8fa5cf;">预计摧毁率</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 8px;">
+                            <div class="info-row">
+                                <span class="info-label">已摧毁目标</span>
+                                <span class="info-value">火控雷达B, 诱饵系统</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">剩余目标</span>
+                                <span class="info-value">指挥中心, 火控雷达A, 预警雷达</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">剩余无人机</span>
+                                <span class="info-value">8架 (可用)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 地图控件 -->
+                    <div class="map-controls">
+                        <div class="map-btn">➕</div>
+                        <div class="map-btn">➖</div>
+                        <div class="map-btn">🗺️</div>
+                        <div class="map-btn">🎯</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧结果面板 -->
+        <div class="right-panel">
+            <!-- 攻击方案卡片 -->
+            <div class="attack-card">
+                <div class="card-header">
+                    <span class="target-name">指挥中心</span>
+                    <span class="target-type-badge" style="background-color: #3498db;">关键节点</span>
+                </div>
+                <div class="uav-allocation">
+                    <span class="uav-badge attack">UAV-01 (主攻)</span>
+                    <span class="uav-badge attack">UAV-02 (主攻)</span>
+                    <span class="uav-badge attack">UAV-03 (主攻)</span>
+                    <span class="uav-badge decoy">UAV-D1 (诱饵)</span>
+                </div>
+                <div class="attack-detail">
+                    攻击角度: 30°, 150°, 270° | 同时到达 T+30s
+                </div>
+                <div class="attack-metrics">
+                    <div class="metric-item">
+                        <div class="metric-value">95%</div>
+                        <div class="metric-label">命中概率</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">85%</div>
+                        <div class="metric-label">摧毁概率</div>
+                    </div>
+                </div>
+                <div class="damage-indicator">
+                    <span>毁伤程度</span>
+                    <div class="damage-bar">
+                        <div class="damage-fill" style="width:65%"></div>
+                    </div>
+                    <span class="damage-value">65%</span>
+                </div>
+                <button class="btn">调整方案</button>
+            </div>
+
+            <div class="attack-card">
+                <div class="card-header">
+                    <span class="target-name">火控雷达A</span>
+                    <span class="target-type-badge" style="background-color: #e74c3c;">高威胁</span>
+                </div>
+                <div class="uav-allocation">
+                    <span class="uav-badge attack">UAV-04 (主攻)</span>
+                    <span class="uav-badge attack">UAV-05 (主攻)</span>
+                </div>
+                <div class="attack-detail">
+                    攻击角度: 45°, 225° | 时序错开 T+45s, T+46s
+                </div>
+                <div class="attack-metrics">
+                    <div class="metric-item">
+                        <div class="metric-value">92%</div>
+                        <div class="metric-label">命中概率</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">80%</div>
+                        <div class="metric-label">摧毁概率</div>
+                    </div>
+                </div>
+                <div class="damage-indicator">
+                    <span>毁伤程度</span>
+                    <div class="damage-bar">
+                        <div class="damage-fill" style="width:30%"></div>
+                    </div>
+                    <span class="damage-value">30%</span>
+                </div>
+                <button class="btn">调整方案</button>
+            </div>
+
+            <div class="attack-card">
+                <div class="card-header">
+                    <span class="target-name">预警雷达</span>
+                    <span class="target-type-badge" style="background-color: #f39c12;">中威胁</span>
+                </div>
+                <div class="uav-allocation">
+                    <span class="uav-badge attack">UAV-06 (主攻)</span>
+                </div>
+                <div class="attack-detail">
+                    攻击角度: 90° | 时间 T+60s
+                </div>
+                <div class="attack-metrics">
+                    <div class="metric-item">
+                        <div class="metric-value">85%</div>
+                        <div class="metric-label">命中概率</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">70%</div>
+                        <div class="metric-label">摧毁概率</div>
+                    </div>
+                </div>
+                <div class="damage-indicator">
+                    <span>毁伤程度</span>
+                    <div class="damage-bar">
+                        <div class="damage-fill" style="width:0%"></div>
+                    </div>
+                    <span class="damage-value">0%</span>
+                </div>
+                <button class="btn">调整方案</button>
+            </div>
+
+            <div class="attack-card">
+                <div class="card-header">
+                    <span class="target-name">诱饵系统</span>
+                    <span class="target-type-badge" style="background-color: #9b59b6;">已摧毁</span>
+                </div>
+                <div class="uav-allocation">
+                    <span class="uav-badge decoy">UAV-D2 (诱饵)</span>
+                </div>
+                <div class="attack-detail">
+                    攻击角度: 180° | 时间 T+15s
+                </div>
+                <div class="attack-metrics">
+                    <div class="metric-item">
+                        <div class="metric-value">100%</div>
+                        <div class="metric-label">命中</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">100%</div>
+                        <div class="metric-label">摧毁</div>
+                    </div>
+                </div>
+                <div class="damage-indicator">
+                    <span>毁伤程度</span>
+                    <div class="damage-bar">
+                        <div class="damage-fill" style="width:100%"></div>
+                    </div>
+                    <span class="damage-value" style="color: #2ecc71;">100%</span>
+                </div>
+                <button class="btn" disabled>已摧毁</button>
+            </div>
+
+            <!-- 二次打击建议 -->
+            <div class="attack-card" style="border-color: #e74c3c;">
+                <div class="card-header">
+                    <span class="target-name">二次打击建议</span>
+                    <span class="target-type-badge" style="background-color: #e74c3c;">需要</span>
+                </div>
+                <div style="font-size: 12px; margin-bottom: 8px;">
+                    火控雷达A摧毁率仅30%，建议补充打击
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn" style="width: auto; flex: 1;">立即执行</button>
+                    <button class="btn" style="width: auto; flex: 1;">调整方案</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 场景切换功能
+    const sceneItems = document.querySelectorAll('.scene-item');
+    
+    sceneItems.forEach(item => {
+        item.addEventListener('click', function() {
+            sceneItems.forEach(s => s.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 这里可以根据不同场景更新界面内容
+            // 为简化演示，仅做样式变化
+        });
+    });
+
+    // 视图切换
+    const viewTabs = document.querySelectorAll('.view-tab');
+    
+    viewTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            viewTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // 模拟目标节点点击事件
+    const targetNodes = document.querySelectorAll('.target-node');
+    
+    targetNodes.forEach(node => {
+        node.addEventListener('click', function() {
+            alert(`选中目标: ${this.textContent}\n位置: ${this.style.left}, ${this.style.top}`);
+        });
+    });
+
+    // 模拟无人机图标点击事件
+    const uavIcons = document.querySelectorAll('.uav-icon');
+    
+    uavIcons.forEach(icon => {
+        icon.addEventListener('click', function() {
+            alert(`无人机 ${this.textContent} 状态: 攻击中\n剩余燃油: 65%`);
+        });
+    });
+</script>
+</body>
+</html>

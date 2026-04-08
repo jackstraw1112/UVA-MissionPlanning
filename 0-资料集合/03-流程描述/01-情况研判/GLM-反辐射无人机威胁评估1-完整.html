@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>反辐射无人机目标威胁评估系统</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config={theme:{extend:{colors:{bg:'#080c16',panel:'#0c1220',card:'#111a2e',border:'#1c2e4a',red:'#ff4757',orange:'#ff8c42',gold:'#ffd700',yellow:'#ffe066',green:'#00e68a',cyan:'#00d2ff',blue:'#1e90ff',muted:'#506580',fg:'#c0cfe0','fg-b':'#e8f0fa'},fontFamily:{sans:['Noto Sans SC','sans-serif'],tech:['Rajdhani','monospace']}}}}
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{background:#080c16;overflow:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#1c2e4a;border-radius:3px}::-webkit-scrollbar-thumb:hover{background:#2a4060}
+.top-bar{height:2px;background:linear-gradient(90deg,transparent,#ff4757,#ffd700,#00e68a,#1e90ff,transparent)}
+.threat-badge{font-size:9px;padding:1px 8px;border-radius:3px;font-weight:700;letter-spacing:1px;font-family:'Rajdhani',monospace}
+.badge-l5{background:rgba(255,71,87,.2);color:#ff4757;border:1px solid rgba(255,71,87,.4)}
+.badge-l4{background:rgba(255,140,66,.2);color:#ff8c42;border:1px solid rgba(255,140,66,.4)}
+.badge-l3{background:rgba(255,215,0,.15);color:#ffd700;border:1px solid rgba(255,215,0,.3)}
+.badge-l2{background:rgba(0,230,138,.12);color:#00e68a;border:1px solid rgba(0,230,138,.25)}
+.badge-l1{background:rgba(80,101,128,.15);color:#506580;border:1px solid rgba(80,101,128,.3)}
+.rank-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani';font-weight:700;font-size:11px;flex-shrink:0}
+.factor-bar{height:6px;border-radius:3px;transition:width .4s ease}
+.weight-slider{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:#1c2e4a;outline:none}
+.weight-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#ffd700;cursor:pointer;border:2px solid #080c16}
+.calc-step{border-left:2px solid #1c2e4a;padding-left:12px;position:relative}
+.calc-step::before{content:'';position:absolute;left:-5px;top:6px;width:8px;height:8px;border-radius:50%;background:#1c2e4a;border:2px solid #080c16}
+.calc-step.active::before{background:#ffd700;border-color:#080c16}
+@keyframes scan{0%{top:0;opacity:1}100%{top:100%;opacity:0}}
+.scan-line{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,.4),transparent);animation:scan 3s linear infinite;pointer-events:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.pulse{animation:pulse 1.5s infinite}
+.detail-row{display:grid;grid-template-columns:70px 1fr 50px 60px;gap:4px;align-items:center;padding:3px 0;font-size:10px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body class="font-sans text-fg">
+<div class="top-bar"></div>
+<div class="h-screen flex flex-col">
+<!-- 顶栏 -->
+<header class="flex-shrink-0 bg-panel border-b border-border px-4 py-2 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-red/10 border border-red/30 flex items-center justify-center"><i class="fas fa-radiation text-red text-sm"></i></div>
+<div><h1 class="font-tech text-fg-b text-sm tracking-wider">目标威胁等级评估系统</h1><p class="text-muted text-[9px] tracking-widest">ANTI-RADIATION UAV THREAT ASSESSMENT ENGINE v2.1</p></div>
+</div>
+<div class="flex items-center gap-4 text-xs">
+<div class="flex items-center gap-4 text-[10px]">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red pulse"></span><span class="text-muted">紧急</span><span class="font-tech text-red" id="c-l5">0</span></span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange"></span><span class="text-muted">高</span><span class="font-tech text-orange" id="c-l4">0</span></span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gold"></span><span class="text-muted">中</span><span class="font-tech text-gold" id="c-l3">0</span></span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green"></span><span class="text-muted">低</span><span class="font-tech text-green" id="c-l2">0</span></span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-muted"></span><span class="text-muted">微</span><span class="font-tech text-muted" id="c-l1">0</span></span>
+</div>
+<div class="h-4 w-px bg-border"></div>
+<span class="text-muted text-[10px] font-tech" id="clock"></span>
+<button onclick="simulate()" class="text-[10px] bg-red/10 border border-red/30 text-red px-3 py-1 rounded font-tech font-bold tracking-wider hover:bg-red/20 transition-colors"><i class="fas fa-play mr-1"></i>仿真推演</button>
+</div>
+</header>
+
+<!-- 主体 -->
+<div class="flex-1 flex min-h-0">
+<!-- 左栏：目标列表+排序 -->
+<aside class="w-[420px] flex-shrink-0 bg-panel border-r border-border flex flex-col">
+<div class="px-3 py-2 border-b border-border flex items-center justify-between">
+<span class="text-gold font-tech text-[10px] font-bold tracking-wider"><i class="fas fa-crosshairs mr-1"></i>目标威胁队列 (按优先级排序)</span>
+<span class="text-[9px] text-muted" id="tgt-count">0 个目标</span>
+</div>
+<!-- 表头 -->
+<div class="px-3 py-1.5 border-b border-border/50 grid grid-cols-[28px_1fr_52px_50px_46px] gap-1 text-[9px] text-muted font-tech tracking-wider">
+<span>#</span><span>目标</span><span>距离</span><span>状态</span><span>威胁分</span>
+</div>
+<div class="flex-1 overflow-y-auto" id="target-list"></div>
+<!-- 选中目标详情 -->
+<div class="border-t border-border" id="detail-panel" style="height:220px;display:none">
+<div class="px-3 py-1.5 border-b border-border/50 flex items-center justify-between">
+<span class="text-gold font-tech text-[10px] font-bold tracking-wider"><i class="fas fa-calculator mr-1"></i>计算详情</span>
+<button onclick="closeDetail()" class="text-muted hover:text-fg text-xs"><i class="fas fa-times"></i></button>
+</div>
+<div class="overflow-y-auto p-3" style="height:188px" id="calc-detail"></div>
+</div>
+</aside>
+
+<!-- 中栏：规则定义+权重 -->
+<div class="w-[380px] flex-shrink-0 bg-panel border-r border-border flex flex-col overflow-y-auto">
+<!-- 规则定义 -->
+<div class="px-3 py-2 border-b border-border">
+<span class="text-gold font-tech text-[10px] font-bold tracking-wider"><i class="fas fa-list-check mr-1"></i>威胁因子规则定义</span>
+</div>
+<div class="p-3 space-y-2" id="rules-panel"></div>
+<!-- 权重配置 -->
+<div class="px-3 py-2 border-b border-border border-t">
+<span class="text-gold font-tech text-[10px] font-bold tracking-wider"><i class="fas fa-sliders mr-1"></i>因子权重配置 (总和自动归一化)</span>
+</div>
+<div class="p-3 space-y-2.5" id="weights-panel"></div>
+<!-- 等级映射 -->
+<div class="px-3 py-2 border-b border-border border-t">
+<span class="text-gold font-tech text-[10px] font-bold tracking-wider"><i class="fas fa-layer-group mr-1"></i>等级映射规则</span>
+</div>
+<div class="p-3 space-y-1.5" id="level-map"></div>
+<!-- 强制规则 -->
+<div class="px-3 py-2 border-b border-border border-t">
+<span class="text-gold font-tech text-[10px] font-bold tracking-wider"><i class="fas fa-gavel mr-1"></i>强制覆盖规则</span>
+</div>
+<div class="p-3 space-y-1.5" id="override-rules"></div>
+</div>
+
+<!-- 右栏：威胁态势 -->
+<aside class="flex-1 bg-bg relative">
+<canvas id="cv"></canvas>
+<div class="absolute bottom-3 left-3 bg-panel/92 border border-border rounded-lg p-2.5 backdrop-blur-sm text-[10px] z-50">
+<div class="text-muted font-tech tracking-wider mb-1.5 text-[9px]">THREAT RADAR SWEEP</div>
+<div class="space-y-1 text-[10px]">
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red"></span>紧急 (0.80-1.00)</div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange"></span>高 (0.60-0.80)</div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-gold"></span>中 (0.40-0.60)</div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-green"></span>低 (0.20-0.40)</div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-muted"></span>微 (0.00-0.20)</div>
+</div>
+</div>
+<div class="absolute top-2 right-2 text-[10px] text-muted font-tech z-50">UAV POS: 120.4°E 24.8°N | ALT 2000m</div>
+</aside>
+</div>
+</div>
+
+<script>
+/* ==================== 威胁因子规则定义 ==================== */
+const FACTOR_RULES = [
+    {id:'F1', name:'雷达类型威胁度', desc:'不同类型雷达对反辐射无人机的威胁程度差异', icon:'fa-satellite-dish',
+     levels:[
+        {label:'火控雷达', val:0.95, note:'直接引导武器，最高威胁'},
+        {label:'三维相控阵', val:0.80, note:'可引导拦截，高威胁'},
+        {label:'预警雷达', val:0.65, note:'远程发现但无直接引导'},
+        {label:'超视距雷达', val:0.50, note:'精度低但覆盖范围大'},
+        {label:'对空监视', val:0.30, note:'仅监视，低直接威胁'},
+        {label:'未知类型', val:0.40, note:'按中等威胁处理'},
+    ]},
+    {id:'F2', name:'雷达状态威胁度', desc:'雷达当前工作状态对威胁评估的影响', icon:'fa-power-off',
+     levels:[
+        {label:'全功率开机', val:1.00, note:'完全暴露，导引头可截获'},
+        {label:'正常开机', val:0.85, note:'稳定辐射，易截获'},
+        {label:'LPI低截获', val:0.45, note:'低功率+捷变，截获困难'},
+        {label:'闪避照射', val:0.35, note:'间歇开机，窗口极短'},
+        {label:'干扰模式', val:0.25, note:'发射干扰信号，非真雷达'},
+        {label:'关机', val:0.00, note:'无辐射，导引头无法截获'},
+    ]},
+    {id:'F3', name:'辐射功率等级', desc:'雷达发射功率越大，被截获距离越远', icon:'fa-bolt',
+     levels:[
+        {label:'满功率 (>200kW)', val:1.00, note:'截获距离>55km'},
+        {label:'高功率 (100-200kW)', val:0.80, note:'截获距离35-55km'},
+        {label:'中功率 (30-100kW)', val:0.55, note:'截获距离20-35km'},
+        {label:'低功率 (<30kW)', val:0.30, note:'截获距离<20km'},
+        {label:'微功率 (<5kW)', val:0.10, note:'截获距离<8km'},
+    ]},
+    {id:'F4', name:'距离紧迫度', desc:'目标距离越近，反应时间越短，威胁越紧迫', icon:'fa-arrows-alt-h',
+     calc:'f(d) = 1 - d/d_max, d_max=80km', dynamic:true},
+    {id:'F5', name:'锁定状态', desc:'目标雷达是否已锁定本机', icon:'fa-crosshairs',
+     levels:[
+        {label:'锁定本机', val:1.00, note:'最高危急，可能被武器跟踪'},
+        {label:'搜索跟踪中', val:0.55, note:'正在扫描，可能发现'},
+        {label:'未探测到', val:0.00, note:'安全'},
+    ]},
+    {id:'F6', name:'武器协同度', desc:'目标雷达是否与防空武器系统协同', icon:'fa-missile',
+     levels:[
+        {label:'武器就绪+已锁定', val:0.95, note:'火力通道已建立'},
+        {label:'武器就绪+搜索中', val:0.70, note:'武器可用但未锁定'},
+        {label:'武器未就绪', val:0.40, note:'有武器但不可发射'},
+        {label:'无武器协同', val:0.00, note:'纯雷达站'},
+    ]},
+    {id:'F7', name:'频段匹配度', desc:'目标频段是否在JWS01导引头覆盖范围内', icon:'fa-wave-square',
+     levels:[
+        {label:'完全匹配', val:1.00, note:'导引头灵敏度最优'},
+        {label:'部分匹配', val:0.55, note:'导引头灵敏度下降3-6dB'},
+        {label:'边缘匹配', val:0.30, note:'导引头灵敏度下降>6dB'},
+        {label:'不匹配', val:0.05, note:'超出导引头频段，几乎无法截获'},
+    ]},
+    {id:'F8', name:'打击窗口评估', desc:'对目标可实施有效攻击的时间窗口', icon:'fa-clock',
+     levels:[
+        {label:'窗口充裕 (>60s)', val:1.00, note:'多次修正机会'},
+        {label:'窗口中等 (20-60s)', val:0.65, note:'一次修正机会'},
+        {label:'窗口狭窄 (5-20s)', val:0.35, note:'几乎无修正机会'},
+        {label:'窗口极短 (<5s)', val:0.10, note:'必须首次命中'},
+        {label:'无窗口', val:0.00, note:'无法实施攻击'},
+    ]},
+    {id:'F9', name:'战略价值', desc:'目标在敌防空体系中的节点重要性', icon:'fa-star',
+     levels:[
+        {label:'核心节点', val:0.95, note:'毁伤后体系断裂'},
+        {label:'重要节点', val:0.70, note:'毁伤后局部失效'},
+        {label:'一般节点', val:0.40, note:'有替代手段'},
+        {label:'次要目标', val:0.15, note:'战术价值有限'},
+    ]},
+];
+
+/* ==================== 默认权重 ==================== */
+let WEIGHTS = {
+    F1:0.12, F2:0.22, F3:0.08, F4:0.15, F5:0.20, F6:0.10, F7:0.05, F8:0.05, F9:0.03
+};
+
+/* ==================== 等级映射 ==================== */
+const LEVEL_MAP = [
+    {min:0.80, max:1.00, level:5, name:'紧急', color:'#ff4757', badge:'badge-l5', action:'立即攻击'},
+    {min:0.60, max:0.80, level:4, name:'高',   color:'#ff8c42', badge:'badge-l4', action:'优先攻击'},
+    {min:0.40, max:0.60, level:3, name:'中',   color:'#ffd700', badge:'badge-l3', action:'计划攻击'},
+    {min:0.20, max:0.40, level:2, name:'低',   color:'#00e68a', badge:'badge-l2', action:'监视记录'},
+    {min:0.00, max:0.20, level:1, name:'微',   color:'#506580', badge:'badge-l1', action:'暂不处理'},
+];
+
+/* ==================== 强制覆盖规则 ==================== */
+const OVERRIDES = [
+    {cond:'F5=锁定本机 且 F6≥武器就绪', action:'强制LEVEL_5', reason:'本机已被火力通道锁定'},
+    {cond:'F1=火控雷达 且 F4<10km', action:'强制LEVEL_5', reason:'火控雷达极近距离，可能已发射'},
+    {cond:'F2=关机 且 持续>30min', action:'Score×0.5', reason:'长期关机降低优先级'},
+    {cond:'F7=不匹配 且 F2≤LPI', action:'Score×0.3', reason:'导引头无法截获的低功率目标'},
+];
+
+/* ==================== 模拟目标数据 ==================== */
+const TARGET_TYPES = [
+    {type:'AN/MPQ-65', typeClass:'火控雷达', freq:'C波段', maxPow:200, weapon:true, strategic:'核心节点'},
+    {type:'AN/MPQ-53', typeClass:'火控雷达', freq:'C波段', maxPow:150, weapon:true, strategic:'重要节点'},
+    {type:'HR-2000S',  typeClass:'三维相控阵', freq:'S波段', maxPow:120, weapon:false, strategic:'重要节点'},
+    {type:'AN/FPS-117',typeClass:'预警雷达', freq:'L波段', maxPow:180, weapon:false, strategic:'核心节点'},
+    {type:'AN/TPS-75', typeClass:'对空监视', freq:'C波段', maxPow:60,  weapon:false, strategic:'一般节点'},
+    {type:'JYL-1',     typeClass:'超视距雷达', freq:'HF', maxPow:300, weapon:false, strategic:'重要节点'},
+    {type:'CS/MPN-45', typeClass:'三维相控阵', freq:'C/D波段', maxPow:80, weapon:true, strategic:'一般节点'},
+    {type:'AN/SPS-48E',typeClass:'三维相控阵', freq:'C/D波段', maxPow:100, weapon:true, strategic:'重要节点'},
+    {type:'未知雷达',   typeClass:'未知类型', freq:'X波段', maxPow:40,  weapon:false, strategic:'次要目标'},
+];
+
+const STATES = ['全功率开机','正常开机','LPI低截获','闪避照射','干扰模式','关机'];
+const LOCK_STATES = ['未探测到','搜索跟踪中','锁定本机'];
+const WEAPON_STATES = ['无武器协同','武器未就绪','武器就绪+搜索中','武器就绪+已锁定'];
+
+// 生成12个模拟目标
+let targets = [];
+function generateTargets(){
+    targets = [
+        {id:'T01',type:TARGET_TYPES[3],name:'FPS-117 大汉山',lng:121.52,lat:24.88,dist:38,state:'全功率开机',lock:'搜索跟踪中',weapon:'武器就绪+搜索中',band:'完全匹配',window:'窗口充裕 (>60s)',offTime:0},
+        {id:'T02',type:TARGET_TYPES[0],name:'MPQ-65 清水',lng:120.52,lat:24.28,dist:12,state:'全功率开机',lock:'锁定本机',weapon:'武器就绪+已锁定',band:'完全匹配',window:'窗口狭窄 (5-20s)',offTime:0},
+        {id:'T03',type:TARGET_TYPES[2],name:'HR-2000S 清泉岗',lng:120.62,lat:24.26,dist:28,state:'LPI低截获',lock:'未探测到',weapon:'无武器协同',band:'完全匹配',window:'窗口中等 (20-60s)',offTime:0},
+        {id:'T04',type:TARGET_TYPES[3],name:'FPS-117 乐山',lng:120.95,lat:23.86,dist:52,state:'关机',lock:'未探测到',weapon:'无武器协同',band:'完全匹配',window:'无窗口',offTime:25},
+        {id:'T05',type:TARGET_TYPES[4],name:'TPS-75 基隆',lng:121.74,lat:25.13,dist:8,state:'正常开机',lock:'搜索跟踪中',weapon:'武器未就绪',band:'完全匹配',window:'窗口充裕 (>60s)',offTime:0},
+        {id:'T06',type:TARGET_TYPES[5],name:'JYL-1 超视距',lng:112.80,lat:24.50,dist:350,state:'全功率开机',lock:'未探测到',weapon:'无武器协同',band:'不匹配',window:'窗口充裕 (>60s)',offTime:0},
+        {id:'T07',type:TARGET_TYPES[1],name:'MPQ-53 万里',lng:121.69,lat:25.18,dist:6,state:'全功率开机',lock:'锁定本机',weapon:'武器就绪+已锁定',band:'完全匹配',window:'窗口极短 (<5s)',offTime:0},
+        {id:'T08',type:TARGET_TYPES[6],name:'MPN-45 三芝',lng:121.53,lat:25.26,dist:22,state:'闪避照射',lock:'未探测到',weapon:'武器就绪+搜索中',band:'部分匹配',window:'窗口狭窄 (5-20s)',offTime:0},
+        {id:'T09',type:TARGET_TYPES[3],name:'FPS-117 大岗山',lng:120.33,lat:22.78,dist:75,state:'LPI低截获',lock:'未探测到',weapon:'无武器协同',band:'完全匹配',window:'窗口中等 (20-60s)',offTime:0},
+        {id:'T10',type:TARGET_TYPES[7],name:'SPS-48E 基德舰',lng:121.40,lat:25.10,dist:18,state:'正常开机',lock:'搜索跟踪中',weapon:'武器就绪+搜索中',band:'部分匹配',window:'窗口中等 (20-60s)',offTime:0},
+        {id:'T11',type:TARGET_TYPES[8],name:'未知雷达 X-01',lng:120.80,lat:24.60,dist:45,state:'干扰模式',lock:'未探测到',weapon:'无武器协同',band:'边缘匹配',window:'窗口充裕 (>60s)',offTime:0},
+        {id:'T12',type:TARGET_TYPES[3],name:'FPS-117 机动站',lng:120.90,lat:23.90,dist:58,state:'关机',lock:'未探测到',weapon:'无武器协同',band:'完全匹配',window:'无窗口',offTime:40},
+    ];
+}
+
+/* ==================== 威胁计算引擎 ==================== */
+function lookupFactor(factorId, value){
+    const rule = FACTOR_RULES.find(r=>r.id===factorId);
+    if(!rule) return 0;
+    // F4 距离紧迫度特殊计算
+    if(factorId==='F4'){
+        const dMax = 80;
+        return Math.max(0, Math.min(1, 1 - value/dMax));
+    }
+    const lvl = rule.levels.find(l=>l.label===value);
+    return lvl ? lvl.val : 0.4;
+}
+
+function calcThreat(t){
+    // Step 1: 提取9个因子
+    const f1 = lookupFactor('F1', t.type.typeClass);
+    const f2 = lookupFactor('F2', t.state);
+    // F3 功率：根据当前状态调整
+    let f3;
+    if(t.state==='关机') f3=0;
+    else if(t.state==='LPI低截获') f3 = lookupFactor('F3','低功率 (<30kW)');
+    else if(t.state==='闪避照射') f3 = lookupFactor('F3','中功率 (30-100kW)');
+    else f3 = lookupFactor('F3', t.type.maxPow>=200?'满功率 (>200kW)': t.type.maxPow>=100?'高功率 (100-200kW)':'中功率 (30-100kW)');
+    const f4 = lookupFactor('F4', t.dist);
+    const f5 = lookupFactor('F5', t.lock);
+    const f6 = lookupFactor('F6', t.weapon);
+    const f7 = lookupFactor('F7', t.band);
+    const f8 = lookupFactor('F8', t.window);
+    const f9 = lookupFactor('F9', t.type.strategic);
+
+    const factors = {F1:f1,F2:f2,F3:f3,F4:f4,F5:f5,F6:f6,F7:f7,F8:f8,F9:f9};
+
+    // Step 2: 归一化权重
+    const wSum = Object.values(WEIGHTS).reduce((a,b)=>a+b,0);
+    const nw = {};
+    for(let k in WEIGHTS) nw[k] = WEIGHTS[k]/wSum;
+
+    // Step 3: 加权求和
+    let score = 0;
+    const contributions = {};
+    for(let k in factors){
+        contributions[k] = factors[k] * nw[k];
+        score += contributions[k];
+    }
+
+    // Step 4: 强制覆盖规则
+    let overrideReason = null;
+    // 规则1: 锁定+武器就绪
+    if(t.lock==='锁定本机' && (t.weapon==='武器就绪+已锁定'||t.weapon==='武器就绪+搜索中')){
+        score = Math.max(score, 0.88);
+        overrideReason = '强制LEVEL_5: 火力通道锁定';
+    }
+    // 规则2: 火控+极近
+    if(t.type.typeClass==='火控雷达' && t.dist<10){
+        score = Math.max(score, 0.85);
+        overrideReason = '强制LEVEL_5: 火控极近距离';
+    }
+    // 规则3: 关机衰减
+    if(t.state==='关机' && t.offTime>30){
+        score *= 0.5;
+        overrideReason = '衰减×0.5: 长期关机';
+    }
+    // 规则4: 不匹配+LPI
+    if(t.band==='不匹配' && (t.state==='LPI低截获'||t.state==='关机')){
+        score *= 0.3;
+        overrideReason = '衰减×0.3: 不可截获';
+    }
+
+    score = Math.max(0, Math.min(1, score));
+
+    // Step 5: 等级映射
+    let level = LEVEL_MAP[4]; // 默认微
+    for(let lm of LEVEL_MAP){
+        if(score >= lm.min && score < lm.max + 0.001){level = lm; break}
+    }
+
+    return {score, level, factors, contributions, normalizedWeights: nw, overrideReason};
+}
+
+function sortTargets(){
+    targets.forEach(t => { t.threat = calcThreat(t); });
+    targets.sort((a,b) => {
+        if(b.threat.level.level !== a.threat.level.level) return b.threat.level.level - a.threat.level.level;
+        if(Math.abs(b.threat.score - a.threat.score) > 0.001) return b.threat.score - a.threat.score;
+        return a.dist - b.dist; // 同分按距离
+    });
+}
+
+/* ==================== 渲染：规则面板 ==================== */
+function renderRules(){
+    const box = document.getElementById('rules-panel');
+    box.innerHTML = FACTOR_RULES.map(r => `
+        <div class="bg-card rounded-lg p-2.5 border border-border">
+            <div class="flex items-center gap-2 mb-1.5">
+                <i class="fas ${r.icon} text-gold text-[10px] w-4 text-center"></i>
+                <span class="text-fg-b text-[11px] font-medium">${r.id} ${r.name}</span>
+            </div>
+            <p class="text-muted text-[9px] mb-1.5">${r.desc}</p>
+            ${r.dynamic ? `<div class="text-[9px] text-cyan font-tech bg-cyan/5 border border-cyan/20 rounded px-2 py-1">公式: ${r.calc}</div>` :
+            `<div class="space-y-0.5">${r.levels.map(l=>`<div class="flex items-center justify-between text-[9px]">
+                <span class="text-fg">${l.label}</span>
+                <span class="font-tech text-muted">${l.val.toFixed(2)}</span>
+            </div>`).join('')}</div>`}
+        </div>
+    `).join('');
+}
+
+/* ==================== 渲染：权重面板 ==================== */
+function renderWeights(){
+    const box = document.getElementById('weights-panel');
+    const wSum = Object.values(WEIGHTS).reduce((a,b)=>a+b,0);
+    box.innerHTML = Object.entries(WEIGHTS).map(([k,v]) => {
+        const rule = FACTOR_RULES.find(r=>r.id===k);
+        const pct = ((v/wSum)*100).toFixed(1);
+        return `<div>
+            <div class="flex items-center justify-between mb-0.5">
+                <span class="text-[10px] text-fg">${k} ${rule?rule.name.replace('威胁度','').replace('评估',''):''}</span>
+                <span class="font-tech text-[10px] ${parseFloat(pct)>15?'text-gold':'text-muted'}">${pct}%</span>
+            </div>
+            <input type="range" class="weight-slider" min="0" max="100" value="${Math.round(v*100)}" data-factor="${k}"
+                oninput="updateWeight('${k}', this.value)">
+        </div>`;
+    }).join('') + `<div class="mt-2 pt-2 border-t border-border/50 text-[9px] text-muted text-center">
+        权重总和: <span class="font-tech text-fg-b">${wSum.toFixed(3)}</span> (自动归一化)
+    </div>`;
+}
+
+function updateWeight(factor, val){
+    WEIGHTS[factor] = parseInt(val)/100;
+    renderWeights();
+    recalc();
+}
+
+/* ==================== 渲染：等级映射 ==================== */
+function renderLevelMap(){
+    const box = document.getElementById('level-map');
+    box.innerHTML = LEVEL_MAP.map(lm => `
+        <div class="flex items-center gap-2 text-[10px]">
+            <span class="threat-badge ${lm.badge}" style="min-width:28px;text-align:center">L${lm.level}</span>
+            <span class="text-fg-b w-8">${lm.name}</span>
+            <span class="font-tech text-muted">${lm.min.toFixed(2)}-${lm.max.toFixed(2)}</span>
+            <span class="text-muted ml-auto">${lm.action}</span>
+        </div>
+    `).join('');
+}
+
+/* ==================== 渲染：强制规则 ==================== */
+function renderOverrides(){
+    const box = document.getElementById('override-rules');
+    box.innerHTML = OVERRIDES.map(o => `
+        <div class="text-[10px]">
+            <div class="flex items-start gap-2">
+                <i class="fas fa-exclamation-triangle text-gold text-[9px] mt-0.5 flex-shrink-0"></i>
+                <div>
+                    <span class="text-fg">IF <span class="text-cyan font-tech">${o.cond}</span></span>
+                    <span class="text-muted"> → </span>
+                    <span class="text-gold font-tech font-bold">${o.action}</span>
+                    <div class="text-muted mt-0.5">${o.reason}</div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+/* ==================== 渲染：目标列表 ==================== */
+function renderTargetList(){
+    const box = document.getElementById('target-list');
+    document.getElementById('tgt-count').textContent = targets.length + ' 个目标';
+    // 统计
+    const counts = {5:0,4:0,3:0,2:0,1:0};
+    targets.forEach(t => counts[t.threat.level.level]++);
+    document.getElementById('c-l5').textContent = counts[5];
+    document.getElementById('c-l4').textContent = counts[4];
+    document.getElementById('c-l3').textContent = counts[3];
+    document.getElementById('c-l2').textContent = counts[2];
+    document.getElementById('c-l1').textContent = counts[1];
+
+    box.innerHTML = targets.map((t,i) => {
+        const th = t.threat;
+        const rankColors = {5:'bg-red text-white',4:'bg-orange text-bg',3:'bg-gold text-bg',2:'bg-green text-bg',1:'bg-muted text-bg'};
+        const isTop3 = i < 3;
+        return `<div class="grid grid-cols-[28px_1fr_52px_50px_46px] gap-1 items-center px-3 py-2 border-b border-border/30 cursor-pointer hover:bg-white/[.03] transition-colors ${isTop3?'bg-white/[.02]':''} ${selId===t.id?'bg-gold/5 border-l-2 border-l-gold':''}"
+            onclick="selectTarget('${t.id}')">
+            <div class="rank-num ${rankColors[th.level.level]} ${isTop3?'ring-1 ring-offset-1 ring-offset-bg '+th.level.color:''}">${i+1}</div>
+            <div class="min-w-0">
+                <div class="text-fg-b text-[11px] font-medium truncate">${t.name}</div>
+                <div class="text-muted text-[9px] truncate">${t.type.typeClass} · ${t.type.freq}</div>
+            </div>
+            <div class="font-tech text-[11px] ${t.dist<15?'text-red':t.dist<40?'text-orange':t.dist<70?'text-fg':'text-muted'}">${t.dist}km</div>
+            <div><span class="threat-badge ${t.state==='关机'?'badge-l1':t.state==='LPI低截获'?'badge-l3':t.state==='闪避照射'?'badge-l3':'badge-l4'}">${t.state.length>4?t.state.substring(0,4):t.state}</span></div>
+            <div class="font-tech text-[12px] font-bold" style="color:${th.level.color}">${th.score.toFixed(3)}</div>
+        </div>`;
+    }).join('');
+}
+
+/* ==================== 渲染：计算详情 ==================== */
+let selId = null;
+function selectTarget(id){
+    selId = selId===id ? null : id;
+    renderTargetList();
+    renderCalcDetail();
+}
+function closeDetail(){selId=null;renderTargetList();document.getElementById('detail-panel').style.display='none'}
+function renderCalcDetail(){
+    const panel = document.getElementById('detail-panel');
+    const box = document.getElementById('calc-detail');
+    if(!selId){panel.style.display='none';return}
+    panel.style.display='block';
+    const t = targets.find(x=>x.id===selId);
+    if(!t){panel.style.display='none';return}
+    const th = t.threat;
+
+    let html = `
+        <div class="flex items-center gap-2 mb-2">
+            <span class="threat-badge ${th.level.badge}" style="font-size:11px;padding:2px 10px">LEVEL_${th.level.level} ${th.level.name}</span>
+            <span class="text-fg-b text-xs font-bold">${t.name}</span>
+            <span class="font-tech text-sm font-bold ml-auto" style="color:${th.level.color}">${th.score.toFixed(4)}</span>
+        </div>
+        ${th.overrideReason ? `<div class="mb-2 px-2 py-1 bg-gold/5 border border-gold/20 rounded text-[9px] text-gold"><i class="fas fa-exclamation-triangle mr-1"></i>${th.overrideReason}</div>` : ''}
+        <div class="text-muted text-[9px] font-tech mb-2 tracking-wider">CALCULATION STEPS</div>
+        <div class="space-y-2">
+    `;
+
+    // 逐因子展示
+    const factorNames = {F1:'类型',F2:'状态',F3:'功率',F4:'距离',F5:'锁定',F6:'武器',F7:'频段',F8:'窗口',F9:'价值'};
+    Object.entries(th.factors).forEach(([k,v]) => {
+        const nw = th.normalizedWeights[k];
+        const contrib = th.contributions[k];
+        const pct = (v*100).toFixed(0);
+        const barColor = v>0.7?'#ff4757':v>0.4?'#ffd700':v>0.2?'#00e68a':'#506580';
+        html += `<div class="calc-step active">
+            <div class="detail-row">
+                <span class="text-muted font-tech">${k}</span>
+                <span class="text-fg">${factorNames[k]}</span>
+                <span class="font-tech text-right" style="color:${barColor}">${v.toFixed(2)}</span>
+                <span class="font-tech text-right text-muted">×${nw.toFixed(3)}</span>
+            </div>
+            <div class="detail-row">
+                <span></span>
+                <div class="h-1.5 bg-border rounded-full overflow-hidden"><div class="factor-bar" style="width:${pct}%;background:${barColor}"></div></div>
+                <span class="font-tech text-right text-fg-b">${contrib.toFixed(4)}</span>
+                <span class="font-tech text-right text-muted">${(nw*100).toFixed(1)}%</span>
+            </div>
+        </div>`;
+    });
+
+    // 求和结果
+    html += `
+        <div class="mt-3 pt-2 border-t border-border/50">
+            <div class="detail-row">
+                <span class="text-gold font-tech font-bold">SUM</span>
+                <span class="text-fg-b font-tech font-bold">加权求和</span>
+                <span></span>
+                <span class="font-tech text-right font-bold" style="color:${th.level.color}">${th.score.toFixed(4)}</span>
+            </div>
+            <div class="detail-row mt-1">
+                <span class="text-gold font-tech font-bold">MAP</span>
+                <span class="text-fg-b font-tech font-bold">等级映射</span>
+                <span></span>
+                <span class="threat-badge ${th.level.badge}" style="font-size:10px">L${th.level.level}</span>
+            </div>
+        </div>
+    `;
+
+    box.innerHTML = html;
+}
+
+/* ==================== 态势Canvas ==================== */
+let cvInfo = null, animT = 0;
+function initCv(){
+    const cv = document.getElementById('cv');
+    const r = cv.parentElement.getBoundingClientRect();
+    const d = window.devicePixelRatio || 1;
+    cv.width = r.width*d; cv.height = r.height*d;
+    cv.style.width = r.width+'px'; cv.style.height = r.height+'px';
+    const c = cv.getContext('2d'); c.scale(d,d);
+    return {cv,c,w:r.width,h:r.height};
+}
+
+function drawSweep(c,x,y,radius,startAngle,color){
+    const endAngle = startAngle + 0.6;
+    c.beginPath(); c.moveTo(x,y);
+    c.arc(x,y,Math.max(1,radius),startAngle,endAngle);
+    c.closePath();
+    const grad = c.createRadialGradient(x,y,0,x,y,Math.max(1,radius));
+    grad.addColorStop(0, color.replace(')',',0.25)').replace('rgb','rgba'));
+    grad.addColorStop(1, color.replace(')',',0)').replace('rgb','rgba'));
+    c.fillStyle = grad; c.fill();
+}
+
+function drawRadar(c){
+    c.clearRect(0,0,c.canvas.width/canvas.getContext('2d').getTransform().a,c.canvas.height/c.canvas.getContext('2d').getTransform().a);
+    const w=cvInfo.w, h=cvInfo.h;
+    // 背景
+    c.fillStyle='#080c16'; c.fillRect(0,0,w,h);
+    const cx=w*0.38, cy=h*0.5;
+    // 同心距离圈
+    [40,80,120,160].forEach((r,i)=>{
+        c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2);
+        c.strokeStyle='rgba(28,46,74,.3)'; c.lineWidth=.5; c.stroke();
+        c.fillStyle='rgba(80,101,128,.2)'; c.font='8px Rajdhani'; c.textAlign='left';
+        c.fillText((r===40?20:r===80?40:r===120?60:80)+'km', cx+r+3, cy-2);
+    });
+    // 十字线
+    c.strokeStyle='rgba(28,46,74,.25)'; c.lineWidth=.5;
+    c.beginPath(); c.moveTo(cx-170,cy); c.lineTo(cx+170,cy); c.stroke();
+    c.beginPath(); c.moveTo(cx,cy-170); c.lineTo(cx,cy+170); c.stroke();
+    // 方位标注
+    c.fillStyle='rgba(80,101,128,.35)'; c.font='9px Rajdhani'; c.textAlign='center';
+    ['N','NE','E','SE','S','SW','W','NW'].forEach((d,i)=>{
+        const a = -Math.PI/2 + i*Math.PI/4;
+        c.fillText(d, cx+Math.cos(a)*172, cy+Math.sin(a)*172+3);
+    });
+    // 扫描线
+    const sweepAngle = (animT*0.015)%(Math.PI*2);
+    drawRweep(c,cx,cy,160,sweepAngle,'rgba(255,215,0,0.3)');
+    // 目标点
+    targets.forEach((t,i)=>{
+        const ang = -Math.PI/2 + 0.3; // 简化：所有目标在偏北方向
+        const angOff = (i - targets.length/2) * 0.08;
+        const a = ang + angOff;
+        const dist = Math.min(160, t.dist * 2); // 缩放到显示范围
+        const tx = cx + Math.cos(a)*dist;
+        const ty = cy + Math.sin(a)*dist;
+        const th = t.threat;
+        const {r:cr,g:cg,b:cb} = h2c(th.level.color);
+        // 光晕
+        if(th.level.level>=4){
+            const pulseR = 6 + Math.sin(animT*0.08+i)*3;
+            c.beginPath(); c.arc(tx,ty,pulseR,0,Math.PI*2);
+            c.fillStyle=`rgba(${cr},${cg},${cb},${0.15+Math.sin(animT*0.08+i)*0.1})`;
+            c.fill();
+        }
+        // 点
+        c.beginPath(); c.arc(tx,ty,4,0,Math.PI*2);
+        c.fillStyle=th.level.color; c.fill();
+        c.strokeStyle=`rgba(${cr},${cg},${cb},0.5)`; c.lineWidth=1; c.stroke();
+        // 编号
+        c.font='bold 8px Rajdhani'; c.textAlign='center'; c.fillStyle=th.level.color;
+        c.fillText(t.id, tx, ty-8);
+    });
+    // 本机
+    c.beginPath(); c.arc(cx,cy,5,0,Math.PI*2);
+    c.fillStyle='#00e68a'; c.fill();
+    c.strokeStyle='rgba(0,230,138,.5)'; c.lineWidth=1.5; c.stroke();
+    c.font='bold 9px Rajdhani'; c.textAlign='center'; c.fillStyle='#00e68a';
+    c.fillText('UAV',cx,cy+14);
+
+    // 右侧威胁排序条形图
+    const barX = w*0.72, barW = w*0.25, barTop = 30;
+    c.fillStyle='rgba(28,46,74,.15)'; c.font='bold 10px Rajdhani'; c.textAlign='left';
+    c.fillText('THREAT RANKING', barX, barTop-5);
+    const sortedTargets = [...targets].sort((a,b)=>b.threat.score-a.threat.score);
+    sortedTargets.forEach((t,i)=>{
+        const by = barTop + i*22;
+        const bw = (barW-50) * t.threat.score;
+        const {r:cr,g:cg,b:cb} = h2c(t.threat.level.color);
+        // 背景
+        c.fillStyle='rgba(28,46,74,.1)'; c.fillRect(barX,by,barW-50,16);
+        // 分数条
+        c.fillStyle=`rgba(${cr},${cg},${cb},0.5)`;
+        c.beginPath(); c.roundRect(barX,by,Math.max(1,bw),16,2); c.fill();
+        // 标签
+        c.font='8px Rajdhani'; c.textAlign='right'; c.fillStyle='#506580';
+        c.fillText(t.id,barX-4,by+12);
+        c.textAlign='left'; c.fillStyle=t.threat.level.color;
+        c.fillText(t.threat.score.toFixed(2), barX+Math.max(1,bw)+4, by+12);
+        // 名称
+        c.font='8px Noto Sans SC'; c.fillStyle='#c0cfe0';
+        c.fillText(t.name.split(' ').pop(), barX+4, by+12);
+    });
+}
+
+function drawRweep(c,x,y,r,startAngle,color){
+    const end = startAngle + 0.5;
+    c.beginPath(); c.moveTo(x,y); c.arc(x,y,Math.max(1,r),startAngle,end); c.closePath();
+    const g = c.createConicGradient(startAngle,x,y);
+    g.addColorStop(0,color); g.addColorStop(0.08,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    c.fillStyle=g; c.fill();
+}
+
+function h2c(h){return{r:parseInt(h.slice(1,3),16),g:parseInt(h.slice(3,5),16),b:parseInt(h.slice(5,7),16)}}
+
+/* ==================== 仿真推演 ==================== */
+function simulate(){
+    // 随机变化部分目标参数
+    targets.forEach(t => {
+        // 距离变化（模拟飞行接近）
+        if(t.state!=='关机'){
+            t.dist = Math.max(3, t.dist + (Math.random()-0.55)*4);
+            t.dist = Math.round(t.dist*10)/10;
+        }
+        // 状态可能变化
+        if(Math.random()<0.2){
+            const possibleStates = ['全功率开机','正常开机','LPI低截获','闪避照射','关机'];
+            t.state = possibleStates[Math.floor(Math.random()*possibleStates.length)];
+            if(t.state==='关机') t.offTime = 0;
+        }
+        // 锁定状态变化
+        if(Math.random()<0.15){
+            t.lock = LOCK_STATES[Math.floor(Math.random()*LOCK_STATES.length)];
+        }
+        // 关机计时
+        if(t.state==='关机') t.offTime += 2;
+        else t.offTime = 0;
+        // 窗口评估联动
+        if(t.state==='关机') t.window = '无窗口';
+        else if(t.state==='闪避照射') t.window = Math.random()>0.5?'窗口狭窄 (5-20s)':'窗口极短 (<5s)';
+        else if(t.state==='LPI低截获') t.window = Math.random()>0.5?'窗口中等 (20-60s)':'窗口狭窄 (5-20s)';
+        else t.window = Math.random()>0.3?'窗口充裕 (>60s)':'窗口中等 (20-60s)';
+    });
+    recalc();
+}
+
+function recalc(){
+    sortTargets();
+    renderTargetList();
+    if(selId) renderCalcDetail();
+}
+
+/* ==================== 时钟 ==================== */
+function updClk(){document.getElementById('clock').textContent=new Date().toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})}
+
+/* ==================== 动画 ==================== */
+function animate(){animT++;if(cvInfo)drawRadar(cvInfo.c);requestAnimationFrame(animate)}
+
+/* ==================== roundRect polyfill ==================== */
+if(!CanvasRenderingContext2D.prototype.roundRect){CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){if(typeof r==='number')r=[r,r,r,r];this.moveTo(x+r[0],y);this.lineTo(x+w-r[1],y);this.quadraticCurveTo(x+w,y,x+w,y+r[1]);this.lineTo(x+w,y+h-r[2]);this.quadraticCurveTo(x+w,y+h,x+w-r[2],y+h);this.lineTo(x+r[3],y+h);this.quadraticCurveTo(x,y+h,x,y+h-r[3]);this.lineTo(x,y+r[0]);this.quadraticCurveTo(x,y,x+r[0],y);this.closePath();return this}}
+
+/* ==================== 初始化 ==================== */
+document.addEventListener('DOMContentLoaded',()=>{
+    generateTargets();
+    sortTargets();
+    renderRules();
+    renderWeights();
+    renderLevelMap();
+    renderOverrides();
+    renderTargetList();
+    cvInfo = initCv();
+    updClk(); setInterval(updClk,1000);
+    setInterval(simulate, 2000); // 每2秒自动仿真
+    animate();
+    window.addEventListener('resize',()=>{cvInfo=initCv()});
+});
+</script>
+</body>
+</html>

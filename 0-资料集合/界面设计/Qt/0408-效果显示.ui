@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>EffectDisplayWidget</class>
+ <widget class="QWidget" name="EffectDisplayWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>效果显示</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <!-- 标题栏 -->
+   <item>
+    <widget class="QLabel" name="labelTitle">
+     <property name="text">
+      <string>作战效果显示</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+       <weight>75</weight>
+      </font>
+     </property>
+    </widget>
+   </item>
+   <!-- 工具栏 -->
+   <item>
+    <widget class="QToolBar" name="toolBar">
+     <property name="iconSize">
+      <size>
+       <width>16</width>
+       <height>16</height>
+      </size>
+     </property>
+     <addaction name="actionRefresh"/>
+     <addaction name="actionSettings"/>
+     <addaction name="separator"/>
+     <addaction name="actionEnableAll"/>
+     <addaction name="actionDisableAll"/>
+    </widget>
+   </item>
+   <!-- 效果控制分组 -->
+   <item>
+    <widget class="QGroupBox" name="groupBoxTrajectory">
+     <property name="title">
+      <string>轨迹显示</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelTrajEnable">
+        <property name="text">
+         <string>启用轨迹：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="checkTrajectory">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelTrajColor">
+        <property name="text">
+         <string>颜色：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="btnTrajColor">
+        <property name="text">
+         <string>选择颜色</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelTrajOpacity">
+        <property name="text">
+         <string>透明度：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSlider" name="sliderTrajOpacity">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>80</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBoxBeam">
+     <property name="title">
+      <string>波束显示</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_2">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelBeamEnable">
+        <property name="text">
+         <string>启用波束：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="checkBeam">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelBeamColor">
+        <property name="text">
+         <string>颜色：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="btnBeamColor">
+        <property name="text">
+         <string>选择颜色</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelBeamOpacity">
+        <property name="text">
+         <string>透明度：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSlider" name="sliderBeamOpacity">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>50</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBoxDamage">
+     <property name="title">
+      <string>毁伤效果</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_3">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelDamageEnable">
+        <property name="text">
+         <string>启用毁伤：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="checkDamage">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelDamageIntensity">
+        <property name="text">
+         <string>效果强度：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSlider" name="sliderDamageIntensity">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>80</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBoxRange">
+     <property name="title">
+      <string>威力范围</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_4">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelRangeEnable">
+        <property name="text">
+         <string>启用范围：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="checkRange">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelRangeOpacity">
+        <property name="text">
+         <string>透明度：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSlider" name="sliderRangeOpacity">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>30</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- 效果状态列表 -->
+   <item>
+    <widget class="QGroupBox" name="groupBoxList">
+     <property name="title">
+      <string>当前效果列表</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QTableWidget" name="tableEffects">
+        <property name="columnCount">
+         <number>3</number>
+        </property>
+        <attribute name="horizontalHeaderStretchLastSection">
+         <bool>true</bool>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>实体</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>效果类型</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>状态</string>
+         </property>
+        </column>
+        <row>
+         <property name="text">
+          <string>UAV-001</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>RAD-01</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>SAM-01</string>
+         </property>
+        </row>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QPushButton" name="btnClearAll">
+          <property name="text">
+           <string>清空所有效果</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+  <!-- 动作定义 -->
+  <action name="actionRefresh">
+   <property name="text">
+    <string>刷新</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>设置</string>
+   </property>
+  </action>
+  <action name="actionEnableAll">
+   <property name="text">
+    <string>全部启用</string>
+   </property>
+  </action>
+  <action name="actionDisableAll">
+   <property name="text">
+    <string>全部禁用</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

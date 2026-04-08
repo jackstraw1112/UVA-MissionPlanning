@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反辐射无人机 · 协同任务管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background-color: #0a0f1e;
+            color: #e0e4f0;
+            padding: 24px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 1400px;
+            max-width: 100%;
+            background-color: #151e2d;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            padding: 24px;
+            border: 1px solid #2a3548;
+        }
+
+        /* 头部 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            border-bottom: 1px solid #2a3a50;
+            padding-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #aaccff, #7aa5d9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header h1 i {
+            margin-right: 12px;
+            font-style: normal;
+            color: #5f8ec9;
+        }
+
+        .status-badge {
+            background-color: #1e3144;
+            border-radius: 40px;
+            padding: 8px 18px;
+            font-size: 14px;
+            color: #b8d1ff;
+            border: 1px solid #3f556b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge .dot {
+            width: 10px;
+            height: 10px;
+            background-color: #2ecc71;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #2ecc71;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background-color: #263445;
+            border: 1px solid #3f556d;
+            color: #e0e8ff;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: default;  /* 静态演示，非交互 */
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn i { font-style: normal; font-weight: 600; margin-right: 4px; }
+
+        .btn-primary {
+            background-color: #1e4f8a;
+            border-color: #4280c0;
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: #8a5f1e;
+            border-color: #c09f42;
+        }
+
+        .btn-danger {
+            background-color: #8a2e2e;
+            border-color: #c05555;
+        }
+
+        .btn:hover {
+            filter: brightness(1.2);
+        }
+
+        /* 任务列表区域 */
+        .section-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: #b0c8f0;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title span {
+            background-color: #2f4057;
+            border-radius: 20px;
+            padding: 2px 12px;
+            font-size: 14px;
+            margin-left: 12px;
+            color: #ccdfff;
+        }
+
+        .table-wrapper {
+            background-color: #101a26;
+            border-radius: 20px;
+            border: 1px solid #2f405a;
+            overflow-x: auto;
+            margin-bottom: 28px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px 16px;
+            background-color: #1b2537;
+            color: #9bb5e0;
+            font-weight: 500;
+            font-size: 14px;
+            border-bottom: 1px solid #31445e;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #1f2b3b;
+            color: #ced9f0;
+            font-size: 14px;
+        }
+
+        tr:hover td {
+            background-color: #1e2b3c;
+        }
+
+        .task-type {
+            background-color: #1d3557;
+            padding: 5px 12px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            color: #b3d0ff;
+            border: 1px solid #3d6192;
+        }
+
+        .task-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active { background-color: #2ecc71; box-shadow: 0 0 8px #2ecc71; }
+        .status-pending { background-color: #f39c12; }
+        .status-completed { background-color: #95a5a6; }
+        .status-aborted { background-color: #e74c3c; }
+
+        .badge {
+            background-color: #2a3f58;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .action-icons {
+            display: flex;
+            gap: 12px;
+            color: #7f9fd5;
+        }
+        .action-icons span {
+            cursor: default;
+            font-size: 18px;
+        }
+
+        /* 编辑面板 */
+        .edit-panel {
+            background-color: #101a26;
+            border-radius: 24px;
+            border: 1px solid #2f405a;
+            padding: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px 20px;
+            margin-top: 20px;
+        }
+
+        .form-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-item label {
+            font-size: 13px;
+            color: #8fa5cf;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .form-item input, .form-item select, .form-item textarea {
+            background-color: #1b2638;
+            border: 1px solid #314a66;
+            border-radius: 16px;
+            padding: 12px 16px;
+            color: #eef3ff;
+            font-size: 15px;
+            outline: none;
+            transition: 0.15s;
+        }
+
+        .form-item input:focus, .form-item select:focus, .form-item textarea:focus {
+            border-color: #5f8ec9;
+            box-shadow: 0 0 0 2px rgba(95, 142, 201, 0.3);
+        }
+
+        .form-item textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        .double-width {
+            grid-column: span 2;
+        }
+
+        .quad-width {
+            grid-column: span 4;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .hr-light {
+            border: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #2f4466, transparent);
+            margin: 20px 0;
+        }
+
+        .footer-note {
+            font-size: 12px;
+            color: #5b739b;
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        /* 无人机分配简表 */
+        .uav-tag {
+            background-color: #142433;
+            border-radius: 30px;
+            padding: 4px 10px;
+            border: 1px solid #2e4b70;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-right: 6px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 头部 -->
+    <div class="header">
+        <h1>
+            <i>🛩️</i> 反辐射无人机 · 协同任务管理
+        </h1>
+        <div class="status-badge">
+            <span class="dot"></span>
+            仿真系统 · 已连接
+        </div>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="btn btn-primary"><i>➕</i> 新建任务</button>
+        <button class="btn"><i>📂</i> 打开</button>
+        <button class="btn"><i>💾</i> 保存</button>
+        <button class="btn btn-danger"><i>🗑️</i> 删除</button>
+        <button class="btn"><i>🔄</i> 导入</button>
+        <button class="btn"><i>📤</i> 导出</button>
+        <div style="flex:1"></div>
+        <button class="btn btn-warning"><i>⚙️</i> 协同配置</button>
+    </div>
+
+    <!-- 任务列表标题 + 计数 -->
+    <div class="section-title">
+        📋 当前任务列表 <span>6 个任务</span>
+    </div>
+
+    <!-- 任务表格 -->
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:30px"><input type="checkbox" style="accent-color:#5f8ec9;"></th>
+                    <th>任务编号</th>
+                    <th>任务名称</th>
+                    <th>任务类型</th>
+                    <th>任务目标</th>
+                    <th>开始时间</th>
+                    <th>结束时间</th>
+                    <th>状态</th>
+                    <th>分配无人机</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 示例任务 1 -->
+                <tr>
+                    <td><input type="checkbox" style="accent-color:#5f8ec9;"></td>
+                    <td><span style="font-family: monospace;">SEAD-101</span></td>
+                    <td>北走廊压制</td>
+                    <td><span class="task-type">SEAD-巡弋打击</span></td>
+                    <td>S-300雷达 (坐标32T 0456789)</td>
+                    <td>2025-04-10 08:30</td>
+                    <td>2025-04-10 12:30</td>
+                    <td><span class="task-status status-active"></span>执行中</td>
+                    <td>
+                        <span class="uav-tag">🛩️ JWS-01 x3</span>
+                        <span class="uav-tag">🛩️ Harop x1</span>
+                    </td>
+                    <td><div class="action-icons"><span>✏️</span><span>📋</span><span>⏹️</span></div></td>
+                </tr>
+                <!-- 任务 2 -->
+                <tr>
+                    <td><input type="checkbox" style="accent-color:#5f8ec9;"></td>
+                    <td>SEAD-107</td>
+                    <td>东区机动猎杀</td>
+                    <td><span class="task-type">SEAD-巡弋打击</span></td>
+                    <td>未知机动雷达 (巡逻区B4)</td>
+                    <td>2025-04-10 09:00</td>
+                    <td>2025-04-10 15:00</td>
+                    <td><span class="task-status status-pending"></span>待执行</td>
+                    <td><span class="uav-tag">🛩️ ASN-301 x4</span></td>
+                    <td><div class="action-icons"><span>✏️</span><span>📋</span><span>⏹️</span></div></td>
+                </tr>
+                <!-- 任务 3 对地攻击 -->
+                <tr>
+                    <td><input type="checkbox" style="accent-color:#5f8ec9;"></td>
+                    <td>AT-023</td>
+                    <td>指挥所精确打击</td>
+                    <td><span class="task-type">对地攻击</span></td>
+                    <td>旅级指挥所 (网格NR4578)</td>
+                    <td>2025-04-10 10:15</td>
+                    <td>2025-04-10 11:00</td>
+                    <td><span class="task-status status-active"></span>执行中</td>
+                    <td><span class="uav-tag">🛩️ Harop x2</span></td>
+                    <td><div class="action-icons"><span>✏️</span><span>📋</span><span>⏹️</span></div></td>
+                </tr>
+                <!-- 任务 4 侦察监视 -->
+                <tr>
+                    <td><input type="checkbox" style="accent-color:#5f8ec9;"></td>
+                    <td>REC-056</td>
+                    <td>河谷电磁侦察</td>
+                    <td><span class="task-type">侦察监视</span></td>
+                    <td>河谷地区电磁信号</td>
+                    <td>2025-04-09 22:00</td>
+                    <td>2025-04-10 06:00</td>
+                    <td><span class="task-status status-completed"></span>已完成</td>
+                    <td><span class="uav-tag">🛩️ 锐鹰800A x1</span></td>
+                    <td><div class="action-icons"><span>✏️</span><span>📋</span><span>⏹️</span></div></td>
+                </tr>
+                <!-- 任务 5 电子干扰 -->
+                <tr>
+                    <td><input type="checkbox" style="accent-color:#5f8ec9;"></td>
+                    <td>EW-009</td>
+                    <td>防空网干扰</td>
+                    <td><span class="task-type">电子干扰</span></td>
+                    <td>诱骗S波段雷达</td>
+                    <td>2025-04-10 11:30</td>
+                    <td>2025-04-10 13:30</td>
+                    <td><span class="task-status status-pending"></span>待执行</td>
+                    <td><span class="uav-tag">🛩️ 腾云 x1 (干扰吊舱)</span></td>
+                    <td><div class="action-icons"><span>✏️</span><span>📋</span><span>⏹️</span></div></td>
+                </tr>
+                <!-- 任务 6 协同饱和攻击 -->
+                <tr>
+                    <td><input type="checkbox" style="accent-color:#5f8ec9;"></td>
+                    <td>SAT-001</td>
+                    <td>蜂群摧毁HQ-9</td>
+                    <td><span class="task-type">协同饱和攻击</span></td>
+                    <td>HQ-9阵地 (多目标)</td>
+                    <td>2025-04-10 13:00</td>
+                    <td>2025-04-10 14:00</td>
+                    <td><span class="task-status status-pending"></span>待执行</td>
+                    <td><span class="uav-tag">🛩️ JWS-01 x6</span><span class="uav-tag">🛩️ 哈洛普 x4</span></td>
+                    <td><div class="action-icons"><span>✏️</span><span>📋</span><span>⏹️</span></div></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 任务编辑面板 (当前选中任务示例: SEAD-101) -->
+    <div class="edit-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="section-title" style="margin-bottom: 0;">✏️ 编辑任务 <span style="font-size:13px;">SEAD-101 北走廊压制</span></div>
+            <div><span class="badge">最后更新: 2025-04-10 08:15</span></div>
+        </div>
+
+        <div class="form-grid">
+            <!-- 第一行 -->
+            <div class="form-item">
+                <label>任务编号</label>
+                <input type="text" value="SEAD-101" placeholder="自动生成">
+            </div>
+            <div class="form-item">
+                <label>任务名称</label>
+                <input type="text" value="北走廊压制">
+            </div>
+            <div class="form-item">
+                <label>任务类型</label>
+                <select>
+                    <option>SEAD-预先打击</option>
+                    <option selected>SEAD-巡弋打击</option>
+                    <option>对地攻击</option>
+                    <option>侦察监视</option>
+                    <option>电子干扰</option>
+                    <option>协同饱和攻击</option>
+                    <option>协同搜索/分区搜索</option>
+                    <option>训练/测试</option>
+                </select>
+            </div>
+            <div class="form-item">
+                <label>优先级</label>
+                <select>
+                    <option>1 (最高)</option>
+                    <option>2</option>
+                    <option>3</option>
+                    <option>4</option>
+                    <option selected>5 (中)</option>
+                    <option>6</option>
+                    <option>7</option>
+                    <option>8</option>
+                    <option>9</option>
+                    <option>10 (最低)</option>
+                </select>
+            </div>
+
+            <!-- 第二行 时间 -->
+            <div class="form-item">
+                <label>计划开始时间</label>
+                <input type="datetime-local" value="2025-04-10T08:30">
+            </div>
+            <div class="form-item">
+                <label>计划结束时间</label>
+                <input type="datetime-local" value="2025-04-10T12:30">
+            </div>
+            <div class="form-item">
+                <label>任务状态</label>
+                <select>
+                    <option>待执行</option>
+                    <option selected>执行中</option>
+                    <option>已完成</option>
+                    <option>已中止</option>
+                </select>
+            </div>
+            <div class="form-item">
+                <label>攻击策略</label>
+                <select>
+                    <option>自主攻击</option>
+                    <option>人在回路</option>
+                    <option>遥控</option>
+                    <option selected>协同预设</option>
+                </select>
+            </div>
+
+            <!-- 目标信息 占用两列 -->
+            <div class="form-item full-width">
+                <label>主要目标 (可多个)</label>
+                <textarea rows="2">S-300雷达 (坐标32T 0456789); 低空补盲雷达 (坐标32T 0456900)</textarea>
+            </div>
+            <div class="form-item full-width">
+                <label>目标特征 / 辐射源参数</label>
+                <textarea rows="2">频率: 2.8-3.2GHz; 重频: 1000Hz; 信号类型: 火控照射</textarea>
+            </div>
+
+            <!-- 无人机分配 占用两列，做简单分配 -->
+            <div class="form-item double-width">
+                <label>分配无人机 (从资源池选择)</label>
+                <div style="display: flex; gap:10px; flex-wrap: wrap; background-color: #1f2b3c; border-radius: 16px; padding: 12px; border:1px solid #314a66;">
+                    <span class="uav-tag" style="background-color: #1d3557;">✅ JWS-01-01</span>
+                    <span class="uav-tag" style="background-color: #1d3557;">✅ JWS-01-02</span>
+                    <span class="uav-tag" style="background-color: #1d3557;">✅ JWS-01-03</span>
+                    <span class="uav-tag" style="background-color: #1d3557;">✅ Harop-05</span>
+                    <span class="uav-tag" style="background-color: #2f4057;">⬜ 锐鹰800A-12</span>
+                    <span class="uav-tag" style="background-color: #2f4057;">⬜ ASN-301-07</span>
+                    <span style="color:#8fa5cf; font-size:13px; margin-left:auto;">+ 从列表添加</span>
+                </div>
+            </div>
+
+            <!-- 航路规划摘要 占用两列 -->
+            <div class="form-item double-width">
+                <label>飞行航路 / 巡逻区</label>
+                <div style="display: flex; gap:8px;">
+                    <input type="text" value="航点: A(32T 0456000) → B(32T 0457000) 巡逻区半径15km" style="flex:3;">
+                    <button class="btn" style="padding:8px 16px; margin:0;">✏️ 编辑</button>
+                </div>
+            </div>
+
+            <!-- 备注 占四列 -->
+            <div class="form-item quad-width">
+                <label>任务备注 / 协同指令</label>
+                <textarea rows="2">与东区SAT-001协同时间窗口；如遇雷达关机，执行决断高度1800m拉起逻辑。</textarea>
+            </div>
+        </div>
+
+        <!-- 底部按钮 -->
+        <div class="btn-group">
+            <button class="btn btn-primary"><i>💾</i> 保存修改</button>
+            <button class="btn"><i>❌</i> 取消</button>
+            <button class="btn"><i>🚀</i> 启动任务</button>
+            <button class="btn btn-danger"><i>🛑</i> 中止任务</button>
+        </div>
+
+        <hr class="hr-light">
+
+        <!-- 协同子任务简表示例（可选） -->
+        <div style="display: flex; gap: 40px; font-size:13px; color:#9bb5e0; padding:8px 0;">
+            <div>🔄 协同模式: <strong>主从编队</strong> (JWS-01 x3 主攻, Harop 监视/评估)</div>
+            <div>⏱️ 时间同步: 攻击窗口 10:20:00 ±5s</div>
+            <div>📡 目标排序逻辑: 按威胁加权 (雷达类型>信号强度>稳定性)</div>
+        </div>
+    </div>
+
+    <!-- 底部信息 -->
+    <div class="footer-note">
+        仿真系统 v2.3 · 反辐射无人机协同任务管理 · 演示界面
+    </div>
+</div>
+<!-- 仅用于视觉展示，无实际功能 -->
+</body>
+</html>

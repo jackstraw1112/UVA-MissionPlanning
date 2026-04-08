@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三维态势显示 - 反辐射无人机仿真系统</title>
+    <!-- Font Awesome 6 (免费) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f0f17;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 顶部工具栏 */
+        .toolbar {
+            background-color: #1e1e2f;
+            border-bottom: 1px solid #333;
+            padding: 8px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar i {
+            font-size: 18px;
+            color: #aaa;
+            transition: color 0.2s;
+            cursor: default;
+        }
+
+        .toolbar i:hover {
+            color: #4a9eff;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 24px;
+            background-color: #444;
+            margin: 0 8px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* 主布局：左右两列 */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 左侧面板 */
+        .left-panel {
+            width: 280px;
+            background-color: #1a1a2a;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .panel-title {
+            font-weight: 600;
+            color: #ccc;
+            margin-bottom: 16px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .filter-box {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            background-color: #2a2a3c;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 4px 8px;
+        }
+
+        .filter-box i {
+            color: #aaa;
+            margin-right: 6px;
+        }
+
+        .filter-box input {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 100%;
+            outline: none;
+        }
+
+        /* 实体列表 */
+        .entity-list {
+            list-style: none;
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .entity-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #2a2a3c;
+            cursor: default;
+            transition: background 0.2s;
+        }
+
+        .entity-item:hover {
+            background-color: #2a2a42;
+        }
+
+        .entity-item.selected {
+            background-color: #2a2a5a;
+            border-left: 3px solid #4a9eff;
+        }
+
+        .entity-icon {
+            width: 24px;
+            text-align: center;
+            color: #4a9eff;
+            margin-right: 10px;
+        }
+
+        .entity-info {
+            flex: 1;
+        }
+
+        .entity-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .entity-type {
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .entity-status {
+            width: 60px;
+            text-align: right;
+            font-size: 11px;
+            color: #4caf50;
+        }
+
+        .entity-status.warning {
+            color: #ff9800;
+        }
+
+        .entity-status.danger {
+            color: #f44336;
+        }
+
+        /* 图层控制 */
+        .layer-group {
+            margin-top: 16px;
+            border-top: 1px solid #333;
+            padding-top: 12px;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 13px;
+        }
+
+        .layer-item i {
+            width: 24px;
+            color: #888;
+        }
+
+        .layer-item input {
+            margin-right: 8px;
+        }
+
+        /* 右侧区域 */
+        .right-panel {
+            flex: 1;
+            background-color: #14141f;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 三维视图区域 */
+        .view-3d {
+            flex: 1;
+            background-color: #1a1a2a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .view-3d canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .view-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .view-controls button {
+            background-color: #2a2a42;
+            border: 1px solid #444;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            cursor: default;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .view-controls button:hover {
+            background-color: #3a3a5a;
+        }
+
+        /* 底部状态栏 */
+        .status-bar {
+            background-color: #1a1a2a;
+            border-top: 1px solid #333;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .status-left {
+            display: flex;
+            gap: 20px;
+        }
+
+        /* 右侧属性面板（可折叠/弹出） */
+        .properties-panel {
+            position: absolute;
+            right: 20px;
+            top: 80px;
+            width: 280px;
+            background-color: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            display: none;
+        }
+
+        .properties-panel.visible {
+            display: block;
+        }
+
+        .properties-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #ccc;
+        }
+
+        .property-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .property-label {
+            color: #888;
+        }
+
+        .property-value {
+            color: white;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e2f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部工具栏 -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <i class="fas fa-globe" title="全球视图"></i>
+            <i class="fas fa-crosshairs" title="跟随选中实体"></i>
+            <i class="fas fa-undo-alt" title="重置视角"></i>
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="toolbar-group">
+            <i class="fas fa-ruler" title="距离测量"></i>
+            <i class="fas fa-draw-polygon" title="区域标注"></i>
+            <i class="fas fa-eye" title="视线分析"></i>
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="toolbar-group">
+            <i class="fas fa-map" title="切换底图"></i>
+            <i class="fas fa-layer-group" title="图层管理"></i>
+            <i class="fas fa-sun" title="光照设置"></i>
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="toolbar-group">
+            <i class="fas fa-camera" title="截图"></i>
+            <i class="fas fa-video" title="录制"></i>
+        </div>
+        <div style="flex:1"></div>
+        <span style="color:#aaa; font-size:14px;"><i class="fas fa-satellite"></i> 场景: 区域A</span>
+    </div>
+
+    <!-- 主布局 -->
+    <div class="main-layout">
+        <!-- 左侧面板 -->
+        <div class="left-panel">
+            <div class="panel-title">战场实体</div>
+            <div class="filter-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="过滤实体 (ID/类型)...">
+            </div>
+            <ul class="entity-list">
+                <li class="entity-item selected">
+                    <span class="entity-icon"><i class="fas fa-plane"></i></span>
+                    <div class="entity-info">
+                        <div class="entity-name">UAV-001</div>
+                        <div class="entity-type">反辐射无人机</div>
+                    </div>
+                    <span class="entity-status">攻击</span>
+                </li>
+                <li class="entity-item">
+                    <span class="entity-icon"><i class="fas fa-plane"></i></span>
+                    <div class="entity-info">
+                        <div class="entity-name">UAV-002</div>
+                        <div class="entity-type">反辐射无人机</div>
+                    </div>
+                    <span class="entity-status">搜索</span>
+                </li>
+                <li class="entity-item">
+                    <span class="entity-icon"><i class="fas fa-plane"></i></span>
+                    <div class="entity-info">
+                        <div class="entity-name">UAV-003</div>
+                        <div class="entity-type">反辐射无人机</div>
+                    </div>
+                    <span class="entity-status warning">规避</span>
+                </li>
+                <li class="entity-item">
+                    <span class="entity-icon"><i class="fas fa-satellite-dish"></i></span>
+                    <div class="entity-info">
+                        <div class="entity-name">RAD-01</div>
+                        <div class="entity-type">预警雷达</div>
+                    </div>
+                    <span class="entity-status">工作</span>
+                </li>
+                <li class="entity-item">
+                    <span class="entity-icon"><i class="fas fa-shield-alt"></i></span>
+                    <div class="entity-info">
+                        <div class="entity-name">SAM-01</div>
+                        <div class="entity-type">防空系统</div>
+                    </div>
+                    <span class="entity-status">跟踪</span>
+                </li>
+                <li class="entity-item">
+                    <span class="entity-icon"><i class="fas fa-fighter-jet"></i></span>
+                    <div class="entity-info">
+                        <div class="entity-name">AC-01</div>
+                        <div class="entity-type">作战飞机</div>
+                    </div>
+                    <span class="entity-status">巡航</span>
+                </li>
+                <li class="entity-item">
+                    <span class="entity-icon"><i class="fas fa-rocket"></i></span>
+                    <div class="entity-info">
+                        <div class="entity-name">BM-01</div>
+                        <div class="entity-type">弹道导弹</div>
+                    </div>
+                    <span class="entity-status danger">飞行中</span>
+                </li>
+            </ul>
+            <div class="layer-group">
+                <div class="panel-title">图层控制</div>
+                <div class="layer-item">
+                    <input type="checkbox" checked> <i class="fas fa-mountain"></i> 地形
+                </div>
+                <div class="layer-item">
+                    <input type="checkbox" checked> <i class="fas fa-image"></i> 卫星影像
+                </div>
+                <div class="layer-item">
+                    <input type="checkbox" checked> <i class="fas fa-plane"></i> 实体模型
+                </div>
+                <div class="layer-item">
+                    <input type="checkbox"> <i class="fas fa-vector-square"></i> 网格
+                </div>
+                <div class="layer-item">
+                    <input type="checkbox"> <i class="fas fa-bolt"></i> 威胁区域
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧区域（三维视图） -->
+        <div class="right-panel">
+            <div class="view-3d">
+                <!-- 这里是Three.js/Cesium的画布区域，用占位表示 -->
+                <canvas id="canvas" style="background: linear-gradient(to bottom, #0a1a2a, #1a3a4a);"></canvas>
+                <!-- 视角控制按钮 -->
+                <div class="view-controls">
+                    <button title="自由视角"><i class="fas fa-mouse-pointer"></i></button>
+                    <button title="跟随模式"><i class="fas fa-crosshairs"></i></button>
+                    <button title="全局视图"><i class="fas fa-globe"></i></button>
+                    <button title="放大"><i class="fas fa-plus"></i></button>
+                    <button title="缩小"><i class="fas fa-minus"></i></button>
+                </div>
+                <!-- 简易坐标指示 -->
+                <div style="position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; font-size: 12px; color: #aaa;">
+                    鼠标位置: 125.32°E, 78.56°N  |  海拔: 3500m
+                </div>
+            </div>
+        </div>
+
+        <!-- 属性面板（默认隐藏，点击实体后显示） -->
+        <div class="properties-panel visible">
+            <div class="properties-title"><i class="fas fa-info-circle"></i> 实体属性 - UAV-001</div>
+            <div class="property-row">
+                <span class="property-label">类型</span>
+                <span class="property-value">反辐射无人机</span>
+            </div>
+            <div class="property-row">
+                <span class="property-label">位置</span>
+                <span class="property-value">125.32, 78.56</span>
+            </div>
+            <div class="property-row">
+                <span class="property-label">高度</span>
+                <span class="property-value">3500 m</span>
+            </div>
+            <div class="property-row">
+                <span class="property-label">速度</span>
+                <span class="property-value">280 km/h</span>
+            </div>
+            <div class="property-row">
+                <span class="property-label">状态</span>
+                <span class="property-value">攻击中</span>
+            </div>
+            <div class="property-row">
+                <span class="property-label">剩余弹药</span>
+                <span class="property-value">2/4</span>
+            </div>
+            <div class="property-row">
+                <span class="property-label">当前目标</span>
+                <span class="property-value">RAD-01</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部状态栏 -->
+    <div class="status-bar">
+        <div class="status-left">
+            <span><i class="fas fa-cube"></i> 实体总数: 248</span>
+            <span><i class="fas fa-bolt"></i> 帧率: 58 FPS</span>
+            <span><i class="fas fa-map-pin"></i> 选中: UAV-001</span>
+        </div>
+        <div>
+            <span><i class="far fa-clock"></i> 仿真时间: 00:12:34.5</span>
+        </div>
+    </div>
+
+    <!-- 简单交互（仅示意） -->
+    <script>
+        // 这里仅为演示，实际开发需实现真正的三维引擎
+        const canvas = document.getElementById('canvas');
+        // 绘制简单的模拟网格（示意）
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        ctx.strokeStyle = '#2a5a7a';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 20; i++) {
+            ctx.beginPath();
+            ctx.moveTo(i * 40, 0);
+            ctx.lineTo(i * 40, canvas.height);
+            ctx.strokeStyle = '#2a5a7a';
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, i * 40);
+            ctx.lineTo(canvas.width, i * 40);
+            ctx.stroke();
+        }
+        // 绘制几个简单的三角形代表无人机
+        ctx.fillStyle = '#4a9eff';
+        ctx.beginPath();
+        ctx.moveTo(200, 150);
+        ctx.lineTo(180, 170);
+        ctx.lineTo(220, 170);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#ffaa00';
+        ctx.beginPath();
+        ctx.moveTo(300, 200);
+        ctx.lineTo(280, 220);
+        ctx.lineTo(320, 220);
+        ctx.closePath();
+        ctx.fill();
+    </script>
+</body>
+</html>

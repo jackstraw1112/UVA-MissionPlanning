@@ -1,0 +1,1008 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SearchPathPlanningWindow</class>
+ <widget class="QMainWindow" name="SearchPathPlanningWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1300</width>
+    <height>900</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>搜索路径规划 - 反辐射无人机协同任务规划</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_5">
+    <item>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="handleWidth">
+       <number>6</number>
+      </property>
+      <!-- 左侧配置面板 -->
+      <widget class="QTabWidget" name="tabWidgetConfig">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <!-- 任务设置页 -->
+       <widget class="QWidget" name="tabTask">
+        <attribute name="title">
+         <string>任务设置</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QGroupBox" name="groupBoxTaskType">
+           <property name="title">
+            <string>任务类型</string>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QComboBox" name="comboTaskType">
+              <item>
+               <property name="text">
+                <string>区域侦察</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>目标搜索</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>电子侦察</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>目标确认</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxTaskObjective">
+           <property name="title">
+            <string>任务目标要求</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelCoverage">
+              <property name="text">
+               <string>最低覆盖率：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="spinCoverage">
+              <property name="suffix">
+               <string> %</string>
+              </property>
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="minimum">
+               <double>0.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>100.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>90.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelTimeLimit">
+              <property name="text">
+               <string>搜索时限(min)：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSpinBox" name="spinTimeLimit">
+              <property name="suffix">
+               <string> min</string>
+              </property>
+              <property name="maximum">
+               <number>1440</number>
+              </property>
+              <property name="value">
+               <number>120</number>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="labelDetectionProb">
+              <property name="text">
+               <string>期望发现概率：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QDoubleSpinBox" name="spinDetectionProb">
+              <property name="suffix">
+               <string> %</string>
+              </property>
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="minimum">
+               <double>0.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>100.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>80.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <!-- 目标区域页 -->
+       <widget class="QWidget" name="tabArea">
+        <attribute name="title">
+         <string>目标区域</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QGroupBox" name="groupBoxRegion">
+           <property name="title">
+            <string>搜索区域定义</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_6">
+            <item>
+             <widget class="QRadioButton" name="radioPolygon">
+              <property name="text">
+               <string>多边形区域</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="radioRectangle">
+              <property name="text">
+               <string>矩形区域(左下-右上)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="radioPointSet">
+              <property name="text">
+               <string>点集搜索</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTextEdit" name="textRegion">
+              <property name="placeholderText">
+               <string>输入多边形顶点坐标(每行: 经度,纬度) 或 矩形左下经度,左下纬度,右上经度,右上纬度 或 点坐标列表</string>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>100</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item>
+               <widget class="QPushButton" name="btnLoadRegionFile">
+                <property name="text">
+                 <string>从文件导入(KML/GeoJSON)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnDrawOnMap">
+                <property name="text">
+                 <string>在地图上绘制</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxRegionAdvanced">
+           <property name="title">
+            <string>高级区域设置</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_2">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelSubregion">
+              <property name="text">
+               <string>子区域划分方式：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="comboSubregion">
+              <item>
+               <property name="text">
+                <string>等面积分割</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>基于负载均衡聚类</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>基于起始位置分配</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelOverlap">
+              <property name="text">
+               <string>允许重叠率：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QDoubleSpinBox" name="spinOverlap">
+              <property name="suffix">
+               <string> %</string>
+              </property>
+              <property name="maximum">
+               <double>50.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>10.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <!-- 无人机资源页 -->
+       <widget class="QWidget" name="tabUAVs">
+        <attribute name="title">
+         <string>无人机资源</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QTableWidget" name="tableUAVs">
+           <property name="columnCount">
+            <number>9</number>
+           </property>
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+           <column>
+            <property name="text">
+             <string>无人机ID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>型号</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>起始经度</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>起始纬度</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>最大航程(km)</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>巡航速度(km/h)</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>传感器类型</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>探测宽度(m)</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>续航时间(h)</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QPushButton" name="btnAddUAV">
+             <property name="text">
+              <string>添加无人机</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btnDeleteUAV">
+             <property name="text">
+              <string>删除无人机</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btnLoadUAVs">
+             <property name="text">
+              <string>从文件加载(CSV)</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="labelUAVCount">
+             <property name="text">
+              <string>总数: 0 架</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <!-- 环境因素页 -->
+       <widget class="QWidget" name="tabEnvironment">
+        <attribute name="title">
+         <string>环境因素</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QGroupBox" name="groupBoxTerrain">
+           <property name="title">
+            <string>地形</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_3">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelTerrainFile">
+              <property name="text">
+               <string>高程数据文件：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <item>
+               <widget class="QLineEdit" name="lineTerrainFile"/>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnBrowseTerrain">
+                <property name="text">
+                 <string>浏览</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelTerrainEffect">
+              <property name="text">
+               <string>地形影响因子：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="comboTerrainEffect">
+              <item>
+               <property name="text">
+                <string>平坦(1.0)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>丘陵(0.9)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>山地(0.7)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>复杂(0.5)</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxThreats">
+           <property name="title">
+            <string>威胁区</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_7">
+            <item>
+             <widget class="QCheckBox" name="checkEnableThreats">
+              <property name="text">
+               <string>启用威胁规避</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="tableThreats">
+              <property name="columnCount">
+               <number>5</number>
+              </property>
+              <column>
+               <property name="text">
+                <string>威胁ID</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>类型</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中心经度</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>中心纬度</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>半径(km)</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <item>
+               <widget class="QPushButton" name="btnAddThreat">
+                <property name="text">
+                 <string>添加</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnDeleteThreat">
+                <property name="text">
+                 <string>删除</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnImportThreats">
+                <property name="text">
+                 <string>导入KML</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxWeather">
+           <property name="title">
+            <string>气象条件</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_4">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelWeatherEffect">
+              <property name="text">
+               <string>气象影响：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="comboWeatherEffect">
+              <item>
+               <property name="text">
+                <string>良好(1.0)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>轻度(0.9)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>中度(0.7)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>重度(0.4)</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelWind">
+              <property name="text">
+               <string>风速/风向：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <item>
+               <widget class="QDoubleSpinBox" name="spinWindSpeed">
+                <property name="suffix">
+                 <string> m/s</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QDoubleSpinBox" name="spinWindDir">
+                <property name="suffix">
+                 <string> °</string>
+                </property>
+                <property name="maximum">
+                 <double>360.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <!-- 算法参数页 -->
+       <widget class="QWidget" name="tabAlgorithm">
+        <attribute name="title">
+         <string>算法参数</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_8">
+         <item>
+          <widget class="QGroupBox" name="groupBoxSearchMode">
+           <property name="title">
+            <string>搜索模式</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_9">
+            <item>
+             <widget class="QRadioButton" name="radioParallel">
+              <property name="text">
+               <string>平行扫海(Boustrophedon)</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="radioSpiral">
+              <property name="text">
+               <string>螺旋搜索</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="radioSTC">
+              <property name="text">
+               <string>生成树覆盖(STC)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="radioRandom">
+              <property name="text">
+               <string>随机搜索</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxOptimization">
+           <property name="title">
+            <string>优化目标权重</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_5">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelWeightCoverage">
+              <property name="text">
+               <string>覆盖率权重：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="spinWeightCoverage">
+              <property name="maximum">
+               <double>1.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.100000000000000</double>
+              </property>
+              <property name="value">
+               <double>0.400000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelWeightTime">
+              <property name="text">
+               <string>搜索时间权重：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QDoubleSpinBox" name="spinWeightTime">
+              <property name="maximum">
+               <double>1.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.100000000000000</double>
+              </property>
+              <property name="value">
+               <double>0.300000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="labelWeightRisk">
+              <property name="text">
+               <string>风险权重：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QDoubleSpinBox" name="spinWeightRisk">
+              <property name="maximum">
+               <double>1.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.100000000000000</double>
+              </property>
+              <property name="value">
+               <double>0.300000000000000</double>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxAlgorithmParams">
+           <property name="title">
+            <string>算法参数</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_6">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelSensorOverlap">
+              <property name="text">
+               <string>传感器重叠系数：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="spinSensorOverlap">
+              <property name="maximum">
+               <double>1.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.050000000000000</double>
+              </property>
+              <property name="value">
+               <double>0.200000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelMinTurnRadius">
+              <property name="text">
+               <string>最小转弯半径(m)：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSpinBox" name="spinMinTurnRadius">
+              <property name="suffix">
+               <string> m</string>
+              </property>
+              <property name="maximum">
+               <number>5000</number>
+              </property>
+              <property name="value">
+               <number>500</number>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="labelSafeHeight">
+              <property name="text">
+               <string>安全离地高度(m)：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSpinBox" name="spinSafeHeight">
+              <property name="suffix">
+               <string> m</string>
+              </property>
+              <property name="maximum">
+               <number>500</number>
+              </property>
+              <property name="value">
+               <number>100</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnStartPlanning">
+           <property name="text">
+            <string>开始搜索路径规划</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>40</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <!-- 右侧可视化区域 -->
+      <widget class="QTabWidget" name="tabWidgetVisual">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <!-- 地图视图页 -->
+       <widget class="QWidget" name="tabMap">
+        <attribute name="title">
+         <string>地图视图</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_10">
+         <item>
+          <widget class="QLabel" name="labelMapPlaceholder">
+           <property name="text">
+            <string>&lt;h2&gt;地图视图&lt;/h2&gt;&lt;p&gt;此处将显示搜索区域、无人机路径和覆盖带。&lt;br&gt;可替换为 QGraphicsView 或 QWebEngineView 实现真实地图。&lt;/p&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">background-color: #2d2d2d; color: white; border: 1px solid #555;</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <!-- 覆盖效果视图页 -->
+       <widget class="QWidget" name="tabCoverage">
+        <attribute name="title">
+         <string>覆盖效果</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_11">
+         <item>
+          <widget class="QLabel" name="labelCoveragePlaceholder">
+           <property name="text">
+            <string>&lt;h2&gt;覆盖效果图&lt;/h2&gt;&lt;p&gt;此处将显示覆盖栅格、覆盖率热力图。&lt;/p&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">background-color: #2d2d2d; color: white; border: 1px solid #555;</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <!-- 统计信息页 -->
+       <widget class="QWidget" name="tabStats">
+        <attribute name="title">
+         <string>统计信息</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_12">
+         <item>
+          <widget class="QTextEdit" name="textStats">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="html">
+            <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'SimSun'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;规划完成后将显示详细统计信息：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;总覆盖率：-- %&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;重叠率：-- %&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;总搜索时间：-- min&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;总航程：-- km&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;发现概率估计：-- %&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </widget>
+    </item>
+    <!-- 底部进度与状态栏 -->
+    <item>
+     <widget class="QGroupBox" name="groupBoxProgress">
+      <property name="title">
+       <string>规划进度</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_7">
+       <item>
+        <widget class="QProgressBar" name="progressBar">
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelProgressText">
+         <property name="text">
+          <string>就绪</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnStop">
+         <property name="text">
+          <string>停止</string>
+         </property>
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1300</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <addaction name="actionLoadMission"/>
+    <addaction name="actionLoadUAVs"/>
+    <addaction name="actionSavePlan"/>
+    <addaction name="separator"/>
+    <addaction name="actionExportKML"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>编辑</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>视图</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>帮助</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionLoadMission"/>
+   <addaction name="actionLoadUAVs"/>
+   <addaction name="actionSavePlan"/>
+   <addaction name="separator"/>
+   <addaction name="actionStartPlanning"/>
+   <addaction name="actionExportKML"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionLoadMission">
+   <property name="text">
+    <string>加载任务</string>
+   </property>
+  </action>
+  <action name="actionLoadUAVs">
+   <property name="text">
+    <string>加载无人机资源</string>
+   </property>
+  </action>
+  <action name="actionSavePlan">
+   <property name="text">
+    <string>保存规划方案</string>
+   </property>
+  </action>
+  <action name="actionExportKML">
+   <property name="text">
+    <string>导出KML路径</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>退出</string>
+   </property>
+  </action>
+  <action name="actionStartPlanning">
+   <property name="text">
+    <string>开始规划</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

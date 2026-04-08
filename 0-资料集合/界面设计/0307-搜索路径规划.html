@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索路径规划 - 反辐射无人机协同任务规划</title>
+    <!-- Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 主容器 */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* 标题栏 */
+        .header {
+            background-color: #1e3a5f;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header h1 i {
+            font-size: 1.8rem;
+        }
+        .toolbar {
+            display: flex;
+            gap: 12px;
+        }
+        .toolbar button {
+            background-color: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+        .toolbar button:hover {
+            background-color: rgba(255,255,255,0.25);
+        }
+        .toolbar button i {
+            font-size: 1rem;
+        }
+        .toolbar .primary-btn {
+            background-color: #2b5797;
+        }
+        .toolbar .primary-btn:hover {
+            background-color: #1e3f6f;
+        }
+
+        /* 主内容区域：左右分割 */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 左侧配置面板 */
+        .left-panel {
+            width: 40%;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            background-color: #f9fafc;
+        }
+        .panel-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            background-color: white;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 14px 0;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #555;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            color: #1e3a5f;
+            border-bottom-color: #1e3a5f;
+            background-color: #f0f7ff;
+        }
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* 右侧结果显示区域 */
+        .right-panel {
+            width: 60%;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+        }
+        .result-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            background-color: #f9fafc;
+            padding-left: 20px;
+        }
+        .result-tab {
+            padding: 14px 24px;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #555;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .result-tab.active {
+            color: #1e3a5f;
+            border-bottom-color: #1e3a5f;
+        }
+        .result-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .result-pane {
+            display: none;
+        }
+        .result-pane.active {
+            display: block;
+        }
+
+        /* 底部进度栏 */
+        .footer {
+            border-top: 1px solid #e0e0e0;
+            padding: 16px 24px;
+            background-color: #f9fafc;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            width: 60%;
+            height: 100%;
+            background-color: #1e3a5f;
+            transition: width 0.3s;
+        }
+        .progress-text {
+            font-size: 0.9rem;
+            color: #666;
+            min-width: 80px;
+        }
+        .stop-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .stop-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #333;
+            font-size: 0.9rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #1e3a5f;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+        }
+        .radio-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+        .data-table th {
+            background-color: #f0f0f0;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #ddd;
+        }
+        .data-table td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .data-table tr:hover {
+            background-color: #f5f9ff;
+        }
+        .table-actions {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .btn-small {
+            padding: 6px 12px;
+            background-color: #e7e7e7;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-small:hover {
+            background-color: #d4d4d4;
+        }
+        .btn-primary {
+            background-color: #1e3a5f;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #15304f;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1e3a5f;
+            font-size: 1rem;
+        }
+
+        /* 状态标签 */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .badge-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        /* 统计信息 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .stat-item {
+            background-color: #f5f7fa;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+
+        /* 模拟地图占位 */
+        .map-placeholder {
+            background-color: #2d2d2d;
+            color: #ccc;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 1rem;
+            border: 1px solid #555;
+        }
+
+        /* 覆盖图占位 */
+        .heatmap-placeholder {
+            background: linear-gradient(45deg, #1e3a5f 0%, #4a6fa5 100%);
+            height: 200px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 0.9rem;
+            font-style: italic;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 标题栏 / 工具栏 -->
+    <div class="header">
+        <h1><i class="fas fa-search-location"></i> 搜索路径规划 · 反辐射无人机</h1>
+        <div class="toolbar">
+            <button><i class="fas fa-file-import"></i> 加载任务</button>
+            <button><i class="fas fa-database"></i> 加载资源</button>
+            <button><i class="fas fa-save"></i> 保存方案</button>
+            <button><i class="fas fa-file-export"></i> 导出KML</button>
+            <button class="primary-btn"><i class="fas fa-play"></i> 开始规划</button>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <!-- 左侧配置面板 -->
+        <div class="left-panel">
+            <div class="panel-tabs">
+                <button class="tab-btn active" data-tab="tab1"><i class="fas fa-tasks"></i> 任务设置</button>
+                <button class="tab-btn" data-tab="tab2"><i class="fas fa-draw-polygon"></i> 目标区域</button>
+                <button class="tab-btn" data-tab="tab3"><i class="fas fa-helicopter"></i> 无人机资源</button>
+                <button class="tab-btn" data-tab="tab4"><i class="fas fa-cloud-sun"></i> 环境因素</button>
+                <button class="tab-btn" data-tab="tab5"><i class="fas fa-sliders-h"></i> 算法参数</button>
+            </div>
+            <div class="tab-content">
+                <!-- 任务设置 -->
+                <div class="tab-pane active" id="tab1">
+                    <div class="card">
+                        <div class="card-title">任务类型</div>
+                        <select class="form-control">
+                            <option>区域侦察</option>
+                            <option>目标搜索</option>
+                            <option>电子侦察</option>
+                            <option>目标确认</option>
+                        </select>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">任务目标要求</div>
+                        <div class="form-group">
+                            <label class="form-label">最低覆盖率 (%)</label>
+                            <input class="form-control" type="number" value="90" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">搜索时限 (分钟)</label>
+                            <input class="form-control" type="number" value="120">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">期望发现概率 (%)</label>
+                            <input class="form-control" type="number" value="80">
+                        </div>
+                    </div>
+                </div>
+                <!-- 目标区域 -->
+                <div class="tab-pane" id="tab2">
+                    <div class="card">
+                        <div class="card-title">搜索区域定义</div>
+                        <div class="radio-group">
+                            <label><input type="radio" name="areaType" checked> 多边形区域</label>
+                            <label><input type="radio" name="areaType"> 矩形区域</label>
+                            <label><input type="radio" name="areaType"> 点集搜索</label>
+                        </div>
+                        <textarea class="form-control" rows="4" placeholder="输入多边形顶点坐标 (每行: 经度,纬度)">120.5,30.2
+120.7,30.3
+120.8,30.1
+120.6,29.9</textarea>
+                        <div class="table-actions" style="margin-top:8px;">
+                            <button class="btn-small"><i class="fas fa-file-import"></i> 从文件导入</button>
+                            <button class="btn-small"><i class="fas fa-map-marked-alt"></i> 在地图上绘制</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">高级区域设置</div>
+                        <div class="form-group">
+                            <label class="form-label">子区域划分方式</label>
+                            <select class="form-control">
+                                <option>等面积分割</option>
+                                <option>基于负载均衡聚类</option>
+                                <option>基于起始位置分配</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">允许重叠率 (%)</label>
+                            <input class="form-control" type="number" value="10">
+                        </div>
+                    </div>
+                </div>
+                <!-- 无人机资源 -->
+                <div class="tab-pane" id="tab3">
+                    <div class="card">
+                        <div class="card-title">无人机资源列表</div>
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>ID</th><th>型号</th><th>起始经度</th><th>起始纬度</th><th>航程(km)</th><th>速度(km/h)</th><th>传感器</th><th>探测宽度(m)</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>UAV-001</td><td>JWS-01A</td><td>120.1</td><td>30.0</td><td>800</td><td>180</td><td>SAR</td><td>500</td></tr>
+                                <tr><td>UAV-002</td><td>JWS-01B</td><td>120.2</td><td>30.1</td><td>750</td><td>180</td><td>EO</td><td>300</td></tr>
+                                <tr><td>UAV-003</td><td>JWS-01A</td><td>120.0</td><td>29.9</td><td>800</td><td>180</td><td>SAR</td><td>500</td></tr>
+                                <tr><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="table-actions">
+                            <button class="btn-small"><i class="fas fa-plus"></i> 添加</button>
+                            <button class="btn-small"><i class="fas fa-trash"></i> 删除</button>
+                            <button class="btn-small"><i class="fas fa-file-import"></i> 从文件加载</button>
+                        </div>
+                        <div style="margin-top:10px;">
+                            <span>总数: <strong>240</strong> 架</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- 环境因素 -->
+                <div class="tab-pane" id="tab4">
+                    <div class="card">
+                        <div class="card-title">地形</div>
+                        <div class="form-group">
+                            <label class="form-label">高程数据文件</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input class="form-control" type="text" value="C:/data/srtm_region.tif">
+                                <button class="btn-small">浏览</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">地形影响因子</label>
+                            <select class="form-control">
+                                <option>平坦 (1.0)</option>
+                                <option>丘陵 (0.9)</option>
+                                <option>山地 (0.7)</option>
+                                <option>复杂 (0.5)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">威胁区</div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="enableThreats" checked>
+                            <label for="enableThreats">启用威胁规避</label>
+                        </div>
+                        <table class="data-table">
+                            <thead><tr><th>ID</th><th>类型</th><th>中心经度</th><th>中心纬度</th><th>半径(km)</th></tr></thead>
+                            <tbody>
+                                <tr><td>THR-01</td><td>防空阵地</td><td>120.5</td><td>30.2</td><td>15</td></tr>
+                                <tr><td>THR-02</td><td>雷达站</td><td>120.7</td><td>30.0</td><td>10</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="table-actions">
+                            <button class="btn-small"><i class="fas fa-plus"></i> 添加</button>
+                            <button class="btn-small"><i class="fas fa-trash"></i> 删除</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">气象条件</div>
+                        <div class="form-group">
+                            <label class="form-label">气象影响</label>
+                            <select class="form-control">
+                                <option>良好 (1.0)</option>
+                                <option>轻度 (0.9)</option>
+                                <option>中度 (0.7)</option>
+                                <option>重度 (0.4)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">风速/风向</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input class="form-control" type="number" placeholder="风速 m/s" value="5">
+                                <input class="form-control" type="number" placeholder="风向 °" value="180">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 算法参数 -->
+                <div class="tab-pane" id="tab5">
+                    <div class="card">
+                        <div class="card-title">搜索模式</div>
+                        <div class="radio-group">
+                            <label><input type="radio" name="searchMode" checked> 平行扫海</label>
+                            <label><input type="radio" name="searchMode"> 螺旋搜索</label>
+                            <label><input type="radio" name="searchMode"> 生成树覆盖</label>
+                            <label><input type="radio" name="searchMode"> 随机搜索</label>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">优化目标权重</div>
+                        <div class="form-group">
+                            <label class="form-label">覆盖率权重</label>
+                            <input class="form-control" type="number" value="0.4" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">搜索时间权重</label>
+                            <input class="form-control" type="number" value="0.3" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">风险权重</label>
+                            <input class="form-control" type="number" value="0.3" step="0.1">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">高级参数</div>
+                        <div class="form-group">
+                            <label class="form-label">传感器重叠系数</label>
+                            <input class="form-control" type="number" value="0.2" step="0.05">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">最小转弯半径 (m)</label>
+                            <input class="form-control" type="number" value="500">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">安全离地高度 (m)</label>
+                            <input class="form-control" type="number" value="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧结果显示区域 -->
+        <div class="right-panel">
+            <div class="result-tabs">
+                <button class="result-tab active" data-result="result1">地图视图</button>
+                <button class="result-tab" data-result="result2">覆盖效果</button>
+                <button class="result-tab" data-result="result3">统计信息</button>
+            </div>
+            <div class="result-content">
+                <!-- 地图视图 -->
+                <div class="result-pane active" id="result1">
+                    <div class="map-placeholder">
+                        <i class="fas fa-map" style="font-size: 3rem; margin-right: 10px;"></i> 
+                        地图视图 (可替换为实际地图组件)
+                    </div>
+                    <div class="info-text">显示搜索区域、无人机路径和威胁区。鼠标悬停可查看详情。</div>
+                </div>
+                <!-- 覆盖效果 -->
+                <div class="result-pane" id="result2">
+                    <div class="heatmap-placeholder">
+                        覆盖率热力图 (模拟)
+                    </div>
+                    <div style="margin-top:20px;">
+                        <table class="data-table">
+                            <tr><th>区域</th><th>覆盖率</th></tr>
+                            <tr><td>子区域1</td><td>92% <span class="badge badge-success">良好</span></td></tr>
+                            <tr><td>子区域2</td><td>78% <span class="badge badge-warning">不足</span></td></tr>
+                            <tr><td>子区域3</td><td>95% <span class="badge badge-success">良好</span></td></tr>
+                            <tr><td>整体</td><td>88%</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <!-- 统计信息 -->
+                <div class="result-pane" id="result3">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">总覆盖率</div>
+                            <div class="stat-value">88%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">重叠率</div>
+                            <div class="stat-value">12%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">总搜索时间</div>
+                            <div class="stat-value">105 min</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">总航程</div>
+                            <div class="stat-value">12,450 km</div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top:20px;">
+                        <div class="card-title">发现概率估计</div>
+                        <div style="font-size:1.5rem; text-align:center;">82%</div>
+                        <div class="info-text">基于传感器模型和气象修正</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">规划耗时</div>
+                        <div style="font-size:1.5rem; text-align:center;">156 秒</div>
+                        <div class="info-text">(240架无人机，8线程并行)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部进度条 -->
+    <div class="footer">
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        <span class="progress-text">60% 已完成</span>
+        <button class="stop-btn"><i class="fas fa-stop"></i> 停止</button>
+    </div>
+</div>
+
+<!-- 简单的标签切换脚本 -->
+<script>
+    (function() {
+        // 左侧标签页切换
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const target = btn.getAttribute('data-tab');
+                tabPanes.forEach(pane => {
+                    pane.classList.remove('active');
+                    if (pane.id === target) pane.classList.add('active');
+                });
+            });
+        });
+
+        // 右侧结果标签切换
+        const resultTabs = document.querySelectorAll('.result-tab');
+        const resultPanes = document.querySelectorAll('.result-pane');
+        resultTabs.forEach(btn => {
+            btn.addEventListener('click', () => {
+                resultTabs.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const target = btn.getAttribute('data-result');
+                resultPanes.forEach(pane => {
+                    pane.classList.remove('active');
+                    if (pane.id === target) pane.classList.add('active');
+                });
+            });
+        });
+    })();
+</script>
+</body>
+</html>

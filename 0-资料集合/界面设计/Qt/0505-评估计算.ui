@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>EvaluationCalcWidget</class>
+ <widget class="QWidget" name="EvaluationCalcWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1000</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>评估计算</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <!-- 顶部参数区域 -->
+   <item>
+    <widget class="QGroupBox" name="groupBoxParams">
+     <property name="title">
+      <string>评估参数</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="labelTask">
+        <property name="text">
+         <string>仿真任务：</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboTask">
+        <item>
+         <property name="text">
+          <string>反辐射攻击任务-001</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>协同压制任务-002</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelModel">
+        <property name="text">
+         <string>评估模型：</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboModel">
+        <item>
+         <property name="text">
+          <string>加权求和</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>层次分析法 (AHP)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>TOPSIS</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>模糊综合评判</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnCalc">
+        <property name="text">
+         <string>开始评估</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- 主内容区域：指标体系树 + 结果展示 -->
+   <item>
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="handleWidth">
+      <number>6</number>
+     </property>
+     <!-- 左侧指标体系树 -->
+     <widget class="QGroupBox" name="groupBoxTree">
+      <property name="title">
+       <string>指标体系</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QTreeWidget" name="treeIndicators">
+         <property name="headerHidden">
+          <bool>false</bool>
+         </property>
+         <column>
+          <property name="text">
+           <string>指标名称</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>得分</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>权重</string>
+          </property>
+         </column>
+         <item>
+          <property name="text">
+           <string>综合效能</string>
+          </property>
+          <item>
+           <property name="text">
+            <string>目标摧毁概率</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>无人机生存率</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>弹药消耗</string>
+           </property>
+          </item>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <!-- 右侧结果展示区域 -->
+     <widget class="QTabWidget" name="tabWidgetResult">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <!-- 雷达图页 -->
+      <widget class="QWidget" name="tabRadar">
+       <attribute name="title">
+        <string>雷达图</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QLabel" name="labelRadarPlaceholder">
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt; font-weight:600; color:#808080;&quot;&gt;雷达图显示区域&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; color:#808080;&quot;&gt;此处将嵌入 QChart 雷达图。&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: #1a1a2a; color: white; border: 1px solid #333;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <!-- 柱状图页 -->
+      <widget class="QWidget" name="tabBar">
+       <attribute name="title">
+        <string>柱状图</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QLabel" name="labelBarPlaceholder">
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt; font-weight:600; color:#808080;&quot;&gt;柱状图显示区域&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; color:#808080;&quot;&gt;此处将嵌入 QChart 柱状图。&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: #1a1a2a; color: white; border: 1px solid #333;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <!-- 详细表格页 -->
+      <widget class="QWidget" name="tabTable">
+       <attribute name="title">
+        <string>详细结果</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QTableWidget" name="tableResult">
+          <property name="columnCount">
+           <number>3</number>
+          </property>
+          <attribute name="horizontalHeaderStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>指标</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>得分</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>权重</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </widget>
+   </item>
+   <!-- 底部进度条和状态 -->
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QProgressBar" name="progressBar">
+       <property name="value">
+        <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="labelStatus">
+       <property name="text">
+        <string>就绪</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,507 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DataPreprocessingDialog</class>
+ <widget class="QDialog" name="DataPreprocessingDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>900</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>数据预处理</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <!-- 数据源选择 -->
+   <item>
+    <widget class="QGroupBox" name="groupBoxSource">
+     <property name="title">
+      <string>数据源</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="labelDataset">
+        <property name="text">
+         <string>选择数据集：</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboDataset">
+        <item>
+         <property name="text">
+          <string>exp_001.csv (试验数据)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>exp_002.xlsx</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>仿真结果_003</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- 预处理步骤选项卡 -->
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <!-- 重复数据消除 -->
+     <widget class="QWidget" name="tabDuplicate">
+      <attribute name="title">
+       <string>重复数据消除</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QGroupBox" name="groupBoxDuplicateParams">
+         <property name="title">
+          <string>参数设置</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelDuplicateKey">
+            <property name="text">
+             <string>关键字段：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" colspan="3">
+           <widget class="QListWidget" name="listDuplicateKey">
+            <property name="selectionMode">
+             <enum>QAbstractItemView::MultiSelection</enum>
+            </property>
+            <item>
+             <property name="text">
+              <string>时间戳</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>无人机ID</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>经度</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>纬度</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="labelKeepStrategy">
+            <property name="text">
+             <string>保留策略：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" colspan="3">
+           <widget class="QComboBox" name="comboKeepStrategy">
+            <item>
+             <property name="text">
+              <string>保留第一条</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>保留最后一条</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>合并（取均值）</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <!-- 缺失值处理 -->
+     <widget class="QWidget" name="tabMissing">
+      <attribute name="title">
+       <string>缺失值处理</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QGroupBox" name="groupBoxMissingParams">
+         <property name="title">
+          <string>参数设置</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelMissingMethod">
+            <property name="text">
+             <string>处理方法：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" colspan="2">
+           <widget class="QComboBox" name="comboMissingMethod">
+            <item>
+             <property name="text">
+              <string>删除包含缺失值的行</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>均值填充</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>中位数填充</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>众数填充</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>前向填充</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>后向填充</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>线性插值</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>固定值填充</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="labelMissingFillValue">
+            <property name="text">
+             <string>填充值（固定值）：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" colspan="2">
+           <widget class="QLineEdit" name="lineMissingFillValue">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="placeholderText">
+             <string>例如 0 或 "未知"</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <!-- 异常值检测与处理 -->
+     <widget class="QWidget" name="tabOutlier">
+      <attribute name="title">
+       <string>异常值检测与处理</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QGroupBox" name="groupBoxOutlierParams">
+         <property name="title">
+          <string>参数设置</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelOutlierMethod">
+            <property name="text">
+             <string>检测方法：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" colspan="3">
+           <widget class="QComboBox" name="comboOutlierMethod">
+            <item>
+             <property name="text">
+              <string>标准差法 (k=3)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>四分位距法 (IQR)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>自定义阈值</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="labelOutlierK">
+            <property name="text">
+             <string>标准差倍数 k：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="spinOutlierK">
+            <property name="value">
+             <double>3.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="labelOutlierAction">
+            <property name="text">
+             <string>处理方式：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QComboBox" name="comboOutlierAction">
+            <item>
+             <property name="text">
+              <string>删除异常行</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>用边界值替换</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>标记但不处理</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <!-- 数据格式标准化 -->
+     <widget class="QWidget" name="tabNormalize">
+      <attribute name="title">
+       <string>数据格式标准化</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QGroupBox" name="groupBoxNormalize">
+         <property name="title">
+          <string>参数设置</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelDateTimeFormat">
+            <property name="text">
+             <string>日期时间格式：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" colspan="3">
+           <widget class="QComboBox" name="comboDateTimeFormat">
+            <item>
+             <property name="text">
+              <string>yyyy-MM-dd HH:mm:ss</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>yyyy/MM/dd HH:mm</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>dd-MM-yyyy HH:mm:ss</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="labelUnitConvert">
+            <property name="text">
+             <string>单位转换：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" colspan="3">
+           <widget class="QCheckBox" name="checkUnitConvert">
+            <property name="text">
+             <string>启用单位转换（英尺→米，英里→公里）</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="labelEncoding">
+            <property name="text">
+             <string>文本编码：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1" colspan="3">
+           <widget class="QComboBox" name="comboEncoding">
+            <item>
+             <property name="text">
+              <string>UTF-8</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>GBK</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>ISO-8859-1</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <!-- 数据预览区域 -->
+   <item>
+    <widget class="QGroupBox" name="groupBoxPreview">
+     <property name="title">
+      <string>数据预览 (前10行)</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_6">
+      <item>
+       <widget class="QTableWidget" name="tablePreview"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- 进度条和日志 -->
+   <item>
+    <widget class="QGroupBox" name="groupBoxProgress">
+     <property name="title">
+      <string>处理日志</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_7">
+      <item>
+       <widget class="QProgressBar" name="progressBar">
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTextEdit" name="textLog">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="placeholderText">
+         <string>处理日志将显示在这里...</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- 底部按钮 -->
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>DataPreprocessingDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>DataPreprocessingDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <!-- 联动：选择固定值填充时启用lineMissingFillValue -->
+  <connection>
+   <sender>comboMissingMethod</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>lineMissingFillValue</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>200</x>
+     <y>130</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>300</x>
+     <y>130</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多层次仿真 - 反辐射无人机仿真系统</title>
+    <!-- Font Awesome 6 (免费) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f0f17;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 顶部工具栏 */
+        .toolbar {
+            background-color: #1e1e2f;
+            border-bottom: 1px solid #333;
+            padding: 8px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar i {
+            font-size: 18px;
+            color: #aaa;
+            transition: color 0.2s;
+            cursor: default;
+        }
+
+        .toolbar i:hover {
+            color: #4a9eff;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 24px;
+            background-color: #444;
+            margin: 0 8px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* 主布局：左右两列 */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 左侧控制面板 */
+        .left-panel {
+            width: 320px;
+            background-color: #1a1a2a;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .control-group {
+            background-color: #222236;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #333;
+        }
+
+        .control-group h3 {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 12px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ccc;
+            cursor: default;
+        }
+
+        .radio-group input[type="radio"] {
+            accent-color: #4a9eff;
+        }
+
+        .checkbox-group {
+            margin-top: 8px;
+        }
+
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .form-row label {
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .form-row .value {
+            font-weight: 500;
+        }
+
+        select, input[type="text"], input[type="number"] {
+            background-color: #2a2a3c;
+            border: 1px solid #444;
+            color: white;
+            padding: 6px 8px;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 13px;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+
+        .scene-sequence {
+            margin-top: 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .scene-list {
+            list-style: none;
+            max-height: 120px;
+            overflow-y: auto;
+            background-color: #1a1a2a;
+        }
+
+        .scene-list li {
+            padding: 8px 12px;
+            border-bottom: 1px solid #333;
+            color: #ccc;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .scene-list li:last-child {
+            border-bottom: none;
+        }
+
+        .scene-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .scene-actions button {
+            background-color: #2a2a42;
+            border: 1px solid #444;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: default;
+            font-size: 12px;
+        }
+
+        .scene-actions button:hover {
+            background-color: #3a3a5a;
+        }
+
+        .stat-group {
+            margin-top: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: #333;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 45%;
+            background: linear-gradient(90deg, #4a9eff, #6f4aff);
+            border-radius: 3px;
+        }
+
+        /* 右侧可视化区域 */
+        .right-panel {
+            flex: 1;
+            background-color: #14141f;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tab-header {
+            display: flex;
+            border-bottom: 1px solid #333;
+            background-color: #1e1e2f;
+        }
+
+        .tab-item {
+            padding: 12px 24px;
+            cursor: default;
+            color: #aaa;
+            border-bottom: 2px solid transparent;
+            transition: 0.2s;
+        }
+
+        .tab-item.active {
+            color: white;
+            border-bottom-color: #4a9eff;
+            background-color: #2a2a42;
+        }
+
+        .tab-item i {
+            margin-right: 8px;
+        }
+
+        .tab-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .visualization-placeholder {
+            background-color: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .visualization-placeholder i {
+            font-size: 48px;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        /* 底部状态栏 */
+        .status-bar {
+            background-color: #1a1a2a;
+            border-top: 1px solid #333;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e2f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* 标签页切换 */
+        .tab-item {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部工具栏 -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <i class="fas fa-folder-open" title="加载场景"></i>
+            <i class="fas fa-file-alt" title="加载方案"></i>
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="toolbar-group">
+            <i class="fas fa-play" title="开始"></i>
+            <i class="fas fa-pause" title="暂停"></i>
+            <i class="fas fa-stop" title="停止"></i>
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="toolbar-group">
+            <i class="fas fa-forward" title="加速"></i>
+            <i class="fas fa-backward" title="减速"></i>
+            <i class="fas fa-undo-alt" title="重置速度"></i>
+        </div>
+        <div style="flex:1"></div>
+        <span style="color:#aaa; font-size:14px;"><i class="far fa-clock"></i> 仿真时间: 00:12:34.5</span>
+    </div>
+
+    <!-- 主布局 -->
+    <div class="main-layout">
+        <!-- 左侧控制面板 -->
+        <div class="left-panel">
+            <!-- 仿真层次选择 -->
+            <div class="control-group">
+                <h3>仿真层次</h3>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="simLevel" checked> 交战级 (高保真度)
+                    </label>
+                    <label>
+                        <input type="radio" name="simLevel"> 任务级 (聚合模型)
+                    </label>
+                </div>
+                <div class="checkbox-group">
+                    <label style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox"> 混合模式（关键区域交战级）
+                    </label>
+                </div>
+            </div>
+
+            <!-- 作战场景类型 -->
+            <div class="control-group">
+                <h3>作战场景</h3>
+                <select style="width:100%;">
+                    <option>反辐射攻击</option>
+                    <option>火力防空</option>
+                    <option>电子对抗</option>
+                    <option>空中打击</option>
+                    <option selected>综合场景</option>
+                </select>
+
+                <!-- 综合场景序列编辑器（仅当选择综合场景时显示） -->
+                <div class="scene-sequence">
+                    <ul class="scene-list">
+                        <li><span>0-300s: 电子对抗</span> <i class="fas fa-edit" style="color:#aaa;"></i></li>
+                        <li><span>300-600s: 反辐射攻击</span> <i class="fas fa-edit" style="color:#aaa;"></i></li>
+                        <li><span>600-900s: 空中打击</span> <i class="fas fa-edit" style="color:#aaa;"></i></li>
+                    </ul>
+                    <div class="scene-actions">
+                        <button><i class="fas fa-plus"></i> 添加</button>
+                        <button><i class="fas fa-edit"></i> 编辑</button>
+                        <button><i class="fas fa-trash"></i> 删除</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 仿真参数 -->
+            <div class="control-group">
+                <h3>仿真参数</h3>
+                <div class="form-row">
+                    <label>时间步长(s)：</label>
+                    <input type="number" value="0.1" step="0.001" style="width:80px;">
+                </div>
+                <div class="form-row">
+                    <label>结束时间(s)：</label>
+                    <input type="number" value="3600" step="1" style="width:80px;">
+                </div>
+            </div>
+
+            <!-- 统计信息 -->
+            <div class="control-group">
+                <h3>统计信息</h3>
+                <div class="stat-item">
+                    <span>实体数量：</span>
+                    <span class="value">248</span>
+                </div>
+                <div class="stat-item">
+                    <span>当前场景：</span>
+                    <span class="value">电子对抗</span>
+                </div>
+                <div class="stat-item">
+                    <span>仿真进度：</span>
+                    <span class="value">45%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width:45%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧可视化区域 -->
+        <div class="right-panel">
+            <!-- 标签页头 -->
+            <div class="tab-header">
+                <div class="tab-item active" data-tab="2d"><i class="fas fa-map"></i> 二维态势</div>
+                <div class="tab-item" data-tab="3d"><i class="fas fa-cube"></i> 三维态势</div>
+                <div class="tab-item" data-tab="chart"><i class="fas fa-chart-line"></i> 统计图表</div>
+            </div>
+            <!-- 标签页内容 -->
+            <div class="tab-content">
+                <div class="tab-pane active" id="tab-2d">
+                    <div class="visualization-placeholder">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <h3>二维态势图</h3>
+                        <p>此处嵌入二维地图、兵力部署图等</p>
+                    </div>
+                </div>
+                <div class="tab-pane" id="tab-3d">
+                    <div class="visualization-placeholder">
+                        <i class="fas fa-cube"></i>
+                        <h3>三维态势图</h3>
+                        <p>此处嵌入三维战场环境、实体模型等</p>
+                    </div>
+                </div>
+                <div class="tab-pane" id="tab-chart">
+                    <div class="visualization-placeholder">
+                        <i class="fas fa-chart-bar"></i>
+                        <h3>统计图表</h3>
+                        <p>此处显示任务级指标曲线、对比报告等</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部状态栏 -->
+    <div class="status-bar">
+        <div>
+            <span><i class="fas fa-database"></i> 实体数: 248</span>
+            <span style="margin-left:16px;"><i class="fas fa-bolt"></i> 事件率: 45/s</span>
+        </div>
+        <div>
+            <span>当前层次: 交战级</span>
+            <span style="margin-left:16px;">场景: 综合</span>
+        </div>
+    </div>
+
+    <!-- 标签页切换脚本 -->
+    <script>
+        const tabItems = document.querySelectorAll('.tab-item');
+        const panes = document.querySelectorAll('.tab-pane');
+
+        tabItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                const target = this.getAttribute('data-tab');
+                // 移除所有active
+                tabItems.forEach(t => t.classList.remove('active'));
+                panes.forEach(p => p.classList.remove('active'));
+                // 添加当前active
+                this.classList.add('active');
+                document.getElementById('tab-' + target).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>台军雷达预警体系部署情况 - 可视化分析</title>
+    <!-- Leaflet 核心库 (地图) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet 测量插件 (用于绘制圆形范围) -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', Roboto, Arial, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部标题栏 */
+        .header {
+            background: linear-gradient(135deg, #1a2a3a 0%, #0f1a24 100%);
+            color: white;
+            padding: 12px 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+        .header h1 small {
+            font-size: 0.8rem;
+            color: #ccc;
+            margin-left: 12px;
+        }
+        .legend-tip {
+            font-size: 0.8rem;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* 主体布局: 左侧兵力树 + 中间地图 + 右侧表格 */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 0;
+            background-color: #e9f0f5;
+        }
+
+        /* 左侧兵力树 (组织架构改为兵力树) */
+        .force-tree {
+            width: 280px;
+            background: #f8fafc;
+            border-right: 1px solid #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+            z-index: 5;
+        }
+        .tree-header {
+            padding: 16px 16px 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            background: #eef2f6;
+            border-bottom: 2px solid #3b82f6;
+            color: #1e293b;
+        }
+        .tree-container {
+            padding: 12px 8px 20px 12px;
+            flex: 1;
+        }
+        .tree-node {
+            list-style: none;
+            margin-left: 16px;
+            padding-left: 0;
+        }
+        .tree-node-root {
+            margin-left: 0;
+            padding-left: 0;
+        }
+        .tree-item {
+            margin: 8px 0;
+            cursor: pointer;
+            transition: 0.1s;
+            border-radius: 8px;
+            padding: 6px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tree-item:hover {
+            background: #e2e8f0;
+        }
+        .tree-item.selected {
+            background: #d9effa;
+            border-left: 3px solid #2563eb;
+            font-weight: 500;
+        }
+        .toggle-icon {
+            font-size: 12px;
+            width: 18px;
+            display: inline-block;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .node-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+        .badge-radar {
+            background: #dc2626;
+            color: white;
+            font-size: 10px;
+            border-radius: 12px;
+            padding: 2px 6px;
+            margin-left: 8px;
+        }
+        .child-list {
+            padding-left: 28px;
+            display: block;
+        }
+        .child-list.collapsed {
+            display: none;
+        }
+        .force-tree .radar-marker {
+            font-weight: normal;
+            font-size: 0.85rem;
+        }
+
+        /* 中间地图区域 */
+        .map-container {
+            flex: 1;
+            position: relative;
+            background: #c8e0f0;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* 右侧表格区域 (雷达性能参数) */
+        .params-panel {
+            width: 360px;
+            background: white;
+            border-left: 1px solid #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.05);
+        }
+        .params-header {
+            padding: 12px 16px;
+            background: #1e293b;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .table-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        .radar-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .radar-table th, .radar-table td {
+            border: 1px solid #d1d5db;
+            padding: 8px 6px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .radar-table th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: #0f172a;
+            position: sticky;
+            top: 0;
+        }
+        .radar-table tr:hover {
+            background: #fef9c3;
+        }
+        .table-wrapper::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        /* 提示框 */
+        .leaflet-popup-content {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        button.map-focus {
+            background: #3b82f6;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            padding: 2px 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>🗺️ 台军雷达预警体系部署 <small>台湾地区防空雷达网 · 探测威力可视化</small></h1>
+    <div class="legend-tip">🔴 红色圆圈: 雷达探测范围(理论) | 📍 点击兵力树定位雷达</div>
+</div>
+
+<div class="main-layout">
+    <!-- 左侧兵力树 (按指挥部/联队/雷达站分级) -->
+    <div class="force-tree">
+        <div class="tree-header">📡 兵力树 (雷达装备映射)</div>
+        <div class="tree-container" id="forceTreeContainer">
+            <!-- 动态生成树结构 -->
+        </div>
+    </div>
+
+    <!-- 中间地图 -->
+    <div class="map-container">
+        <div id="map"></div>
+    </div>
+
+    <!-- 右侧雷达性能参数表格 -->
+    <div class="params-panel">
+        <div class="params-header">📊 雷达系统性能参数表</div>
+        <div class="table-wrapper">
+            <table class="radar-table" id="radarParamsTable">
+                <thead>
+                    <tr><th>雷达型号</th><th>所属单位</th><th>工作波段</th><th>最大探测距离(km)</th><th>主要探测目标</th></tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- 动态填充 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ======================= 雷达站点数据 (含坐标、威力半径、参数) =======================
+    // 坐标基于台湾岛及周边实际地理范围(GCJ02近似, 使用WGS84展示)
+    const radarSites = [
+        { id: "rd1", name: "乐山雷达站", type: "AN/FPS-115 PAVE PAWS", unit: "空军防空暨导弹指挥部", lat: 24.580, lng: 121.015, radiusKm: 480, band: "UHF波段", maxRange: 480, mainTarget: "弹道导弹/远程轰炸机" },
+        { id: "rd2", name: "大汉山雷达站", type: "AN/FPS-117", unit: "空军作战指挥部", lat: 22.438, lng: 120.645, radiusKm: 370, band: "L波段", maxRange: 370, mainTarget: "战斗机/巡航导弹" },
+        { id: "rd3", name: "三芝雷达站", type: "AN/FPS-117", unit: "空军作战指挥部", lat: 25.256, lng: 121.468, radiusKm: 370, band: "L波段", maxRange: 370, mainTarget: "战斗机/无人机" },
+        { id: "rd4", name: "东引岛雷达站", type: "CS/MPQ-90", unit: "陆军金门防卫指挥部", lat: 26.365, lng: 120.487, radiusKm: 180, band: "X波段", maxRange: 180, mainTarget: "低空目标/直升机" },
+        { id: "rd5", name: "金门雷达站", type: "AN/TPS-75", unit: "陆军金门防卫指挥部", lat: 24.436, lng: 118.316, radiusKm: 260, band: "S波段", maxRange: 260, mainTarget: "战术飞机/导弹" },
+        { id: "rd6", name: "马祖雷达站", type: "AN/TPS-75", unit: "陆军马祖防卫指挥部", lat: 26.160, lng: 119.948, radiusKm: 260, band: "S波段", maxRange: 260, mainTarget: "多用途空中目标" },
+        { id: "rd7", name: "鹅銮鼻雷达站", type: "HR-3000", unit: "海军雷达站", lat: 21.902, lng: 120.851, radiusKm: 300, band: "S波段", maxRange: 300, mainTarget: "舰载机/反舰导弹" },
+        { id: "rd8", name: "花莲雷达站", type: "AN/FPS-117", unit: "空军作战指挥部", lat: 24.006, lng: 121.618, radiusKm: 370, band: "L波段", maxRange: 370, mainTarget: "高空侦察机" },
+        { id: "rd9", name: "澎湖雷达站", type: "CS/MPQ-90", unit: "海军雷达中队", lat: 23.568, lng: 119.565, radiusKm: 180, band: "X波段", maxRange: 180, mainTarget: "低空突防目标" },
+        { id: "rd10", name: "阳明山雷达站", type: "AN/FPS-117", unit: "空军作战指挥部", lat: 25.175, lng: 121.537, radiusKm: 370, band: "L波段", maxRange: 370, mainTarget: "战斗机/预警机" }
+    ];
+
+    // 构建兵力树结构: 按照指挥部/单位分组, 映射雷达设备
+    // 兵力树层级: 台军防空指挥部 -> 下属单位(空军/陆军/海军) -> 具体雷达站
+    const forceTreeData = [
+        { name: "防空暨导弹指挥部", type: "HQ", children: [
+            { name: "乐山雷达站", radarId: "rd1", type: "radar" }
+        ]},
+        { name: "空军作战指挥部", type: "HQ", children: [
+            { name: "大漢山雷达站", radarId: "rd2", type: "radar" },
+            { name: "三芝雷达站", radarId: "rd3", type: "radar" },
+            { name: "花莲雷达站", radarId: "rd8", type: "radar" },
+            { name: "阳明山雷达站", radarId: "rd10", type: "radar" }
+        ]},
+        { name: "陆军防卫指挥部", type: "HQ", children: [
+            { name: "金门防卫指挥部", children: [
+                { name: "金门雷达站", radarId: "rd5", type: "radar" }
+            ]},
+            { name: "马祖防卫指挥部", children: [
+                { name: "马祖雷达站", radarId: "rd6", type: "radar" }
+            ]},
+            { name: "东引岛雷达站", radarId: "rd4", type: "radar" }
+        ]},
+        { name: "海军雷达中队", type: "HQ", children: [
+            { name: "鹅銮鼻雷达站", radarId: "rd7", type: "radar" },
+            { name: "澎湖雷达站", radarId: "rd9", type: "radar" }
+        ]}
+    ];
+
+    // 辅助: 根据id获取雷达
+    function getRadarById(id) {
+        return radarSites.find(r => r.id === id);
+    }
+
+    // ========== 初始化地图 ==========
+    const map = L.map('map').setView([23.8, 121.0], 7.5);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> & CartoDB',
+        subdomains: 'abcd',
+        maxZoom: 12,
+        minZoom: 6
+    }).addTo(map);
+
+    // 存储图层组: 威力圆圈和标记
+    let circlesLayer = L.layerGroup().addTo(map);
+    let markersLayer = L.layerGroup().addTo(map);
+
+    // 绘制所有雷达标记+威力圆圈
+    function renderMapRadars() {
+        circlesLayer.clearLayers();
+        markersLayer.clearLayers();
+        radarSites.forEach(radar => {
+            // 绘制探测范围圆圈 (半径公里转米)
+            const radiusMeters = radar.radiusKm * 1000;
+            const circle = L.circle([radar.lat, radar.lng], {
+                radius: radiusMeters,
+                color: '#e34234',
+                weight: 1.5,
+                fillColor: '#ff7f50',
+                fillOpacity: 0.2,
+                opacity: 0.7
+            }).bindPopup(`
+                <b>${radar.name}</b><br>
+                型号: ${radar.type}<br>
+                探测距离: ${radar.radiusKm} km<br>
+                主要目标: ${radar.mainTarget}<br>
+                <span style="font-size:11px;">坐标: ${radar.lat.toFixed(3)}, ${radar.lng.toFixed(3)}</span>
+            `);
+            circlesLayer.addLayer(circle);
+
+            // 标记点
+            const marker = L.marker([radar.lat, radar.lng], {
+                title: radar.name,
+                riseOnHover: true
+            }).bindPopup(`
+                <b>📍 ${radar.name}</b><br>
+                所属: ${radar.unit}<br>
+                型号: ${radar.type}<br>
+                最大探测距离: ${radar.radiusKm} km<br>
+                探测目标: ${radar.mainTarget}
+            `);
+            markersLayer.addLayer(marker);
+        });
+    }
+
+    // 右侧表格渲染性能参数
+    function renderParamsTable() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        radarSites.forEach(radar => {
+            const row = tbody.insertRow();
+            row.insertCell(0).innerText = radar.type + " (" + radar.name + ")";
+            row.insertCell(1).innerText = radar.unit;
+            row.insertCell(2).innerText = radar.band;
+            row.insertCell(3).innerText = radar.maxRange + " km";
+            row.insertCell(4).innerText = radar.mainTarget;
+            // 添加点击表格行定位到地图的功能 (可选)
+            row.style.cursor = 'pointer';
+            row.addEventListener('click', () => {
+                map.setView([radar.lat, radar.lng], 9);
+                // 打开对应popup
+                markersLayer.eachLayer(layer => {
+                    if (layer.getPopup && layer.getPopup() && layer.getLatLng().lat === radar.lat && layer.getLatLng().lng === radar.lng) {
+                        layer.openPopup();
+                    }
+                });
+            });
+        });
+    }
+
+    // ========== 动态生成兵力树 (带折叠/展开，并高亮选中雷达，地图跳转) ==========
+    function buildForceTree(containerEl, treeData, level = 0) {
+        const ul = document.createElement('ul');
+        ul.className = 'tree-node tree-node-root';
+        if (level === 0) ul.style.paddingLeft = '0';
+        for (let node of treeData) {
+            const li = document.createElement('li');
+            li.style.listStyle = 'none';
+            const hasChildren = node.children && node.children.length > 0;
+            const isRadar = node.type === 'radar';
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'tree-item';
+            if (isRadar) itemDiv.setAttribute('data-radar-id', node.radarId);
+            
+            // 折叠图标占位/控制
+            let toggleSpan = null;
+            if (hasChildren) {
+                toggleSpan = document.createElement('span');
+                toggleSpan.className = 'toggle-icon';
+                toggleSpan.innerText = '▼';
+                toggleSpan.style.cursor = 'pointer';
+                itemDiv.appendChild(toggleSpan);
+            } else {
+                const placeholder = document.createElement('span');
+                placeholder.style.width = '18px';
+                placeholder.style.display = 'inline-block';
+                itemDiv.appendChild(placeholder);
+            }
+            
+            // 节点标签内容
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'node-label';
+            let icon = isRadar ? '📡 ' : (hasChildren ? '🗂️ ' : '📍 ');
+            labelSpan.innerHTML = `${icon} ${node.name}`;
+            if (isRadar) {
+                const radarObj = getRadarById(node.radarId);
+                if (radarObj) {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge-radar';
+                    badge.innerText = radarObj.radiusKm + 'km';
+                    labelSpan.appendChild(badge);
+                }
+            }
+            itemDiv.appendChild(labelSpan);
+            
+            // 点击事件: 如果是雷达，跳转地图并选中树节点样式；如果是目录则展开/折叠
+            if (isRadar) {
+                itemDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const radarId = node.radarId;
+                    const radar = getRadarById(radarId);
+                    if (radar) {
+                        map.setView([radar.lat, radar.lng], 9.5);
+                        // 打开对应的popup
+                        markersLayer.eachLayer(layer => {
+                            if (layer.getLatLng && layer.getLatLng().lat === radar.lat && layer.getLatLng().lng === radar.lng) {
+                                layer.openPopup();
+                            }
+                        });
+                    }
+                    // 高亮当前选中的树节点
+                    document.querySelectorAll('.tree-item').forEach(el => el.classList.remove('selected'));
+                    itemDiv.classList.add('selected');
+                });
+            } else {
+                // 非雷达节点: 点击时展开/折叠子节点
+                if (hasChildren) {
+                    const childUl = document.createElement('ul');
+                    childUl.className = 'child-list';
+                    // 递归构建子节点
+                    buildChildrenRecursive(childUl, node.children, level + 1);
+                    li.appendChild(childUl);
+                    // 默认展开
+                    let expanded = true;
+                    if (toggleSpan) {
+                        toggleSpan.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            if (expanded) {
+                                childUl.classList.add('collapsed');
+                                toggleSpan.innerText = '▶';
+                            } else {
+                                childUl.classList.remove('collapsed');
+                                toggleSpan.innerText = '▼';
+                            }
+                            expanded = !expanded;
+                        });
+                    }
+                    itemDiv.addEventListener('click', (e) => {
+                        // 防止点到toggle时冒泡重复触发
+                        if (e.target === toggleSpan) return;
+                        if (toggleSpan) toggleSpan.click();
+                    });
+                }
+            }
+            li.appendChild(itemDiv);
+            if (!hasChildren && !isRadar) {
+                // 没有子节点的普通目录，无需额外动作
+            } else if (hasChildren && !itemDiv.querySelector('+ ul')) {
+                // 已经处理递归的子节点，无需重复
+            }
+            ul.appendChild(li);
+            
+            // 如果当前节点有children但尚未创建子ul(在非雷达分支下已经递归)
+            if (hasChildren && !li.querySelector('ul')) {
+                const childUl = document.createElement('ul');
+                childUl.className = 'child-list';
+                buildChildrenRecursive(childUl, node.children, level + 1);
+                li.appendChild(childUl);
+                if (toggleSpan) {
+                    const originalClick = toggleSpan.onclick;
+                    toggleSpan.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (childUl.classList.contains('collapsed')) {
+                            childUl.classList.remove('collapsed');
+                            toggleSpan.innerText = '▼';
+                        } else {
+                            childUl.classList.add('collapsed');
+                            toggleSpan.innerText = '▶';
+                        }
+                    });
+                }
+            }
+        }
+        containerEl.appendChild(ul);
+    }
+    
+    function buildChildrenRecursive(containerUl, children, depth) {
+        for (let child of children) {
+            const li = document.createElement('li');
+            li.style.listStyle = 'none';
+            const hasGrand = child.children && child.children.length > 0;
+            const isRadarChild = child.type === 'radar';
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'tree-item';
+            if (isRadarChild) itemDiv.setAttribute('data-radar-id', child.radarId);
+            // 折叠图标
+            let toggleSpan = null;
+            if (hasGrand) {
+                toggleSpan = document.createElement('span');
+                toggleSpan.className = 'toggle-icon';
+                toggleSpan.innerText = '▼';
+                itemDiv.appendChild(toggleSpan);
+            } else {
+                const ph = document.createElement('span');
+                ph.style.width = '18px';
+                itemDiv.appendChild(ph);
+            }
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'node-label';
+            let icon = isRadarChild ? '📡 ' : (hasGrand ? '📁 ' : '📍 ');
+            labelSpan.innerHTML = `${icon} ${child.name}`;
+            if (isRadarChild) {
+                const radarObj = getRadarById(child.radarId);
+                if (radarObj) {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge-radar';
+                    badge.innerText = radarObj.radiusKm + 'km';
+                    labelSpan.appendChild(badge);
+                }
+            }
+            itemDiv.appendChild(labelSpan);
+            
+            if (isRadarChild) {
+                itemDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const radar = getRadarById(child.radarId);
+                    if (radar) {
+                        map.setView([radar.lat, radar.lng], 9.5);
+                        markersLayer.eachLayer(layer => {
+                            if (layer.getLatLng && layer.getLatLng().lat === radar.lat && layer.getLatLng().lng === radar.lng) {
+                                layer.openPopup();
+                            }
+                        });
+                    }
+                    document.querySelectorAll('.tree-item').forEach(el => el.classList.remove('selected'));
+                    itemDiv.classList.add('selected');
+                });
+            } else if (hasGrand) {
+                // 递归创建子节点
+                const childUl = document.createElement('ul');
+                childUl.className = 'child-list';
+                buildChildrenRecursive(childUl, child.children, depth + 1);
+                li.appendChild(childUl);
+                let expanded = true;
+                if (toggleSpan) {
+                    toggleSpan.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (expanded) {
+                            childUl.classList.add('collapsed');
+                            toggleSpan.innerText = '▶';
+                        } else {
+                            childUl.classList.remove('collapsed');
+                            toggleSpan.innerText = '▼';
+                        }
+                        expanded = !expanded;
+                    });
+                }
+                itemDiv.addEventListener('click', (e) => {
+                    if (e.target === toggleSpan) return;
+                    if (toggleSpan) toggleSpan.click();
+                });
+            }
+            li.appendChild(itemDiv);
+            containerUl.appendChild(li);
+        }
+    }
+    
+    // 初始化左侧树
+    function initForceTree() {
+        const container = document.getElementById('forceTreeContainer');
+        container.innerHTML = '';
+        const wrapperUl = document.createElement('ul');
+        wrapperUl.className = 'tree-node-root';
+        wrapperUl.style.paddingLeft = '0';
+        container.appendChild(wrapperUl);
+        for (let topNode of forceTreeData) {
+            const li = document.createElement('li');
+            li.style.listStyle = 'none';
+            const hasChildren = topNode.children && topNode.children.length > 0;
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'tree-item';
+            const toggleSpan = document.createElement('span');
+            toggleSpan.className = 'toggle-icon';
+            toggleSpan.innerText = hasChildren ? '▼' : ' ';
+            toggleSpan.style.cursor = hasChildren ? 'pointer' : 'default';
+            itemDiv.appendChild(toggleSpan);
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'node-label';
+            labelSpan.innerHTML = `🏢 ${topNode.name}`;
+            itemDiv.appendChild(labelSpan);
+            li.appendChild(itemDiv);
+            
+            if (hasChildren) {
+                const childUl = document.createElement('ul');
+                childUl.className = 'child-list';
+                buildChildrenRecursive(childUl, topNode.children, 1);
+                li.appendChild(childUl);
+                let expanded = true;
+                toggleSpan.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (expanded) {
+                        childUl.classList.add('collapsed');
+                        toggleSpan.innerText = '▶';
+                    } else {
+                        childUl.classList.remove('collapsed');
+                        toggleSpan.innerText = '▼';
+                    }
+                    expanded = !expanded;
+                });
+                itemDiv.addEventListener('click', (e) => {
+                    if (e.target === toggleSpan) return;
+                    toggleSpan.click();
+                });
+            } else {
+                toggleSpan.style.opacity = '0.3';
+            }
+            wrapperUl.appendChild(li);
+        }
+    }
+
+    // 页面整体初始化
+    function init() {
+        renderMapRadars();
+        renderParamsTable();
+        initForceTree();
+        // 添加一个默认选中样式无，但可以让地图适应所有标记范围
+        const group = L.featureGroup([...markersLayer.getLayers(), ...circlesLayer.getLayers()]);
+        // 可选自动调整边界，但为了体验，直接设置合适视图
+        map.fitBounds([[21.5, 118.0], [26.5, 122.5]]);
+    }
+    
+    init();
+</script>
+</body>
+</html>

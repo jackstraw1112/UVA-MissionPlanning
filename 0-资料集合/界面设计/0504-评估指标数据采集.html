@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>评估指标数据采集 - 反辐射无人机仿真系统</title>
+    <!-- Font Awesome 6 (免费) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f0f17;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 标题栏 */
+        .header {
+            background-color: #1e1e2f;
+            border-bottom: 1px solid #333;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h2 {
+            font-size: 18px;
+            font-weight: 400;
+            color: #ccc;
+        }
+
+        .header i {
+            color: #aaa;
+            margin-left: 16px;
+            cursor: default;
+        }
+
+        .header i:hover {
+            color: #4a9eff;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            background-color: #1e1e2f;
+            border-bottom: 1px solid #333;
+            padding: 8px 16px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar i {
+            font-size: 18px;
+            color: #aaa;
+            transition: color 0.2s;
+            cursor: default;
+        }
+
+        .toolbar i:hover {
+            color: #4a9eff;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 24px;
+            background-color: #444;
+            margin: 0 8px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* 主布局 */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            padding: 16px;
+            gap: 16px;
+        }
+
+        /* 左侧指标映射面板 */
+        .left-panel {
+            width: 320px;
+            background-color: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 12px 16px;
+            background-color: #222236;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: #ccc;
+        }
+
+        .panel-header i {
+            color: #4a9eff;
+        }
+
+        .mapping-table {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .mapping-row {
+            display: flex;
+            flex-direction: column;
+            background-color: #222236;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .mapping-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .mapping-name {
+            font-weight: 600;
+            color: #4a9eff;
+        }
+
+        .mapping-actions i {
+            color: #aaa;
+            margin-left: 8px;
+            font-size: 14px;
+        }
+
+        .mapping-detail {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 6px;
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .mapping-detail .label {
+            color: #888;
+        }
+
+        .btn-add {
+            background-color: #2a2a42;
+            border: 1px solid #444;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 12px;
+            text-align: center;
+            cursor: default;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-add:hover {
+            background-color: #3a3a5a;
+        }
+
+        /* 右侧区域 */
+        .right-panel {
+            flex: 1;
+            background-color: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 标签页头 */
+        .tab-header {
+            display: flex;
+            border-bottom: 1px solid #333;
+            background-color: #1e1e2f;
+        }
+
+        .tab-item {
+            padding: 12px 24px;
+            cursor: default;
+            color: #aaa;
+            border-bottom: 2px solid transparent;
+            transition: 0.2s;
+        }
+
+        .tab-item.active {
+            color: white;
+            border-bottom-color: #4a9eff;
+            background-color: #2a2a42;
+        }
+
+        .tab-item i {
+            margin-right: 8px;
+        }
+
+        .tab-content {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* 采集状态卡片 */
+        .status-card {
+            background-color: #222236;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .status-row .label {
+            color: #aaa;
+        }
+
+        .status-row .value {
+            color: white;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: #333;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 45%;
+            background: linear-gradient(90deg, #4a9eff, #6f4aff);
+            border-radius: 3px;
+        }
+
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 8px;
+            background-color: #2a2a3c;
+            color: #ccc;
+            font-weight: 400;
+            border-bottom: 1px solid #444;
+        }
+
+        .data-table td {
+            padding: 8px;
+            border-bottom: 1px solid #2a2a3c;
+        }
+
+        .data-table tr:hover {
+            background-color: #2a2a42;
+        }
+
+        /* 底部状态栏 */
+        .status-bar {
+            background-color: #1a1a2a;
+            border-top: 1px solid #333;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e2f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* 标签页切换 */
+        .tab-item {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- 标题栏 -->
+    <div class="header">
+        <h2><i class="fas fa-database" style="margin-right: 8px; color: #4a9eff;"></i>评估指标数据采集</h2>
+        <div>
+            <i class="fas fa-question-circle" title="帮助"></i>
+            <i class="fas fa-user" title="用户"></i>
+        </div>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <i class="fas fa-play" title="开始采集"></i>
+            <i class="fas fa-stop" title="停止采集"></i>
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="toolbar-group">
+            <i class="fas fa-save" title="保存配置"></i>
+            <i class="fas fa-folder-open" title="加载配置"></i>
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="toolbar-group">
+            <i class="fas fa-trash-alt" title="清空数据"></i>
+        </div>
+        <div style="flex:1"></div>
+        <span style="color:#aaa;">数据源: 仿真引擎 (共享内存)</span>
+    </div>
+
+    <!-- 主布局 -->
+    <div class="main-layout">
+        <!-- 左侧指标映射面板 -->
+        <div class="left-panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-arrows-spin" style="margin-right: 6px;"></i>指标映射规则</h3>
+                <i class="fas fa-plus" title="添加规则"></i>
+            </div>
+            <div class="mapping-table">
+                <div class="mapping-row">
+                    <div class="mapping-header">
+                        <span class="mapping-name">目标摧毁概率</span>
+                        <span class="mapping-actions">
+                            <i class="fas fa-edit"></i>
+                            <i class="fas fa-copy"></i>
+                            <i class="fas fa-trash-alt"></i>
+                        </span>
+                    </div>
+                    <div class="mapping-detail">
+                        <span class="label">数据源:</span><span>事件日志</span>
+                        <span class="label">转换规则:</span><span>命中数/总发射数</span>
+                        <span class="label">采集频率:</span><span>50 Hz</span>
+                        <span class="label">预处理:</span><span>窗口平均 (10s)</span>
+                    </div>
+                </div>
+                <div class="mapping-row">
+                    <div class="mapping-header">
+                        <span class="mapping-name">无人机生存率</span>
+                        <span class="mapping-actions">
+                            <i class="fas fa-edit"></i>
+                            <i class="fas fa-copy"></i>
+                            <i class="fas fa-trash-alt"></i>
+                        </span>
+                    </div>
+                    <div class="mapping-detail">
+                        <span class="label">数据源:</span><span>实体状态</span>
+                        <span class="label">转换规则:</span><span>存活数量/总数</span>
+                        <span class="label">采集频率:</span><span>20 Hz</span>
+                        <span class="label">预处理:</span><span>瞬时值</span>
+                    </div>
+                </div>
+                <div class="mapping-row">
+                    <div class="mapping-header">
+                        <span class="mapping-name">压制时间</span>
+                        <span class="mapping-actions">
+                            <i class="fas fa-edit"></i>
+                            <i class="fas fa-copy"></i>
+                            <i class="fas fa-trash-alt"></i>
+                        </span>
+                    </div>
+                    <div class="mapping-detail">
+                        <span class="label">数据源:</span><span>事件日志</span>
+                        <span class="label">转换规则:</span><span>结束时间-开始时间</span>
+                        <span class="label">采集频率:</span><span>事件触发</span>
+                        <span class="label">预处理:</span><span>最大值</span>
+                    </div>
+                </div>
+            </div>
+            <div class="btn-add">
+                <i class="fas fa-plus"></i> 添加新规则
+            </div>
+        </div>
+
+        <!-- 右侧区域 -->
+        <div class="right-panel">
+            <!-- 标签页头 -->
+            <div class="tab-header">
+                <div class="tab-item active" data-tab="status"><i class="fas fa-chart-line"></i> 采集状态</div>
+                <div class="tab-item" data-tab="preview"><i class="fas fa-table"></i> 实时预览</div>
+                <div class="tab-item" data-tab="stats"><i class="fas fa-calculator"></i> 统计信息</div>
+            </div>
+            <!-- 标签页内容 -->
+            <div class="tab-content">
+                <!-- 采集状态页 -->
+                <div class="tab-pane active" id="tab-status">
+                    <div class="status-card">
+                        <div class="status-row">
+                            <span class="label">数据源</span>
+                            <span class="value">仿真引擎 (共享内存)</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="label">采样频率</span>
+                            <span class="value">100 Hz</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="label">已采集数据量</span>
+                            <span class="value">1,234,567 条</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="label">最后更新时间</span>
+                            <span class="value">2025-03-18 15:30:45</span>
+                        </div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-row">
+                            <span class="label">采集进度</span>
+                            <span class="value">45%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:45%"></div>
+                        </div>
+                        <div style="text-align:right; font-size:12px; color:#aaa;">任务时间 00:12:34 / 01:00:00</div>
+                    </div>
+                    <div class="status-card">
+                        <h4 style="margin-bottom:12px; font-size:14px; color:#ccc;">最近采集记录</h4>
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>时间</th><th>指标名称</th><th>原始值</th><th>标准化值</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>15:30:45</td><td>目标摧毁概率</td><td>0.82</td><td>0.78</td></tr>
+                                <tr><td>15:30:44</td><td>无人机生存率</td><td>0.75</td><td>0.71</td></tr>
+                                <tr><td>15:30:43</td><td>压制时间</td><td>12.5s</td><td>0.63</td></tr>
+                                <tr><td>15:30:42</td><td>目标摧毁概率</td><td>0.79</td><td>0.74</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- 实时预览页 -->
+                <div class="tab-pane" id="tab-preview">
+                    <div style="margin-bottom:12px; display:flex; gap:8px; align-items:center;">
+                        <span style="color:#aaa;">选择指标:</span>
+                        <select style="background:#2a2a3c; border:1px solid #444; color:white; padding:4px 8px; border-radius:4px;">
+                            <option>目标摧毁概率</option>
+                            <option>无人机生存率</option>
+                            <option>压制时间</option>
+                        </select>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>实体ID</th><th>原始值</th><th>标准化值</th><th>时间戳</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>UAV-001</td><td>0.82</td><td>0.78</td><td>15:30:45</td></tr>
+                            <tr><td>UAV-002</td><td>0.79</td><td>0.74</td><td>15:30:45</td></tr>
+                            <tr><td>UAV-003</td><td>0.85</td><td>0.81</td><td>15:30:45</td></tr>
+                            <tr><td>UAV-004</td><td>0.80</td><td>0.76</td><td>15:30:45</td></tr>
+                            <tr><td>UAV-005</td><td>0.77</td><td>0.73</td><td>15:30:44</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- 统计信息页 -->
+                <div class="tab-pane" id="tab-stats">
+                    <div class="status-card">
+                        <div class="status-row">
+                            <span class="label">目标摧毁概率</span>
+                            <span class="value">均值 0.82, 标准差 0.12</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="label">无人机生存率</span>
+                            <span class="value">均值 0.75, 标准差 0.08</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="label">压制时间</span>
+                            <span class="value">均值 12.3s, 标准差 2.1s</span>
+                        </div>
+                    </div>
+                    <div class="status-card">
+                        <h4 style="margin-bottom:12px; font-size:14px; color:#ccc;">指标相关性</h4>
+                        <table class="data-table">
+                            <thead><tr><th></th><th>摧毁概率</th><th>生存率</th><th>压制时间</th></tr></thead>
+                            <tbody>
+                                <tr><td>摧毁概率</td><td>1.00</td><td>-0.32</td><td>0.45</td></tr>
+                                <tr><td>生存率</td><td>-0.32</td><td>1.00</td><td>-0.21</td></tr>
+                                <tr><td>压制时间</td><td>0.45</td><td>-0.21</td><td>1.00</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部状态栏 -->
+    <div class="status-bar">
+        <div>
+            <span><i class="fas fa-circle" style="color:#4caf50;"></i> 采集运行中</span>
+            <span style="margin-left:16px;">数据速率: 1.2 MB/s</span>
+        </div>
+        <div>
+            <span>缓冲区使用: 32%</span>
+        </div>
+    </div>
+
+    <!-- 标签页切换脚本 -->
+    <script>
+        const tabItems = document.querySelectorAll('.tab-item');
+        const panes = document.querySelectorAll('.tab-pane');
+
+        tabItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                const target = this.getAttribute('data-tab');
+                tabItems.forEach(t => t.classList.remove('active'));
+                panes.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('tab-' + target).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
