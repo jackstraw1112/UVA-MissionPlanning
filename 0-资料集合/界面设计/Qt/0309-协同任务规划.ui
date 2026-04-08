@@ -1,0 +1,1002 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CooperativePlanningWindow</class>
+ <widget class="QMainWindow" name="CooperativePlanningWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1400</width>
+    <height>950</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>协同任务规划 - 反辐射无人机联合作战</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_5">
+    <item>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="handleWidth">
+       <number>6</number>
+      </property>
+      <!-- 左侧配置面板 -->
+      <widget class="QTabWidget" name="tabWidgetConfig">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <!-- 任务目标页 -->
+       <widget class="QWidget" name="tabMission">
+        <attribute name="title">
+         <string>任务目标</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QGroupBox" name="groupBoxTaskType">
+           <property name="title">
+            <string>联合作战任务</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelTaskType">
+              <property name="text">
+               <string>任务类型：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="comboTaskType">
+              <item>
+               <property name="text">
+                <string>防空压制 (SEAD)</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>区域侦察</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>目标打击</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>电子干扰</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelTaskPriority">
+              <property name="text">
+               <string>任务优先级：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSpinBox" name="spinTaskPriority">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>5</number>
+              </property>
+              <property name="value">
+               <number>3</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxTargets">
+           <property name="title">
+            <string>目标列表</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_6">
+            <item>
+             <widget class="QTableWidget" name="tableTargets">
+              <property name="columnCount">
+               <number>6</number>
+              </property>
+              <attribute name="horizontalHeaderStretchLastSection">
+               <bool>true</bool>
+              </attribute>
+              <column>
+               <property name="text">
+                <string>目标ID</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>类型</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>经度</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>纬度</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>威胁等级</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>要求摧毁概率</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <item>
+               <widget class="QPushButton" name="btnAddTarget">
+                <property name="text">
+                 <string>添加</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnDeleteTarget">
+                <property name="text">
+                 <string>删除</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnImportTargets">
+                <property name="text">
+                 <string>从上级导入</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxTimeConstraints">
+           <property name="title">
+            <string>时间约束</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_2">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelStartTime">
+              <property name="text">
+               <string>最早开始时间：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDateTimeEdit" name="dateTimeStart"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelEndTime">
+              <property name="text">
+               <string>最晚结束时间：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QDateTimeEdit" name="dateTimeEnd"/>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <!-- 协同规则页 -->
+       <widget class="QWidget" name="tabRules">
+        <attribute name="title">
+         <string>协同规则</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QGroupBox" name="groupBoxTacticLib">
+           <property name="title">
+            <string>协同战术库</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_3">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelTactic">
+              <property name="text">
+               <string>选择战术模板：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="comboTactic">
+              <item>
+               <property name="text">
+                <string>多机同时到达压制</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>接力探测-攻击</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>分布式干扰</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>蜂群饱和攻击</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxCoopParams">
+           <property name="title">
+            <string>协同参数</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_4">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelCoopMode">
+              <property name="text">
+               <string>协同模式：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="comboCoopMode">
+              <item>
+               <property name="text">
+                <string>集中式</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>分布式</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>混合式</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelCommProtocol">
+              <property name="text">
+               <string>通信协议：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="comboCommProtocol">
+              <item>
+               <property name="text">
+                <string>Link-16</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>TTNT</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>军用自组网</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="labelSynAccuracy">
+              <property name="text">
+               <string>时间同步精度(ms)：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSpinBox" name="spinSynAccuracy">
+              <property name="suffix">
+               <string> ms</string>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="value">
+               <number>10</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxRuleset">
+           <property name="title">
+            <string>规则库版本</string>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QComboBox" name="comboRuleset">
+              <item>
+               <property name="text">
+                <string>联合作战规则 v2.0</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>防空压制专用规则 v1.5</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <!-- 资源池页 -->
+       <widget class="QWidget" name="tabResources">
+        <attribute name="title">
+         <string>资源池</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QGroupBox" name="groupBoxPlatforms">
+           <property name="title">
+            <string>可用平台列表</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_7">
+            <item>
+             <widget class="QTableWidget" name="tablePlatforms">
+              <property name="columnCount">
+               <number>7</number>
+              </property>
+              <attribute name="horizontalHeaderStretchLastSection">
+               <bool>true</bool>
+              </attribute>
+              <column>
+               <property name="text">
+                <string>平台ID</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>类型</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>型号</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>载荷</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>位置(经,纬)</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>航程(km)</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>可用数量</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <item>
+               <widget class="QLabel" name="labelTotalCount">
+                <property name="text">
+                 <string>总数：</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="labelTotalCountValue">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxForceGroup">
+           <property name="title">
+            <string>兵力编组</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_8">
+            <item>
+             <widget class="QListWidget" name="listForceGroups"/>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <item>
+               <widget class="QPushButton" name="btnCreateGroup">
+                <property name="text">
+                 <string>新建编组</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnEditGroup">
+                <property name="text">
+                 <string>编辑编组</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <!-- 规划控制页 -->
+       <widget class="QWidget" name="tabControl">
+        <attribute name="title">
+         <string>规划控制</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QGroupBox" name="groupBoxAlgorithm">
+           <property name="title">
+            <string>算法选择</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_5">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelAlgo">
+              <property name="text">
+               <string>主算法：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="comboMainAlgo">
+              <item>
+               <property name="text">
+                <string>多目标遗传算法</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>合同网协议</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>MADDPG强化学习</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelIterations">
+              <property name="text">
+               <string>最大迭代次数：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSpinBox" name="spinIterations">
+              <property name="maximum">
+               <number>10000</number>
+              </property>
+              <property name="value">
+               <number>500</number>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="labelPopulation">
+              <property name="text">
+               <string>种群大小：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSpinBox" name="spinPopulation">
+              <property name="value">
+               <number>200</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxOptimize">
+           <property name="title">
+            <string>优化目标</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_6">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelObj1">
+              <property name="text">
+               <string>任务成功率：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="spinObj1Weight">
+              <property name="value">
+               <double>0.400000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelObj2">
+              <property name="text">
+               <string>资源消耗：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QDoubleSpinBox" name="spinObj2Weight">
+              <property name="value">
+               <double>0.300000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="labelObj3">
+              <property name="text">
+               <string>时间窗口匹配：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QDoubleSpinBox" name="spinObj3Weight">
+              <property name="value">
+               <double>0.300000000000000</double>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnStartCoopPlanning">
+           <property name="text">
+            <string>启动协同规划</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>40</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <!-- 右侧结果显示区域 -->
+      <widget class="QTabWidget" name="tabWidgetResult">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <!-- 协同方案总览 -->
+       <widget class="QWidget" name="tabOverview">
+        <attribute name="title">
+         <string>协同方案总览</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_9">
+         <item>
+          <widget class="QLabel" name="labelGantt">
+           <property name="text">
+            <string>行动时间线 (甘特图)</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QFrame" name="frameGantt">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>200</height>
+            </size>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_10">
+            <item>
+             <widget class="QLabel" name="labelGanttPlaceholder">
+              <property name="text">
+               <string>&lt;h3&gt;甘特图占位&lt;/h3&gt;&lt;p&gt;此处显示各平台任务时间线 (可用QCustomPlot或第三方库实现)&lt;/p&gt;</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelCoopGraph">
+           <property name="text">
+            <string>协同关系图</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QFrame" name="frameGraph">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>150</height>
+            </size>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_11">
+            <item>
+             <widget class="QLabel" name="labelGraphPlaceholder">
+              <property name="text">
+               <string>&lt;h3&gt;协同网络图占位&lt;/h3&gt;&lt;p&gt;显示平台间协同关系与信息流&lt;/p&gt;</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <!-- 详细分配表 -->
+       <widget class="QWidget" name="tabAssignment">
+        <attribute name="title">
+         <string>详细分配表</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_12">
+         <item>
+          <widget class="QTableWidget" name="tableAssignment">
+           <property name="columnCount">
+            <number>7</number>
+           </property>
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+           <column>
+            <property name="text">
+             <string>平台ID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>任务序列</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>目标ID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>开始时间</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>结束时间</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>路径长度(km)</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>工作参数</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <!-- 方案评估页 -->
+       <widget class="QWidget" name="tabEvaluation">
+        <attribute name="title">
+         <string>方案评估</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_13">
+         <item>
+          <widget class="QGroupBox" name="groupBoxMetrics">
+           <property name="title">
+            <string>关键指标</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelSuccessProb">
+              <property name="text">
+               <string>任务成功概率：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="labelSuccessProbValue">
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="labelRisk">
+              <property name="text">
+               <string>综合风险：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QLabel" name="labelRiskValue">
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelTotalCost">
+              <property name="text">
+               <string>总资源消耗：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="labelTotalCostValue">
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLabel" name="labelTimeDeviation">
+              <property name="text">
+               <string>时间偏差：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QLabel" name="labelTimeDeviationValue">
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxDetailEval">
+           <property name="title">
+            <string>详细评估报告</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_14">
+            <item>
+             <widget class="QTextEdit" name="textEvalReport">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+              <property name="html">
+               <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;
+&lt;p&gt;协同方案评估结果将显示在这里...&lt;/p&gt;
+&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </widget>
+    </item>
+    <!-- 底部进度与状态栏 -->
+    <item>
+     <widget class="QGroupBox" name="groupBoxProgress">
+      <property name="title">
+       <string>规划进度</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <item>
+        <widget class="QProgressBar" name="progressBar">
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelProgressText">
+         <property name="text">
+          <string>就绪</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnStopPlanning">
+         <property name="text">
+          <string>停止</string>
+         </property>
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1400</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <addaction name="actionLoadMission"/>
+    <addaction name="actionLoadResources"/>
+    <addaction name="actionSavePlan"/>
+    <addaction name="separator"/>
+    <addaction name="actionExportPlan"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>编辑</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>视图</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>帮助</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionLoadMission"/>
+   <addaction name="actionLoadResources"/>
+   <addaction name="actionSavePlan"/>
+   <addaction name="separator"/>
+   <addaction name="actionStartPlanning"/>
+   <addaction name="actionExportPlan"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionLoadMission">
+   <property name="text">
+    <string>加载任务</string>
+   </property>
+  </action>
+  <action name="actionLoadResources">
+   <property name="text">
+    <string>加载资源</string>
+   </property>
+  </action>
+  <action name="actionSavePlan">
+   <property name="text">
+    <string>保存方案</string>
+   </property>
+  </action>
+  <action name="actionExportPlan">
+   <property name="text">
+    <string>导出方案</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>退出</string>
+   </property>
+  </action>
+  <action name="actionStartPlanning">
+   <property name="text">
+    <string>开始规划</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

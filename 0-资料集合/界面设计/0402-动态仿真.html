@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动态仿真 - 反辐射无人机仿真系统</title>
+    <!-- Font Awesome 6 (免费) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f0f17;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 顶部工具栏 */
+        .toolbar {
+            background-color: #1e1e2f;
+            border-bottom: 1px solid #333;
+            padding: 8px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar i {
+            font-size: 18px;
+            color: #aaa;
+            transition: color 0.2s;
+            cursor: default;
+        }
+
+        .toolbar i:hover {
+            color: #4a9eff;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 24px;
+            background-color: #444;
+            margin: 0 8px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* 主布局：左右两列 */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 左侧控制面板 */
+        .left-panel {
+            width: 320px;
+            background-color: #1a1a2a;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* 标签页头 */
+        .tab-header {
+            display: flex;
+            border-bottom: 1px solid #333;
+            background-color: #1e1e2f;
+        }
+
+        .tab-item {
+            flex: 1;
+            padding: 12px 0;
+            text-align: center;
+            cursor: default;
+            color: #aaa;
+            transition: 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-item.active {
+            color: white;
+            border-bottom-color: #4a9eff;
+            background-color: #2a2a42;
+        }
+
+        .tab-item i {
+            margin-right: 6px;
+        }
+
+        /* 标签页内容区域 */
+        .tab-content {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* 控件组 */
+        .control-group {
+            background-color: #222236;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #333;
+        }
+
+        .control-group h3 {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 12px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .form-row label {
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .form-row .value {
+            font-weight: 500;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .slider {
+            flex: 1;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            appearance: none;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #4a9eff;
+            border-radius: 50%;
+            cursor: default;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: #333;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 45%;
+            background: linear-gradient(90deg, #4a9eff, #6f4aff);
+            border-radius: 3px;
+        }
+
+        /* 表格样式 */
+        .entity-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .entity-table th {
+            text-align: left;
+            color: #aaa;
+            font-weight: 400;
+            padding: 8px 4px;
+            border-bottom: 1px solid #333;
+        }
+
+        .entity-table td {
+            padding: 6px 4px;
+            border-bottom: 1px solid #2a2a3c;
+        }
+
+        .entity-table tr:hover {
+            background-color: #2a2a42;
+        }
+
+        /* 事件日志 */
+        .event-log {
+            list-style: none;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            background-color: #1a1a2a;
+            border-radius: 4px;
+        }
+
+        .event-log li {
+            padding: 6px 8px;
+            border-bottom: 1px solid #2a2a3c;
+            color: #ccc;
+        }
+
+        .event-log li:last-child {
+            border-bottom: none;
+        }
+
+        .event-time {
+            color: #4a9eff;
+            margin-right: 8px;
+        }
+
+        /* 右侧可视化区域 */
+        .right-panel {
+            flex: 1;
+            background-color: #14141f;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .visualization-area {
+            flex: 1;
+            background-color: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            font-size: 18px;
+        }
+
+        .visualization-placeholder {
+            text-align: center;
+        }
+
+        .visualization-placeholder i {
+            font-size: 48px;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        /* 底部状态栏 */
+        .status-bar {
+            background-color: #1a1a2a;
+            border-top: 1px solid #333;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .status-left {
+            display: flex;
+            gap: 20px;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e2f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* 简单交互（切换标签页） */
+        .tab-item {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部工具栏 -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <i class="fas fa-folder-open" title="加载场景"></i>
+            <i class="fas fa-file-alt" title="加载方案"></i>
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="toolbar-group">
+            <i class="fas fa-play" title="开始"></i>
+            <i class="fas fa-pause" title="暂停"></i>
+            <i class="fas fa-stop" title="停止"></i>
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="toolbar-group">
+            <i class="fas fa-forward" title="加速"></i>
+            <i class="fas fa-backward" title="减速"></i>
+            <i class="fas fa-undo-alt" title="重置速度"></i>
+        </div>
+        <div style="flex:1"></div>
+        <span style="color:#aaa; font-size:14px;"><i class="far fa-clock"></i> 仿真时间: 00:12:34.5</span>
+    </div>
+
+    <!-- 主布局 -->
+    <div class="main-layout">
+        <!-- 左侧控制面板 -->
+        <div class="left-panel">
+            <!-- 标签页头 -->
+            <div class="tab-header">
+                <div class="tab-item active" data-tab="control"><i class="fas fa-sliders-h"></i> 控制</div>
+                <div class="tab-item" data-tab="entities"><i class="fas fa-list"></i> 实体</div>
+                <div class="tab-item" data-tab="events"><i class="fas fa-history"></i> 事件</div>
+            </div>
+            <!-- 标签页内容 -->
+            <div class="tab-content">
+                <!-- 控制页 -->
+                <div class="tab-pane active" id="tab-control">
+                    <div class="control-group">
+                        <h3>时间控制</h3>
+                        <div class="form-row">
+                            <label>当前时间</label>
+                            <span class="value">00:12:34.5</span>
+                        </div>
+                        <div class="form-row">
+                            <label>仿真速度</label>
+                            <div class="slider-container">
+                                <input type="range" min="1" max="100" value="10" class="slider">
+                                <span class="value">1.0x</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <h3>仿真参数</h3>
+                        <div class="form-row">
+                            <label>时间步长(s)</label>
+                            <span class="value">0.1</span>
+                        </div>
+                        <div class="form-row">
+                            <label>结束时间(s)</label>
+                            <span class="value">3600</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <h3>统计信息</h3>
+                        <div class="stat-row">
+                            <span>实体数量</span>
+                            <span class="value">248</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>已处理事件</span>
+                            <span class="value">1,234</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>仿真进度</span>
+                            <span class="value">45%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:45%"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 实体列表页 -->
+                <div class="tab-pane" id="tab-entities">
+                    <div style="margin-bottom:12px; display:flex; gap:8px; align-items:center;">
+                        <i class="fas fa-search" style="color:#aaa;"></i>
+                        <input type="text" placeholder="过滤实体..." style="background:#2a2a3c; border:1px solid #444; color:white; padding:6px; border-radius:4px; flex:1;">
+                    </div>
+                    <table class="entity-table">
+                        <thead>
+                            <tr><th>ID</th><th>类型</th><th>位置X</th><th>位置Y</th><th>高度</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>UAV-001</td><td>反辐射无人机</td><td>125.3</td><td>78.2</td><td>3500</td></tr>
+                            <tr><td>UAV-002</td><td>反辐射无人机</td><td>130.7</td><td>65.4</td><td>3400</td></tr>
+                            <tr><td>UAV-003</td><td>反辐射无人机</td><td>118.9</td><td>82.1</td><td>3600</td></tr>
+                            <tr><td>TGT-001</td><td>目标雷达</td><td>150.2</td><td>70.5</td><td>100</td></tr>
+                            <tr><td>TGT-002</td><td>目标雷达</td><td>140.8</td><td>95.3</td><td>120</td></tr>
+                            <tr><td>THR-001</td><td>威胁区</td><td>145.0</td><td>80.0</td><td>0</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top:12px;">
+                        <label><input type="checkbox"> 在视图中跟随选中实体</label>
+                    </div>
+                </div>
+                <!-- 事件日志页 -->
+                <div class="tab-pane" id="tab-events">
+                    <ul class="event-log">
+                        <li><span class="event-time">[12:34.5]</span> 无人机 UAV-001 进入目标区域</li>
+                        <li><span class="event-time">[12:35.2]</span> 目标 TGT-001 被探测到</li>
+                        <li><span class="event-time">[12:36.1]</span> 无人机 UAV-003 发射导弹</li>
+                        <li><span class="event-time">[12:37.0]</span> 目标 TGT-001 被摧毁</li>
+                        <li><span class="event-time">[12:38.4]</span> 威胁区 THR-001 激活</li>
+                    </ul>
+                    <div style="display:flex; justify-content:space-between; margin-top:12px;">
+                        <label><input type="checkbox"> 事件发生时暂停</label>
+                        <i class="fas fa-trash-alt" style="color:#aaa; cursor:default;" title="清空日志"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧可视化区域 -->
+        <div class="right-panel">
+            <div class="visualization-area">
+                <div class="visualization-placeholder">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <p>态势显示区域</p>
+                    <p style="font-size:14px; color:#555;">此处可嵌入二维/三维地图、态势图等</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部状态栏 -->
+    <div class="status-bar">
+        <div class="status-left">
+            <span><i class="fas fa-database"></i> 实体数: 248</span>
+            <span><i class="fas fa-bolt"></i> 事件率: 45/s</span>
+        </div>
+        <div>
+            <span><i class="far fa-clock"></i> 上次更新时间: 12:34:45</span>
+        </div>
+    </div>
+
+    <!-- 简单的标签页切换脚本 -->
+    <script>
+        const tabItems = document.querySelectorAll('.tab-item');
+        const panes = document.querySelectorAll('.tab-pane');
+
+        tabItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                const target = this.getAttribute('data-tab');
+                // 移除所有active
+                tabItems.forEach(t => t.classList.remove('active'));
+                panes.forEach(p => p.classList.remove('active'));
+                // 添加当前active
+                this.classList.add('active');
+                document.getElementById('tab-' + target).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

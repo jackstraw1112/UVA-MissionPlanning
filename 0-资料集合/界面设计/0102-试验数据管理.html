@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>试验数据管理 - 反辐射无人机仿真系统</title>
+    <!-- Font Awesome 6 (免费) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f0f17;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 标题栏 */
+        .header {
+            background-color: #1e1e2f;
+            border-bottom: 1px solid #333;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h2 {
+            font-size: 18px;
+            font-weight: 400;
+            color: #ccc;
+        }
+
+        .header i {
+            color: #aaa;
+            margin-left: 16px;
+            cursor: default;
+        }
+
+        .header i:hover {
+            color: #4a9eff;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            background-color: #1e1e2f;
+            border-bottom: 1px solid #333;
+            padding: 8px 16px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar i {
+            font-size: 18px;
+            color: #aaa;
+            transition: color 0.2s;
+            cursor: default;
+        }
+
+        .toolbar i:hover {
+            color: #4a9eff;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 24px;
+            background-color: #444;
+            margin: 0 8px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background-color: #2a2a3c;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 4px 8px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 4px;
+            width: 200px;
+            outline: none;
+        }
+
+        .search-box i {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        /* 主容器 */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            overflow: hidden;
+            gap: 16px;
+        }
+
+        /* 主布局：左右两列 */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 16px;
+        }
+
+        /* 左侧数据导航 */
+        .left-panel {
+            width: 280px;
+            background-color: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 12px 16px;
+            background-color: #222236;
+            border-bottom: 1px solid #333;
+            font-size: 14px;
+            font-weight: 500;
+            color: #ccc;
+        }
+
+        .panel-header i {
+            margin-right: 6px;
+            color: #4a9eff;
+        }
+
+        .file-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .tree-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            cursor: default;
+            transition: background 0.2s;
+        }
+
+        .tree-item:hover {
+            background-color: #2a2a42;
+        }
+
+        .tree-item.selected {
+            background-color: #2a2a5a;
+            border-left: 2px solid #4a9eff;
+        }
+
+        .tree-item i {
+            color: #4a9eff;
+            width: 20px;
+            margin-right: 6px;
+        }
+
+        .tree-item .name {
+            flex: 1;
+            font-size: 13px;
+        }
+
+        .tree-item .size {
+            color: #aaa;
+            font-size: 11px;
+        }
+
+        .file-info {
+            background-color: #222236;
+            border-top: 1px solid #333;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 6px;
+        }
+
+        .info-label {
+            width: 70px;
+            color: #aaa;
+        }
+
+        .info-value {
+            flex: 1;
+            color: white;
+        }
+
+        /* 右侧工作区 */
+        .right-panel {
+            flex: 1;
+            background-color: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tab-header {
+            display: flex;
+            border-bottom: 1px solid #333;
+            background-color: #1e1e2f;
+        }
+
+        .tab-item {
+            padding: 10px 20px;
+            cursor: default;
+            color: #aaa;
+            border-bottom: 2px solid transparent;
+            transition: 0.2s;
+        }
+
+        .tab-item.active {
+            color: white;
+            border-bottom-color: #4a9eff;
+            background-color: #2a2a42;
+        }
+
+        .tab-item i {
+            margin-right: 6px;
+        }
+
+        .tab-content {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 8px;
+            background-color: #2a2a3c;
+            color: #ccc;
+            font-weight: 400;
+            border-bottom: 1px solid #444;
+        }
+
+        .data-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #2a2a3c;
+        }
+
+        .data-table tr:hover {
+            background-color: #2a2a42;
+        }
+
+        .table-info {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #aaa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 6px;
+        }
+
+        .pagination span {
+            background-color: #2a2a3c;
+            border: 1px solid #444;
+            color: #ccc;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: default;
+        }
+
+        .pagination span.active {
+            background-color: #2a2a5a;
+            border-color: #4a9eff;
+            color: white;
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: none;
+            color: #4a9eff;
+            cursor: default;
+            font-size: 14px;
+            margin: 0 4px;
+        }
+
+        .btn-icon:hover {
+            color: #7ab9ff;
+        }
+
+        .btn-delete {
+            color: #f44336;
+        }
+
+        .btn-delete:hover {
+            color: #ff7777;
+        }
+
+        /* 清洗面板 */
+        .cleaning-group {
+            background-color: #222236;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .cleaning-group h4 {
+            font-size: 13px;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-row label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .checkbox-row input[type="checkbox"] {
+            accent-color: #4a9eff;
+        }
+
+        .checkbox-row select {
+            background-color: #2a2a3c;
+            border: 1px solid #444;
+            color: white;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .btn {
+            background-color: #2a2a42;
+            border: 1px solid #444;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: default;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #3a3a5a;
+        }
+
+        .btn i {
+            color: #4a9eff;
+        }
+
+        .log-box {
+            background-color: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 12px;
+            color: #aaa;
+            height: 100px;
+            overflow-y: auto;
+            margin-top: 12px;
+        }
+
+        /* 底部状态栏 */
+        .status-bar {
+            background-color: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e2f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* 标签页切换 */
+        .tab-item {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- 标题栏 -->
+    <div class="header">
+        <h2><i class="fas fa-database" style="margin-right: 8px; color: #4a9eff;"></i>试验数据管理</h2>
+        <div>
+            <i class="fas fa-question-circle" title="帮助"></i>
+            <i class="fas fa-user" title="用户"></i>
+        </div>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <i class="fas fa-upload" title="导入数据"></i>
+            <i class="fas fa-download" title="导出数据"></i>
+            <i class="fas fa-plus-circle" title="新增记录"></i>
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="toolbar-group">
+            <i class="fas fa-broom" title="数据清洗"></i>
+            <i class="fas fa-trash-alt" title="批量删除"></i>
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="查询...">
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="toolbar-group">
+            <i class="fas fa-sync-alt" title="刷新"></i>
+        </div>
+        <div style="flex:1"></div>
+        <span style="color:#aaa;">当前数据源: 试验批次-005</span>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="main-container">
+        <!-- 主布局 -->
+        <div class="main-layout">
+            <!-- 左侧数据导航 -->
+            <div class="left-panel">
+                <div class="panel-header">
+                    <i class="fas fa-folder-tree"></i> 试验数据文件
+                </div>
+                <div class="file-tree">
+                    <div class="tree-item selected">
+                        <i class="fas fa-file-csv"></i>
+                        <span class="name">exp_001.csv</span>
+                        <span class="size">2.3 MB</span>
+                    </div>
+                    <div class="tree-item">
+                        <i class="fas fa-file-excel"></i>
+                        <span class="name">exp_002.xlsx</span>
+                        <span class="size">5.1 MB</span>
+                    </div>
+                    <div class="tree-item">
+                        <i class="fas fa-file-code"></i>
+                        <span class="name">exp_003.json</span>
+                        <span class="size">1.8 MB</span>
+                    </div>
+                    <div class="tree-item">
+                        <i class="fas fa-file"></i>
+                        <span class="name">exp_004.h5</span>
+                        <span class="size">12.4 MB</span>
+                    </div>
+                    <div class="tree-item">
+                        <i class="fas fa-file"></i>
+                        <span class="name">exp_005.mat</span>
+                        <span class="size">8.2 MB</span>
+                    </div>
+                </div>
+                <div class="file-info">
+                    <div class="info-row">
+                        <span class="info-label">文件名</span>
+                        <span class="info-value">exp_001.csv</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">大小</span>
+                        <span class="info-value">2.3 MB</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">修改时间</span>
+                        <span class="info-value">2025-03-18 15:30</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">记录数</span>
+                        <span class="info-value">12,345 条</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧工作区 -->
+            <div class="right-panel">
+                <div class="tab-header">
+                    <div class="tab-item active" data-tab="preview"><i class="fas fa-table"></i> 数据预览</div>
+                    <div class="tab-item" data-tab="stats"><i class="fas fa-chart-bar"></i> 数据统计</div>
+                    <div class="tab-item" data-tab="cleaning"><i class="fas fa-broom"></i> 数据清洗</div>
+                </div>
+                <div class="tab-content">
+                    <!-- 预览页 -->
+                    <div class="tab-pane active" id="tab-preview">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:30px;"><input type="checkbox"></th>
+                                    <th>时间</th>
+                                    <th>无人机ID</th>
+                                    <th>经度</th>
+                                    <th>纬度</th>
+                                    <th>高度(m)</th>
+                                    <th>速度(m/s)</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>12:30:01</td>
+                                    <td>UAV-001</td>
+                                    <td>125.32</td>
+                                    <td>78.56</td>
+                                    <td>3500</td>
+                                    <td>280</td>
+                                    <td>
+                                        <i class="fas fa-edit btn-icon" title="编辑"></i>
+                                        <i class="fas fa-trash-alt btn-icon btn-delete" title="删除"></i>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>12:30:02</td>
+                                    <td>UAV-001</td>
+                                    <td>125.33</td>
+                                    <td>78.57</td>
+                                    <td>3510</td>
+                                    <td>282</td>
+                                    <td>
+                                        <i class="fas fa-edit btn-icon" title="编辑"></i>
+                                        <i class="fas fa-trash-alt btn-icon btn-delete" title="删除"></i>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>12:30:03</td>
+                                    <td>UAV-002</td>
+                                    <td>130.15</td>
+                                    <td>65.23</td>
+                                    <td>3400</td>
+                                    <td>275</td>
+                                    <td>
+                                        <i class="fas fa-edit btn-icon" title="编辑"></i>
+                                        <i class="fas fa-trash-alt btn-icon btn-delete" title="删除"></i>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>12:30:04</td>
+                                    <td>UAV-002</td>
+                                    <td>130.18</td>
+                                    <td>65.25</td>
+                                    <td>3415</td>
+                                    <td>277</td>
+                                    <td>
+                                        <i class="fas fa-edit btn-icon" title="编辑"></i>
+                                        <i class="fas fa-trash-alt btn-icon btn-delete" title="删除"></i>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>12:30:05</td>
+                                    <td>UAV-003</td>
+                                    <td>118.90</td>
+                                    <td>82.10</td>
+                                    <td>3600</td>
+                                    <td>290</td>
+                                    <td>
+                                        <i class="fas fa-edit btn-icon" title="编辑"></i>
+                                        <i class="fas fa-trash-alt btn-icon btn-delete" title="删除"></i>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>12:30:06</td>
+                                    <td>UAV-003</td>
+                                    <td>118.92</td>
+                                    <td>82.12</td>
+                                    <td>3612</td>
+                                    <td>292</td>
+                                    <td>
+                                        <i class="fas fa-edit btn-icon" title="编辑"></i>
+                                        <i class="fas fa-trash-alt btn-icon btn-delete" title="删除"></i>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>12:30:07</td>
+                                    <td>RAD-01</td>
+                                    <td>150.20</td>
+                                    <td>70.50</td>
+                                    <td>100</td>
+                                    <td>0</td>
+                                    <td>
+                                        <i class="fas fa-edit btn-icon" title="编辑"></i>
+                                        <i class="fas fa-trash-alt btn-icon btn-delete" title="删除"></i>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>12:30:08</td>
+                                    <td>RAD-01</td>
+                                    <td>150.20</td>
+                                    <td>70.50</td>
+                                    <td>100</td>
+                                    <td>0</td>
+                                    <td>
+                                        <i class="fas fa-edit btn-icon" title="编辑"></i>
+                                        <i class="fas fa-trash-alt btn-icon btn-delete" title="删除"></i>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>12:30:09</td>
+                                    <td>SAM-01</td>
+                                    <td>140.80</td>
+                                    <td>95.30</td>
+                                    <td>50</td>
+                                    <td>0</td>
+                                    <td>
+                                        <i class="fas fa-edit btn-icon" title="编辑"></i>
+                                        <i class="fas fa-trash-alt btn-icon btn-delete" title="删除"></i>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>12:30:10</td>
+                                    <td>SAM-01</td>
+                                    <td>140.80</td>
+                                    <td>95.30</td>
+                                    <td>50</td>
+                                    <td>0</td>
+                                    <td>
+                                        <i class="fas fa-edit btn-icon" title="编辑"></i>
+                                        <i class="fas fa-trash-alt btn-icon btn-delete" title="删除"></i>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="table-info">
+                            <span>显示 1-10 条 / 共 12,345 条记录</span>
+                            <div class="pagination">
+                                <span>&laquo;</span>
+                                <span class="active">1</span>
+                                <span>2</span>
+                                <span>3</span>
+                                <span>4</span>
+                                <span>5</span>
+                                <span>&raquo;</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 统计页 -->
+                    <div class="tab-pane" id="tab-stats">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>字段名</th>
+                                    <th>最小值</th>
+                                    <th>最大值</th>
+                                    <th>平均值</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>经度</td><td>118.90</td><td>150.20</td><td>132.58</td></tr>
+                                <tr><td>纬度</td><td>65.23</td><td>95.30</td><td>78.23</td></tr>
+                                <tr><td>高度(m)</td><td>50</td><td>3612</td><td>1850</td></tr>
+                                <tr><td>速度(m/s)</td><td>0</td><td>292</td><td>145</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- 清洗页 -->
+                    <div class="tab-pane" id="tab-cleaning">
+                        <div class="cleaning-group">
+                            <h4><i class="fas fa-exclamation-triangle" style="color:#ffaa00;"></i> 缺失值处理</h4>
+                            <div class="checkbox-row">
+                                <label><input type="checkbox" checked> 删除缺失值行</label>
+                                <label><input type="checkbox"> 填充缺失值</label>
+                                <select>
+                                    <option>均值填充</option>
+                                    <option>中位数填充</option>
+                                    <option>前向填充</option>
+                                    <option>固定值填充</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="cleaning-group">
+                            <h4><i class="fas fa-chart-line" style="color:#ffaa00;"></i> 异常值检测</h4>
+                            <div class="checkbox-row">
+                                <label><input type="checkbox" checked> 标准差法 (k=3)</label>
+                                <label><input type="checkbox"> 四分位距法 (IQR)</label>
+                            </div>
+                        </div>
+                        <div class="checkbox-row">
+                            <span class="btn"><i class="fas fa-play"></i> 应用清洗</span>
+                            <span class="btn"><i class="fas fa-undo"></i> 重置</span>
+                        </div>
+                        <div class="log-box">
+                            [15:30:45] 开始清洗...<br>
+                            [15:30:46] 缺失值行: 12 条已删除<br>
+                            [15:30:47] 异常值检测: 5 条异常值标记<br>
+                            [15:30:48] 清洗完成，剩余记录: 12,328 条
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部状态栏 -->
+        <div class="status-bar">
+            <div>
+                <span><i class="fas fa-database"></i> 数据源: exp_001.csv</span>
+                <span style="margin-left:16px;"><i class="fas fa-cube"></i> 记录数: 12,345</span>
+                <span style="margin-left:16px;"><i class="fas fa-check-circle" style="color:#4caf50;"></i> 已清洗: 否</span>
+            </div>
+            <div>
+                <span>就绪</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 标签页切换脚本 -->
+    <script>
+        const tabItems = document.querySelectorAll('.tab-item');
+        const panes = document.querySelectorAll('.tab-pane');
+
+        tabItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                const target = this.getAttribute('data-tab');
+                tabItems.forEach(t => t.classList.remove('active'));
+                panes.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('tab-' + target).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

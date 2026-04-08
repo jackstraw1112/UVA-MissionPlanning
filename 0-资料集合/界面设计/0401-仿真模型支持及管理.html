@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仿真模型管理 - 反辐射无人机仿真系统</title>
+    <!-- Font Awesome 6 (免费) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f0f17;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 顶部工具栏 */
+        .toolbar {
+            background-color: #1e1e2f;
+            border-bottom: 1px solid #333;
+            padding: 8px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar i {
+            font-size: 18px;
+            color: #aaa;
+            transition: color 0.2s;
+            cursor: default;
+        }
+
+        .toolbar i:hover {
+            color: #4a9eff;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 24px;
+            background-color: #444;
+            margin: 0 8px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* 主布局：左右两列 */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 左侧模型树 */
+        .left-panel {
+            width: 280px;
+            background-color: #1a1a2a;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .panel-title {
+            font-weight: 600;
+            color: #ccc;
+            margin-bottom: 16px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .model-tree {
+            list-style: none;
+            font-size: 14px;
+        }
+
+        .model-tree li {
+            padding: 6px 0;
+            color: #bbb;
+            cursor: default;
+        }
+
+        .model-tree li i {
+            width: 20px;
+            color: #4a9eff;
+            font-size: 14px;
+        }
+
+        .model-tree .folder {
+            font-weight: 500;
+            color: #ddd;
+            margin-top: 8px;
+        }
+
+        .model-tree .folder:first-child {
+            margin-top: 0;
+        }
+
+        .model-tree .item {
+            margin-left: 24px;
+            padding-left: 8px;
+            border-left: 1px solid #333;
+            transition: background 0.2s;
+        }
+
+        .model-tree .item:hover {
+            background-color: #2a2a42;
+        }
+
+        .model-tree .item.selected {
+            background-color: #2a2a5a;
+            border-left: 2px solid #4a9eff;
+            color: white;
+        }
+
+        .refresh-btn {
+            margin-top: 16px;
+            background-color: #2a2a42;
+            border: 1px solid #444;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: default;
+            text-align: center;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background-color: #3a3a5a;
+        }
+
+        /* 右侧编辑区域 */
+        .right-panel {
+            flex: 1;
+            background-color: #14141f;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 标签页头 */
+        .tab-header {
+            display: flex;
+            border-bottom: 1px solid #333;
+            background-color: #1e1e2f;
+        }
+
+        .tab-item {
+            padding: 12px 24px;
+            cursor: default;
+            color: #aaa;
+            border-bottom: 2px solid transparent;
+            transition: 0.2s;
+        }
+
+        .tab-item.active {
+            color: white;
+            border-bottom-color: #4a9eff;
+            background-color: #2a2a42;
+        }
+
+        .tab-item i {
+            margin-right: 8px;
+        }
+
+        /* 标签页内容 */
+        .tab-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group h3 {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-row {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .form-row label {
+            width: 120px;
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .form-row .value {
+            flex: 1;
+        }
+
+        input, select, textarea {
+            background-color: #2a2a3c;
+            border: 1px solid #444;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 13px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .range-input {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .range-input span {
+            color: #aaa;
+        }
+
+        .script-editor {
+            background-color: #1a1a2a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #ddd;
+            min-height: 200px;
+            white-space: pre-wrap;
+        }
+
+        /* 底部状态栏 */
+        .status-bar {
+            background-color: #1a1a2a;
+            border-top: 1px solid #333;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e2f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* 标签页切换 */
+        .tab-item {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部工具栏 -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <i class="fas fa-plus-circle" title="新建模型"></i>
+            <i class="fas fa-trash-alt" title="删除模型"></i>
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="toolbar-group">
+            <i class="fas fa-file-import" title="导入模型"></i>
+            <i class="fas fa-file-export" title="导出模型"></i>
+        </div>
+        <span class="toolbar-separator"></span>
+        <div class="toolbar-group">
+            <i class="fas fa-check-circle" title="验证模型"></i>
+        </div>
+        <div style="flex:1"></div>
+        <span style="color:#aaa; font-size:14px;">当前模型库: 24个模型</span>
+    </div>
+
+    <!-- 主布局 -->
+    <div class="main-layout">
+        <!-- 左侧模型树 -->
+        <div class="left-panel">
+            <div class="panel-title">模型库</div>
+            <ul class="model-tree">
+                <li class="folder"><i class="fas fa-folder-open"></i> 反辐射无人机</li>
+                <li class="item selected"><i class="fas fa-plane"></i> JWS-01</li>
+                <li class="item"><i class="fas fa-plane"></i> JWS-02</li>
+                <li class="item"><i class="fas fa-plane"></i> JWS-03</li>
+                
+                <li class="folder" style="margin-top:12px;"><i class="fas fa-folder-open"></i> 飞机</li>
+                <li class="item"><i class="fas fa-fighter-jet"></i> F-16</li>
+                <li class="item"><i class="fas fa-fighter-jet"></i> Su-35</li>
+                
+                <li class="folder" style="margin-top:12px;"><i class="fas fa-folder-open"></i> 导弹</li>
+                <li class="item"><i class="fas fa-rocket"></i> AIM-120</li>
+                <li class="item"><i class="fas fa-rocket"></i> S-300</li>
+                
+                <li class="folder" style="margin-top:12px;"><i class="fas fa-folder-open"></i> 舰船</li>
+                <li class="item"><i class="fas fa-ship"></i> 驱逐舰</li>
+                
+                <li class="folder" style="margin-top:12px;"><i class="fas fa-folder-open"></i> 威胁力量</li>
+                <li class="item"><i class="fas fa-shield-alt"></i> 爱国者</li>
+                
+                <li class="folder" style="margin-top:12px;"><i class="fas fa-folder-open"></i> 雷达系统</li>
+                <li class="item"><i class="fas fa-satellite-dish"></i> 预警雷达</li>
+            </ul>
+            <div class="refresh-btn">
+                <i class="fas fa-sync-alt"></i> 刷新模型库
+            </div>
+        </div>
+
+        <!-- 右侧编辑区域 -->
+        <div class="right-panel">
+            <!-- 标签页头 -->
+            <div class="tab-header">
+                <div class="tab-item active" data-tab="basic"><i class="fas fa-info-circle"></i> 基本属性</div>
+                <div class="tab-item" data-tab="sensor"><i class="fas fa-satellite"></i> 传感器</div>
+                <div class="tab-item" data-tab="weapon"><i class="fas fa-bomb"></i> 武器</div>
+                <div class="tab-item" data-tab="behavior"><i class="fas fa-code"></i> 行为脚本</div>
+            </div>
+            <!-- 标签页内容 -->
+            <div class="tab-content">
+                <!-- 基本属性页 -->
+                <div class="tab-pane active" id="tab-basic">
+                    <div class="form-group">
+                        <h3>通用信息</h3>
+                        <div class="form-row">
+                            <label>模型名称</label>
+                            <div class="value"><input type="text" value="JWS-01"></div>
+                        </div>
+                        <div class="form-row">
+                            <label>模型类型</label>
+                            <div class="value">
+                                <select>
+                                    <option>反辐射无人机</option>
+                                    <option>飞机</option>
+                                    <option>导弹</option>
+                                    <option>舰船</option>
+                                    <option>威胁力量</option>
+                                    <option>雷达系统</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>版本</label>
+                            <div class="value"><input type="text" value="1.0"></div>
+                        </div>
+                        <div class="form-row">
+                            <label>描述</label>
+                            <div class="value"><textarea rows="3">反辐射无人机标准型号</textarea></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <h3>几何/运动参数</h3>
+                        <div class="grid-2col">
+                            <div class="form-row">
+                                <label>长度(m)</label>
+                                <div class="value"><input type="number" value="3.5" step="0.1"></div>
+                            </div>
+                            <div class="form-row">
+                                <label>翼展(m)</label>
+                                <div class="value"><input type="number" value="4.2" step="0.1"></div>
+                            </div>
+                            <div class="form-row">
+                                <label>重量(kg)</label>
+                                <div class="value"><input type="number" value="150"></div>
+                            </div>
+                            <div class="form-row">
+                                <label>最大速度(km/h)</label>
+                                <div class="value"><input type="number" value="300"></div>
+                            </div>
+                            <div class="form-row">
+                                <label>最大航程(km)</label>
+                                <div class="value"><input type="number" value="800"></div>
+                            </div>
+                            <div class="form-row">
+                                <label>续航时间(h)</label>
+                                <div class="value"><input type="number" value="4.0" step="0.1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 传感器参数页 -->
+                <div class="tab-pane" id="tab-sensor">
+                    <div class="form-group">
+                        <h3>导引头</h3>
+                        <div class="form-row">
+                            <label>导引头类型</label>
+                            <div class="value">
+                                <select>
+                                    <option>被动雷达导引头</option>
+                                    <option>主动雷达导引头</option>
+                                    <option>红外成像导引头</option>
+                                    <option>复合制导</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>工作频率(GHz)</label>
+                            <div class="value range-input">
+                                <input type="number" value="2.0" step="0.1" style="width:45%">
+                                <span>-</span>
+                                <input type="number" value="18.0" step="0.1" style="width:45%">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>探测距离(km)</label>
+                            <div class="value"><input type="number" value="80"></div>
+                        </div>
+                        <div class="form-row">
+                            <label>灵敏度(dBm)</label>
+                            <div class="value"><input type="number" value="-90" step="1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 武器参数页 -->
+                <div class="tab-pane" id="tab-weapon">
+                    <div class="form-group">
+                        <h3>战斗部/引信</h3>
+                        <div class="form-row">
+                            <label>战斗部类型</label>
+                            <div class="value">
+                                <select>
+                                    <option>高爆破片</option>
+                                    <option>穿甲</option>
+                                    <option>连续杆</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>战斗部重量(kg)</label>
+                            <div class="value"><input type="number" value="40"></div>
+                        </div>
+                        <div class="form-row">
+                            <label>引信类型</label>
+                            <div class="value">
+                                <select>
+                                    <option>触发</option>
+                                    <option>近炸</option>
+                                    <option>延时</option>
+                                    <option>近炸/触发复合</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>引炸高度范围(m)</label>
+                            <div class="value range-input">
+                                <input type="number" value="5" style="width:45%">
+                                <span>-</span>
+                                <input type="number" value="50" style="width:45%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 行为脚本页 -->
+                <div class="tab-pane" id="tab-behavior">
+                    <div class="form-group">
+                        <h3>脚本文件</h3>
+                        <div class="form-row">
+                            <label>脚本路径</label>
+                            <div class="value">
+                                <div style="display:flex; gap:8px;">
+                                    <input type="text" value="JWS-01_behavior.lua" style="flex:1">
+                                    <button style="background:#2a2a42; border:1px solid #444; color:white; padding:8px 16px; border-radius:4px; cursor:default;">浏览</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <h3>脚本内容</h3>
+                        <div class="script-editor">
+-- JWS-01 反辐射无人机行为脚本
+function on_init()
+    state = {mode = "SEARCH"}
+    return true
+end
+
+function do_step(time, dt)
+    -- 每帧执行逻辑
+    if state.mode == "SEARCH" then
+        -- 搜索行为
+        search_target()
+    elseif state.mode == "ATTACK" then
+        -- 攻击行为
+        launch_missile()
+    end
+    return true
+end
+
+function on_finish()
+    return true
+end
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部状态栏 -->
+    <div class="status-bar">
+        <div>
+            <span><i class="fas fa-check-circle" style="color:#4a9eff;"></i> 模型验证通过</span>
+        </div>
+        <div>
+            <span>最后保存: 2025-03-18 15:30</span>
+        </div>
+    </div>
+
+    <!-- 标签页切换脚本 -->
+    <script>
+        const tabItems = document.querySelectorAll('.tab-item');
+        const panes = document.querySelectorAll('.tab-pane');
+
+        tabItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                const target = this.getAttribute('data-tab');
+                // 移除所有active
+                tabItems.forEach(t => t.classList.remove('active'));
+                panes.forEach(p => p.classList.remove('active'));
+                // 添加当前active
+                this.classList.add('active');
+                document.getElementById('tab-' + target).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反辐射无人机 · 作战行动设置系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #0a0f1e;
+            color: #e0e4f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background-color: #151e2d;
+            border-radius: 24px;
+            border: 1px solid #2a3548;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        /* 头部 */
+        .header {
+            background-color: #101826;
+            padding: 16px 24px;
+            border-bottom: 1px solid #2a3a50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 500;
+            background: linear-gradient(135deg, #aaccff, #5f8ec9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge {
+            background-color: #1e4f8a;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #1e3144;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 13px;
+        }
+
+        .dot-green {
+            width: 10px;
+            height: 10px;
+            background-color: #2ecc71;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #2ecc71;
+        }
+
+        /* 主布局 - 三列 */
+        .main-layout {
+            display: flex;
+            gap: 16px;
+            padding: 20px;
+            min-height: calc(100vh - 180px);
+        }
+
+        /* 左侧面板 - 任务分配表格 */
+        .left-panel {
+            width: 32%;
+            background-color: #101826;
+            border-radius: 16px;
+            border: 1px solid #2a3a50;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 中间面板 - 路径管理 */
+        .center-panel {
+            width: 38%;
+            background-color: #101826;
+            border-radius: 16px;
+            border: 1px solid #2a3a50;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 右侧面板 - 参数装订 */
+        .right-panel {
+            width: 30%;
+            background-color: #101826;
+            border-radius: 16px;
+            border: 1px solid #2a3a50;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 14px 20px;
+            background-color: #1a2538;
+            border-bottom: 1px solid #2f405a;
+            font-size: 15px;
+            font-weight: 600;
+            color: #aaccff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-content {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 10px 8px;
+            background-color: #1f2b3c;
+            color: #b0c8f0;
+            font-weight: 500;
+            border-bottom: 1px solid #3f556d;
+        }
+
+        .data-table td {
+            padding: 8px;
+            border-bottom: 1px solid #2a3a50;
+        }
+
+        .data-table tr:hover td {
+            background-color: #1f2b3c;
+        }
+
+        .data-table input, .data-table select {
+            background-color: #1f2b3c;
+            border: 1px solid #3f556d;
+            border-radius: 6px;
+            padding: 4px 8px;
+            color: white;
+            width: 100%;
+            font-size: 12px;
+        }
+
+        .threat-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+        }
+        .threat-critical { background-color: #8a2e2e; color: #ffb3b3; }
+        .threat-high { background-color: #c0392b; color: #ffcccc; }
+        .threat-medium { background-color: #8a5f1e; color: #ffd966; }
+        .threat-low { background-color: #1e6f5c; color: #a3e4d7; }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: none;
+            background-color: #1e4f8a;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #2563a5;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #3f556d;
+        }
+
+        .btn-outline:hover {
+            background-color: #1f2b3c;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        /* 路径编辑模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: #151e2d;
+            border-radius: 16px;
+            padding: 24px;
+            width: 550px;
+            max-width: 90%;
+            border: 1px solid #2a3a50;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #aaccff;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .waypoint-list {
+            max-height: 250px;
+            overflow-y: auto;
+            margin: 16px 0;
+        }
+
+        .waypoint-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .waypoint-item input {
+            background-color: #1f2b3c;
+            border: 1px solid #3f556d;
+            border-radius: 6px;
+            padding: 6px;
+            color: white;
+            width: 90px;
+        }
+
+        .footer {
+            padding: 12px 20px;
+            background-color: #101826;
+            border-top: 1px solid #2a3a50;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #8fa5cf;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 头部 -->
+    <div class="header">
+        <h1>
+            <span>⚙️ 作战行动设置</span>
+            <span class="badge">反辐射无人机任务规划</span>
+        </h1>
+        <div class="status">
+            <span class="dot-green"></span>
+            系统就绪 | 可编辑参数
+        </div>
+    </div>
+
+    <!-- 主布局 -->
+    <div class="main-layout">
+        <!-- 左侧：任务分配表格 -->
+        <div class="left-panel">
+            <div class="panel-header">
+                <span>📋</span> 作战任务分配
+                <span style="margin-left: auto; font-size: 12px;">共 <span id="taskCount">0</span> 个任务</span>
+            </div>
+            <div class="panel-content">
+                <table class="data-table" id="taskTable">
+                    <thead>
+                        <tr>
+                            <th>任务名称</th>
+                            <th>目标类型</th>
+                            <th>威胁等级</th>
+                            <th>分配无人机</th>
+                            <th>编队</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 中间：路径管理 -->
+        <div class="center-panel">
+            <div class="panel-header">
+                <span>🛩️</span> 无人机路径管理
+                <span style="margin-left: auto; font-size: 12px;">
+                    <span class="btn-group" style="margin: 0;">
+                        <button class="btn btn-sm" id="switchToCruise">巡航路径</button>
+                        <button class="btn btn-sm btn-outline" id="switchToSearch">搜索路径</button>
+                    </span>
+                </span>
+            </div>
+            <div class="panel-content">
+                <div id="cruisePanel">
+                    <table class="data-table" id="cruiseTable">
+                        <thead>
+                            <tr><th>路径名称</th><th>关联任务</th><th>航点数</th><th>状态</th><th>操作</th></tr>
+                        </thead>
+                        <tbody id="cruiseTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="searchPanel" style="display: none;">
+                    <table class="data-table" id="searchTable">
+                        <thead>
+                            <tr><th>路径名称</th><th>关联任务</th><th>航点数</th><th>状态</th><th>操作</th></tr>
+                        </thead>
+                        <tbody id="searchTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="btn-group">
+                    <button class="btn" id="generateSelectedBtn">🚀 生成选中路径</button>
+                    <button class="btn btn-outline" id="generateAllPathsBtn">生成全部路径</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：目标参数装订表格 -->
+        <div class="right-panel">
+            <div class="panel-header">
+                <span>🎯</span> 目标参数装订
+                <span style="margin-left: auto; font-size: 12px;">可编辑修改</span>
+            </div>
+            <div class="panel-content">
+                <table class="data-table" id="paramTable">
+                    <thead>
+                        <tr>
+                            <th>任务名称</th>
+                            <th>频率(MHz)</th>
+                            <th>PRI(μs)</th>
+                            <th>脉宽(μs)</th>
+                            <th>功率(kW)</th>
+                            <th>工作模式</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paramTableBody"></tbody>
+                </table>
+                <div class="btn-group">
+                    <button class="btn" id="saveParamsBtn">💾 保存参数修改</button>
+                    <button class="btn btn-outline" id="resetParamsBtn">🔄 重置参数</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部 -->
+    <div class="footer">
+        <div>路径规划算法: A* + 威胁代价场 | 支持人工干预编辑航点</div>
+        <div id="actionStatus">就绪</div>
+    </div>
+</div>
+
+<!-- 路径编辑模态框 -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title">✏️ 编辑路径 - <span id="editPathName"></span></span>
+            <span class="modal-close" onclick="closeModal()">✕</span>
+        </div>
+        <div style="margin-bottom: 12px;">
+            <label style="color: #8fa5cf;">航点序列 (经度,纬度,高度)</label>
+        </div>
+        <div id="waypointEditor" class="waypoint-list"></div>
+        <div class="btn-group">
+            <button class="btn btn-outline btn-sm" id="addWaypointBtn">+ 添加航点</button>
+            <button class="btn" id="saveWaypointsBtn">保存修改</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==================== 数据结构 ====================
+    // 任务数据
+    let tasks = [
+        { id: 1, name: '火控雷达-01', type: '火控雷达', threat: 'critical', uavCount: 3, formation: '主攻编队-北' },
+        { id: 2, name: '火控雷达-02', type: '火控雷达', threat: 'critical', uavCount: 3, formation: '主攻编队-北' },
+        { id: 3, name: '制导雷达-01', type: '制导雷达', threat: 'critical', uavCount: 3, formation: '主攻编队-北' },
+        { id: 4, name: '预警雷达-01', type: '预警雷达', threat: 'high', uavCount: 2, formation: '主攻编队-南' },
+        { id: 5, name: '多功能相控阵-01', type: '相控阵雷达', threat: 'high', uavCount: 2, formation: '主攻编队-南' },
+        { id: 6, name: '搜索雷达-01', type: '搜索雷达', threat: 'medium', uavCount: 1, formation: '诱饵编队' },
+        { id: 7, name: '搜索雷达-02', type: '搜索雷达', threat: 'medium', uavCount: 1, formation: '诱饵编队' },
+        { id: 8, name: '跟踪雷达-01', type: '跟踪雷达', threat: 'medium', uavCount: 2, formation: '诱饵编队' },
+        { id: 9, name: '导航雷达-01', type: '导航雷达', threat: 'low', uavCount: 1, formation: '支援评估编队' },
+        { id: 10, name: '导航雷达-02', type: '导航雷达', threat: 'low', uavCount: 1, formation: '支援评估编队' },
+        { id: 11, name: '战术数据链-01', type: '数据链', threat: 'medium', uavCount: 1, formation: '支援评估编队' },
+        { id: 12, name: '通信中继站-01', type: '通信', threat: 'low', uavCount: 1, formation: '支援评估编队' }
+    ];
+
+    // 巡航路径数据
+    let cruisePaths = [
+        { id: 1, taskId: 1, name: '火控雷达-01 巡航路径', status: 'pending', waypoints: [[125.32,78.56,3500],[125.35,78.60,3500],[125.38,78.65,3400]] },
+        { id: 2, taskId: 2, name: '火控雷达-02 巡航路径', status: 'pending', waypoints: [[125.40,78.70,3500],[125.43,78.75,3500],[125.46,78.80,3400]] },
+        { id: 3, taskId: 3, name: '制导雷达-01 巡航路径', status: 'pending', waypoints: [[125.50,78.85,3500],[125.53,78.90,3500],[125.56,78.95,3400]] },
+        { id: 4, taskId: 4, name: '预警雷达-01 巡航路径', status: 'pending', waypoints: [[125.60,79.00,4000],[125.63,79.05,4000],[125.66,79.10,3900]] },
+        { id: 5, taskId: 5, name: '相控阵-01 巡航路径', status: 'pending', waypoints: [[125.70,79.15,4000],[125.73,79.20,4000],[125.76,79.25,3900]] }
+    ];
+
+    // 搜索路径数据
+    let searchPaths = [
+        { id: 1, taskId: 1, name: '火控雷达-01 搜索路径', status: 'pending', waypoints: [[125.32,78.56,3000],[125.34,78.58,3000],[125.36,78.60,3000]] },
+        { id: 2, taskId: 2, name: '火控雷达-02 搜索路径', status: 'pending', waypoints: [[125.40,78.70,3000],[125.42,78.72,3000],[125.44,78.74,3000]] },
+        { id: 3, taskId: 3, name: '制导雷达-01 搜索路径', status: 'pending', waypoints: [[125.50,78.85,3000],[125.52,78.87,3000],[125.54,78.89,3000]] }
+    ];
+
+    // 目标参数数据
+    let targetParams = {
+        1: { freq: '9350-9450', pri: '1200', pulseWidth: '1.2', power: '250', mode: '跟踪' },
+        2: { freq: '9350-9450', pri: '1200', pulseWidth: '1.2', power: '250', mode: '跟踪' },
+        3: { freq: '15200-15600', pri: '200', pulseWidth: '0.15', power: '100', mode: '制导' },
+        4: { freq: '1250-1350', pri: '2800', pulseWidth: '80', power: '2000', mode: '预警' },
+        5: { freq: '2000-12000', pri: '可变', pulseWidth: '可变', power: '500', mode: '多功能' },
+        6: { freq: '2800-3100', pri: '2000', pulseWidth: '25', power: '300', mode: '搜索' },
+        7: { freq: '2800-3100', pri: '2000', pulseWidth: '25', power: '300', mode: '搜索' },
+        8: { freq: '5450-5650', pri: '1500', pulseWidth: '2.5', power: '150', mode: '跟踪' },
+        9: { freq: '9300-9500', pri: '2000', pulseWidth: '0.08', power: '25', mode: '导航' },
+        10: { freq: '9300-9500', pri: '2000', pulseWidth: '0.08', power: '25', mode: '导航' },
+        11: { freq: '225-400', pri: '可变', pulseWidth: '可变', power: '50', mode: '通信' },
+        12: { freq: '30-88', pri: '可变', pulseWidth: '可变', power: '25', mode: '通信' }
+    };
+
+    let currentPathType = 'cruise';
+    let currentEditPath = null;
+
+    // 威胁样式
+    function getThreatClass(threat) {
+        const map = { critical: '极高', high: '高', medium: '中', low: '低' };
+        return `<span class="threat-badge threat-${threat}">${map[threat]}</span>`;
+    }
+
+    // 渲染任务表格
+    function renderTaskTable() {
+        const tbody = document.getElementById('taskTableBody');
+        tbody.innerHTML = '';
+        tasks.forEach(task => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${task.name}</td>
+                <td>${task.type}</td>
+                <td>${getThreatClass(task.threat)}</td>
+                <td>${task.uavCount}架</td>
+                <td>${task.formation}</td>
+            `;
+        });
+        document.getElementById('taskCount').innerText = tasks.length;
+    }
+
+    // 渲染巡航路径表格
+    function renderCruisePaths() {
+        const tbody = document.getElementById('cruiseTableBody');
+        tbody.innerHTML = '';
+        cruisePaths.forEach(path => {
+            const task = tasks.find(t => t.id === path.taskId);
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${path.name}</td>
+                <td>${task ? task.name : '-'}</td>
+                <td>${path.waypoints.length}</td>
+                <td>${path.status === 'generated' ? '<span style="color:#2ecc71;">已生成</span>' : '<span style="color:#f39c12;">待生成</span>'}</td>
+                <td>
+                    <button class="btn btn-sm" onclick="generatePath(${path.id}, 'cruise')">🚀 生成</button>
+                    <button class="btn btn-outline btn-sm" onclick="editPath(${path.id}, 'cruise')">✏️ 编辑</button>
+                </td>
+            `;
+        });
+    }
+
+    // 渲染搜索路径表格
+    function renderSearchPaths() {
+        const tbody = document.getElementById('searchTableBody');
+        tbody.innerHTML = '';
+        searchPaths.forEach(path => {
+            const task = tasks.find(t => t.id === path.taskId);
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${path.name}</td>
+                <td>${task ? task.name : '-'}</td>
+                <td>${path.waypoints.length}</td>
+                <td>${path.status === 'generated' ? '<span style="color:#2ecc71;">已生成</span>' : '<span style="color:#f39c12;">待生成</span>'}</td>
+                <td>
+                    <button class="btn btn-sm" onclick="generatePath(${path.id}, 'search')">🚀 生成</button>
+                    <button class="btn btn-outline btn-sm" onclick="editPath(${path.id}, 'search')">✏️ 编辑</button>
+                </td>
+            `;
+        });
+    }
+
+    // 渲染参数装订表格
+    function renderParamTable() {
+        const tbody = document.getElementById('paramTableBody');
+        tbody.innerHTML = '';
+        tasks.forEach(task => {
+            const params = targetParams[task.id] || { freq: '', pri: '', pulseWidth: '', power: '', mode: '' };
+            const row = tbody.insertRow();
+            row.setAttribute('data-task-id', task.id);
+            row.innerHTML = `
+                <td>${task.name}</td>
+                <td><input type="text" class="param-freq" value="${params.freq}" placeholder="频率范围"></td>
+                <td><input type="text" class="param-pri" value="${params.pri}" placeholder="PRI"></td>
+                <td><input type="text" class="param-pw" value="${params.pulseWidth}" placeholder="脉宽"></td>
+                <td><input type="text" class="param-power" value="${params.power}" placeholder="功率"></td>
+                <td>
+                    <select class="param-mode">
+                        <option ${params.mode === '搜索' ? 'selected' : ''}>搜索</option>
+                        <option ${params.mode === '跟踪' ? 'selected' : ''}>跟踪</option>
+                        <option ${params.mode === '制导' ? 'selected' : ''}>制导</option>
+                        <option ${params.mode === '预警' ? 'selected' : ''}>预警</option>
+                        <option ${params.mode === '导航' ? 'selected' : ''}>导航</option>
+                        <option ${params.mode === '通信' ? 'selected' : ''}>通信</option>
+                        <option ${params.mode === '多功能' ? 'selected' : ''}>多功能</option>
+                    </select>
+                </td>
+            `;
+        });
+    }
+
+    // 生成路径（模拟算法）
+    function generatePath(pathId, type) {
+        const paths = type === 'cruise' ? cruisePaths : searchPaths;
+        const path = paths.find(p => p.id === pathId);
+        if (path && path.status !== 'generated') {
+            path.status = 'generated';
+            // 模拟算法生成新航点
+            const baseLon = 125.3 + pathId * 0.05;
+            const baseLat = 78.5 + pathId * 0.03;
+            path.waypoints = [
+                [baseLon, baseLat, 3500],
+                [baseLon + 0.03, baseLat + 0.02, 3500],
+                [baseLon + 0.06, baseLat + 0.04, 3400],
+                [baseLon + 0.09, baseLat + 0.06, 3300]
+            ];
+            if (type === 'cruise') renderCruisePaths();
+            else renderSearchPaths();
+            updateStatus(`已生成路径: ${path.name}`);
+        }
+    }
+
+    // 生成选中路径
+    function generateSelectedPaths() {
+        const activePaths = currentPathType === 'cruise' ? cruisePaths : searchPaths;
+        const pendingPaths = activePaths.filter(p => p.status !== 'generated');
+        if (pendingPaths.length === 0) {
+            alert('所有路径已生成');
+            return;
+        }
+        pendingPaths.forEach(p => { p.status = 'generated'; });
+        if (currentPathType === 'cruise') renderCruisePaths();
+        else renderSearchPaths();
+        updateStatus(`已生成 ${pendingPaths.length} 条${currentPathType === 'cruise' ? '巡航' : '搜索'}路径`);
+    }
+
+    // 生成全部路径
+    function generateAllPaths() {
+        cruisePaths.forEach(p => { p.status = 'generated'; });
+        searchPaths.forEach(p => { p.status = 'generated'; });
+        renderCruisePaths();
+        renderSearchPaths();
+        updateStatus('已生成全部巡航和搜索路径');
+    }
+
+    // 编辑路径
+    function editPath(pathId, type) {
+        const paths = type === 'cruise' ? cruisePaths : searchPaths;
+        const path = paths.find(p => p.id === pathId);
+        if (!path) return;
+        
+        currentEditPath = path;
+        currentPathType = type;
+        document.getElementById('editPathName').innerText = path.name;
+        
+        const editor = document.getElementById('waypointEditor');
+        editor.innerHTML = '';
+        path.waypoints.forEach((wp, idx) => {
+            const div = document.createElement('div');
+            div.className = 'waypoint-item';
+            div.innerHTML = `
+                <span style="width: 30px;">${idx + 1}</span>
+                <input type="text" class="wp-lon" value="${wp[0]}" placeholder="经度">
+                <input type="text" class="wp-lat" value="${wp[1]}" placeholder="纬度">
+                <input type="text" class="wp-alt" value="${wp[2]}" placeholder="高度" style="width: 70px;">
+                <button class="btn btn-outline btn-sm" onclick="removeWaypoint(this, ${idx})">✕</button>
+            `;
+            editor.appendChild(div);
+        });
+        
+        document.getElementById('editModal').classList.add('active');
+    }
+
+    window.removeWaypoint = function(btn, idx) {
+        if (!currentEditPath) return;
+        currentEditPath.waypoints.splice(idx, 1);
+        editPath(currentEditPath.id, currentPathType);
+    };
+
+    function addWaypoint() {
+        if (!currentEditPath) return;
+        currentEditPath.waypoints.push([125.3, 78.5, 3500]);
+        editPath(currentEditPath.id, currentPathType);
+    }
+
+    function saveWaypoints() {
+        if (!currentEditPath) return;
+        const waypointItems = document.querySelectorAll('#waypointEditor .waypoint-item');
+        const newWaypoints = [];
+        waypointItems.forEach(item => {
+            const lon = parseFloat(item.querySelector('.wp-lon')?.value) || 0;
+            const lat = parseFloat(item.querySelector('.wp-lat')?.value) || 0;
+            const alt = parseFloat(item.querySelector('.wp-alt')?.value) || 3500;
+            newWaypoints.push([lon, lat, alt]);
+        });
+        currentEditPath.waypoints = newWaypoints;
+        if (currentPathType === 'cruise') renderCruisePaths();
+        else renderSearchPaths();
+        closeModal();
+        updateStatus(`已保存路径编辑: ${currentEditPath.name}`);
+    }
+
+    function closeModal() {
+        document.getElementById('editModal').classList.remove('active');
+        currentEditPath = null;
+    }
+
+    // 保存参数修改
+    function saveParams() {
+        const rows = document.querySelectorAll('#paramTableBody tr');
+        rows.forEach(row => {
+            const taskId = parseInt(row.getAttribute('data-task-id'));
+            const freq = row.querySelector('.param-freq')?.value || '';
+            const pri = row.querySelector('.param-pri')?.value || '';
+            const pw = row.querySelector('.param-pw')?.value || '';
+            const power = row.querySelector('.param-power')?.value || '';
+            const mode = row.querySelector('.param-mode')?.value || '';
+            targetParams[taskId] = { freq, pri, pulseWidth: pw, power, mode };
+        });
+        updateStatus('参数已保存');
+        alert('目标参数保存成功');
+    }
+
+    // 重置参数
+    function resetParams() {
+        if (confirm('确定要重置所有参数吗？')) {
+            renderParamTable();
+            updateStatus('参数已重置');
+        }
+    }
+
+    function updateStatus(msg) {
+        document.getElementById('actionStatus').innerHTML = msg;
+    }
+
+    // 切换路径类型
+    document.getElementById('switchToCruise').onclick = () => {
+        currentPathType = 'cruise';
+        document.getElementById('cruisePanel').style.display = 'block';
+        document.getElementById('searchPanel').style.display = 'none';
+        document.getElementById('switchToCruise').classList.add('btn');
+        document.getElementById('switchToCruise').classList.remove('btn-outline');
+        document.getElementById('switchToSearch').classList.add('btn-outline');
+        document.getElementById('switchToSearch').classList.remove('btn');
+    };
+    document.getElementById('switchToSearch').onclick = () => {
+        currentPathType = 'search';
+        document.getElementById('cruisePanel').style.display = 'none';
+        document.getElementById('searchPanel').style.display = 'block';
+        document.getElementById('switchToSearch').classList.add('btn');
+        document.getElementById('switchToSearch').classList.remove('btn-outline');
+        document.getElementById('switchToCruise').classList.add('btn-outline');
+        document.getElementById('switchToCruise').classList.remove('btn');
+    };
+
+    document.getElementById('generateSelectedBtn').onclick = generateSelectedPaths;
+    document.getElementById('generateAllPathsBtn').onclick = generateAllPaths;
+    document.getElementById('saveParamsBtn').onclick = saveParams;
+    document.getElementById('resetParamsBtn').onclick = resetParams;
+    document.getElementById('addWaypointBtn').onclick = addWaypoint;
+    document.getElementById('saveWaypointsBtn').onclick = saveWaypoints;
+
+    // 初始化渲染
+    renderTaskTable();
+    renderCruisePaths();
+    renderSearchPaths();
+    renderParamTable();
+</script>
+</body>
+</html>

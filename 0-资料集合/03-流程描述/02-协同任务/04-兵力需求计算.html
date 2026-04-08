@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反辐射无人机 · 兵力需求计算系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #0a0f1e;
+            color: #e0e4f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background-color: #151e2d;
+            border-radius: 24px;
+            border: 1px solid #2a3548;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        /* 头部 */
+        .header {
+            background-color: #101826;
+            padding: 16px 24px;
+            border-bottom: 1px solid #2a3a50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 500;
+            background: linear-gradient(135deg, #aaccff, #5f8ec9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge {
+            background-color: #1e4f8a;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #1e3144;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 13px;
+        }
+
+        .dot-green {
+            width: 10px;
+            height: 10px;
+            background-color: #2ecc71;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #2ecc71;
+        }
+
+        /* 主布局 - 两列 */
+        .main-layout {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            min-height: calc(100vh - 160px);
+        }
+
+        /* 左侧面板 - 目标配置 */
+        .left-panel {
+            flex: 1.2;
+            background-color: #101826;
+            border-radius: 16px;
+            border: 1px solid #2a3a50;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            background-color: #1a2538;
+            border-bottom: 1px solid #2f405a;
+            font-size: 16px;
+            font-weight: 600;
+            color: #aaccff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-content {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(100vh - 280px);
+        }
+
+        /* 目标表格 */
+        .target-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .target-table th {
+            text-align: left;
+            padding: 12px 8px;
+            background-color: #1f2b3c;
+            color: #b0c8f0;
+            font-weight: 500;
+            border-bottom: 1px solid #3f556d;
+        }
+
+        .target-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #2a3a50;
+        }
+
+        .target-table input, .target-table select {
+            background-color: #1f2b3c;
+            border: 1px solid #3f556d;
+            color: white;
+            padding: 6px 8px;
+            border-radius: 6px;
+            width: 100%;
+            font-size: 12px;
+        }
+
+        .target-table input:focus {
+            outline: none;
+            border-color: #5f8ec9;
+        }
+
+        .threat-select {
+            width: 80px;
+        }
+
+        /* 右侧面板 - 计算结果 */
+        .right-panel {
+            flex: 0.8;
+            background-color: #101826;
+            border-radius: 16px;
+            border: 1px solid #2a3a50;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 结果卡片 */
+        .result-card {
+            background: linear-gradient(135deg, #1a2538, #1f2b3c);
+            margin: 16px;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .result-number {
+            font-size: 56px;
+            font-weight: 700;
+            color: #5f8ec9;
+            line-height: 1.2;
+        }
+
+        .result-label {
+            font-size: 14px;
+            color: #8fa5cf;
+            margin-top: 8px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #2a3a50;
+        }
+
+        .detail-label {
+            color: #8fa5cf;
+        }
+
+        .detail-value {
+            color: white;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #2f405a;
+            border-radius: 4px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #5f8ec9, #2ecc71);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: none;
+            background-color: #1e4f8a;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn:hover {
+            background-color: #2563a5;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #3f556d;
+        }
+
+        .btn-outline:hover {
+            background-color: #1f2b3c;
+        }
+
+        .param-group {
+            margin: 16px;
+            padding: 16px;
+            background-color: #1a2538;
+            border-radius: 12px;
+        }
+
+        .param-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #aaccff;
+            margin-bottom: 12px;
+        }
+
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .param-row label {
+            color: #8fa5cf;
+        }
+
+        .param-row input {
+            background-color: #1f2b3c;
+            border: 1px solid #3f556d;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            width: 100px;
+            text-align: right;
+        }
+
+        .footer {
+            padding: 12px 20px;
+            background-color: #101826;
+            border-top: 1px solid #2a3a50;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #8fa5cf;
+        }
+
+        .threat-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .threat-critical { background-color: #8a2e2e; color: #ffb3b3; }
+        .threat-high { background-color: #c0392b; color: #ffcccc; }
+        .threat-medium { background-color: #8a5f1e; color: #ffd966; }
+        .threat-low { background-color: #1e6f5c; color: #a3e4d7; }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin: 16px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 头部 -->
+    <div class="header">
+        <h1>
+            <span>⚔️ 兵力需求计算系统</span>
+            <span class="badge">反辐射无人机任务规划</span>
+        </h1>
+        <div class="status">
+            <span class="dot-green"></span>
+            基于蓝方目标 | 实时计算
+        </div>
+    </div>
+
+    <!-- 主布局 -->
+    <div class="main-layout">
+        <!-- 左侧：蓝方目标配置 -->
+        <div class="left-panel">
+            <div class="panel-header">
+                <span>🎯</span> 蓝方目标清单
+                <span style="margin-left: auto; font-size: 12px;">可编辑威胁等级与数量</span>
+            </div>
+            <div class="panel-content">
+                <table class="target-table" id="targetTable">
+                    <thead>
+                        <tr>
+                            <th>目标类型</th>
+                            <th>数量</th>
+                            <th>威胁等级</th>
+                            <th>防护能力</th>
+                            <th>单机需求</th>
+                        </tr>
+                    </thead>
+                    <tbody id="targetTableBody">
+                        <tr data-threat="critical" data-protection="hard">
+                            <td>火控雷达</td>
+                            <td><input type="number" class="target-count" value="2" min="0" step="1" style="width:60px"></td>
+                            <td><select class="threat-select"><option value="critical" selected>极高</option><option value="high">高</option><option value="medium">中</option><option value="low">低</option></select></td>
+                            <td><select class="protection-select"><option value="hard" selected>硬防护</option><option value="soft">软防护</option><option value="none">无防护</option></select></td>
+                            <td><span class="base-demand">3</span></td>
+                        </tr>
+                        <tr data-threat="critical" data-protection="hard">
+                            <td>制导雷达</td>
+                            <td><input type="number" class="target-count" value="1" min="0" step="1" style="width:60px"></td>
+                            <td><select class="threat-select"><option value="critical" selected>极高</option><option value="high">高</option><option value="medium">中</option><option value="low">低</option></select></td>
+                            <td><select class="protection-select"><option value="hard" selected>硬防护</option><option value="soft">软防护</option><option value="none">无防护</option></select></td>
+                            <td><span class="base-demand">3</span></td>
+                        </tr>
+                        <tr data-threat="high" data-protection="soft">
+                            <td>预警雷达</td>
+                            <td><input type="number" class="target-count" value="1" min="0" step="1" style="width:60px"></td>
+                            <td><select class="threat-select"><option value="high" selected>高</option><option value="medium">中</option><option value="low">低</option></select></td>
+                            <td><select class="protection-select"><option value="soft" selected>软防护</option><option value="hard">硬防护</option><option value="none">无防护</option></select></td>
+                            <td><span class="base-demand">2</span></td>
+                        </tr>
+                        <tr data-threat="high" data-protection="none">
+                            <td>多功能相控阵</td>
+                            <td><input type="number" class="target-count" value="1" min="0" step="1" style="width:60px"></td>
+                            <td><select class="threat-select"><option value="high" selected>高</option><option value="medium">中</option><option value="low">低</option></select></td>
+                            <td><select class="protection-select"><option value="none" selected>无防护</option><option value="soft">软防护</option><option value="hard">硬防护</option></select></td>
+                            <td><span class="base-demand">2</span></td>
+                        </tr>
+                        <tr data-threat="medium" data-protection="none">
+                            <td>搜索雷达</td>
+                            <td><input type="number" class="target-count" value="2" min="0" step="1" style="width:60px"></td>
+                            <td><select class="threat-select"><option value="medium" selected>中</option><option value="high">高</option><option value="low">低</option></select></td>
+                            <td><select class="protection-select"><option value="none" selected>无防护</option><option value="soft">软防护</option><option value="hard">硬防护</option></select></td>
+                            <td><span class="base-demand">1</span></td>
+                        </tr>
+                        <tr data-threat="medium" data-protection="soft">
+                            <td>跟踪雷达</td>
+                            <td><input type="number" class="target-count" value="1" min="0" step="1" style="width:60px"></td>
+                            <td><select class="threat-select"><option value="medium" selected>中</option><option value="high">高</option><option value="low">低</option></select></td>
+                            <td><select class="protection-select"><option value="soft" selected>软防护</option><option value="hard">硬防护</option><option value="none">无防护</option></select></td>
+                            <td><span class="base-demand">2</span></td>
+                        </tr>
+                        <tr data-threat="low" data-protection="none">
+                            <td>导航雷达</td>
+                            <td><input type="number" class="target-count" value="2" min="0" step="1" style="width:60px"></td>
+                            <td><select class="threat-select"><option value="low" selected>低</option><option value="medium">中</option><option value="high">高</option></select></td>
+                            <td><select class="protection-select"><option value="none" selected>无防护</option><option value="soft">软防护</option><option value="hard">硬防护</option></select></td>
+                            <td><span class="base-demand">1</span></td>
+                        </tr>
+                        <tr data-threat="medium" data-protection="none">
+                            <td>战术数据链</td>
+                            <td><input type="number" class="target-count" value="1" min="0" step="1" style="width:60px"></td>
+                            <td><select class="threat-select"><option value="medium" selected>中</option><option value="high">高</option><option value="low">低</option></select></td>
+                            <td><select class="protection-select"><option value="none" selected>无防护</option><option value="soft">软防护</option><option value="hard">硬防护</option></select></td>
+                            <td><span class="base-demand">1</span></td>
+                        </tr>
+                        <tr data-threat="low" data-protection="none">
+                            <td>通信中继站</td>
+                            <td><input type="number" class="target-count" value="1" min="0" step="1" style="width:60px"></td>
+                            <td><select class="threat-select"><option value="low" selected>低</option><option value="medium">中</option><option value="high">高</option></select></td>
+                            <td><select class="protection-select"><option value="none" selected>无防护</option><option value="soft">软防护</option><option value="hard">硬防护</option></select></td>
+                            <td><span class="base-demand">1</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 右侧：兵力需求计算 -->
+        <div class="right-panel">
+            <div class="panel-header">
+                <span>📊</span> 兵力需求计算结果
+            </div>
+
+            <!-- 总需求卡片 -->
+            <div class="result-card">
+                <div class="result-number" id="totalDemand">0</div>
+                <div class="result-label">所需反辐射无人机总数 (架)</div>
+                <div class="progress-bar" style="margin-top: 16px;">
+                    <div class="progress-fill" id="resourceProgress" style="width:0%"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px;">
+                    <span>已分配: <span id="allocatedCount">0</span> 架</span>
+                    <span>可用: <span id="availableCount">240</span> 架</span>
+                </div>
+            </div>
+
+            <!-- 详细分解 -->
+            <div class="param-group">
+                <div class="param-title">📋 目标分解计算</div>
+                <div id="detailList">
+                    <div class="detail-item">
+                        <span class="detail-label">火控雷达 (2个)</span>
+                        <span class="detail-value" id="detail_火控雷达">0 架</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">制导雷达 (1个)</span>
+                        <span class="detail-value" id="detail_制导雷达">0 架</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">预警雷达 (1个)</span>
+                        <span class="detail-value" id="detail_预警雷达">0 架</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">多功能相控阵 (1个)</span>
+                        <span class="detail-value" id="detail_多功能相控阵">0 架</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">搜索雷达 (2个)</span>
+                        <span class="detail-value" id="detail_搜索雷达">0 架</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">跟踪雷达 (1个)</span>
+                        <span class="detail-value" id="detail_跟踪雷达">0 架</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">导航雷达 (2个)</span>
+                        <span class="detail-value" id="detail_导航雷达">0 架</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">战术数据链 (1个)</span>
+                        <span class="detail-value" id="detail_战术数据链">0 架</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">通信中继站 (1个)</span>
+                        <span class="detail-value" id="detail_通信中继站">0 架</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 计算依据 -->
+            <div class="param-group">
+                <div class="param-title">📐 计算依据</div>
+                <div class="detail-item">
+                    <span class="detail-label">基础需求</span>
+                    <span class="detail-value" id="baseRequirement">0 架</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">威胁修正</span>
+                    <span class="detail-value" id="threatModifier">+0 架</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">防护修正</span>
+                    <span class="detail-value" id="protectionModifier">+0 架</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">战术冗余</span>
+                    <span class="detail-value" id="redundancyModifier">+0 架</span>
+                </div>
+                <div class="detail-item" style="border-top: 1px solid #2a3a50; margin-top: 8px; padding-top: 12px;">
+                    <span class="detail-label">合计需求</span>
+                    <span class="detail-value" id="totalDetail" style="color: #5f8ec9; font-size: 18px;">0 架</span>
+                </div>
+            </div>
+
+            <!-- 编组建议 -->
+            <div class="param-group">
+                <div class="param-title">🎯 编组建议</div>
+                <div id="formationSuggestion" style="font-size: 13px; color: #b0c8f0; line-height: 1.6;">
+                    待计算
+                </div>
+            </div>
+
+            <!-- 按钮组 -->
+            <div class="btn-group">
+                <button class="btn" id="calculateBtn">📐 重新计算</button>
+                <button class="btn btn-outline" id="exportBtn">📄 导出报告</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部 -->
+    <div class="footer">
+        <div>计算公式: 需求 = Σ(数量 × 基础需求 × 威胁系数 × 防护系数) × 冗余系数</div>
+        <div>可用兵力: 240架 JWS-01 反辐射无人机</div>
+    </div>
+</div>
+
+<script>
+    // 威胁系数映射
+    const threatFactor = {
+        'critical': 1.5,
+        'high': 1.2,
+        'medium': 1.0,
+        'low': 0.8
+    };
+
+    // 防护系数映射
+    const protectionFactor = {
+        'hard': 1.5,
+        'soft': 1.2,
+        'none': 1.0
+    };
+
+    // 基础需求映射
+    const baseDemandMap = {
+        '火控雷达': 3,
+        '制导雷达': 3,
+        '预警雷达': 2,
+        '多功能相控阵': 2,
+        '搜索雷达': 1,
+        '跟踪雷达': 2,
+        '导航雷达': 1,
+        '战术数据链': 1,
+        '通信中继站': 1
+    };
+
+    // 冗余系数 (可调整)
+    let redundancyFactor = 1.15;
+
+    function calculateForceRequirement() {
+        let total = 0;
+        let baseTotal = 0;
+        let threatTotal = 0;
+        let protectionTotal = 0;
+        let details = {};
+
+        const rows = document.querySelectorAll('#targetTableBody tr');
+        
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const targetType = cells[0].innerText.trim();
+            const count = parseInt(row.querySelector('.target-count').value) || 0;
+            const threat = row.querySelector('.threat-select').value;
+            const protection = row.querySelector('.protection-select').value;
+            const baseDemand = baseDemandMap[targetType] || 1;
+            
+            const threatWeight = threatFactor[threat];
+            const protectionWeight = protectionFactor[protection];
+            
+            // 单目标需求
+            const perTargetDemand = baseDemand * threatWeight * protectionWeight;
+            const targetTotal = count * perTargetDemand;
+            
+            total += targetTotal;
+            baseTotal += count * baseDemand;
+            threatTotal += count * baseDemand * (threatWeight - 1);
+            protectionTotal += count * baseDemand * (protectionWeight - 1);
+            
+            details[targetType] = {
+                count: count,
+                demand: targetTotal,
+                perTarget: perTargetDemand
+            };
+        });
+        
+        // 应用冗余系数
+        let finalTotal = Math.ceil(total * redundancyFactor);
+        
+        // 更新界面
+        document.getElementById('totalDemand').innerText = finalTotal;
+        document.getElementById('baseRequirement').innerText = Math.ceil(baseTotal) + ' 架';
+        document.getElementById('threatModifier').innerText = '+' + Math.ceil(threatTotal) + ' 架';
+        document.getElementById('protectionModifier').innerText = '+' + Math.ceil(protectionTotal) + ' 架';
+        document.getElementById('redundancyModifier').innerText = '+' + Math.ceil(total * (redundancyFactor - 1)) + ' 架';
+        document.getElementById('totalDetail').innerText = finalTotal + ' 架';
+        
+        // 更新详细列表
+        for (const [type, data] of Object.entries(details)) {
+            const detailElement = document.getElementById(`detail_${type}`);
+            if (detailElement) {
+                detailElement.innerHTML = `${Math.ceil(data.demand)} 架 <span style="color:#8fa5cf; font-size:11px;">(${data.count}个×${data.perTarget.toFixed(1)})</span>`;
+            }
+        }
+        
+        // 更新资源进度
+        const available = 240;
+        const percentage = Math.min(100, (finalTotal / available) * 100);
+        document.getElementById('resourceProgress').style.width = percentage + '%';
+        document.getElementById('allocatedCount').innerText = finalTotal;
+        
+        // 编组建议
+        let formationText = '';
+        if (finalTotal <= 50) {
+            formationText = '建议采用单波次集中攻击，编队以楔形队形进入，每目标分配2-3架无人机。';
+        } else if (finalTotal <= 120) {
+            formationText = '建议采用双波次攻击，第一波主攻高威胁目标，第二波清扫剩余目标。编队采用分散突防策略。';
+        } else {
+            formationText = '建议采用多波次饱和攻击，分3-4个波次，每波间隔30-60秒。编组建议：主攻机群占60%，诱饵机群占20%，干扰机群占20%。';
+        }
+        
+        // 添加具体编组建议
+        if (details['火控雷达'] && details['火控雷达'].count > 0) {
+            formationText += ` 火控雷达${details['火控雷达'].count}个，建议每目标分配3-4架。`;
+        }
+        if (details['制导雷达'] && details['制导雷达'].count > 0) {
+            formationText += ` 制导雷达${details['制导雷达'].count}个，建议每目标分配3-4架。`;
+        }
+        
+        document.getElementById('formationSuggestion').innerHTML = formationText;
+    }
+
+    // 监听所有输入变化
+    document.getElementById('calculateBtn').addEventListener('click', calculateForceRequirement);
+    
+    // 监听数量变化
+    const countInputs = document.querySelectorAll('.target-count');
+    countInputs.forEach(input => {
+        input.addEventListener('change', calculateForceRequirement);
+        input.addEventListener('input', calculateForceRequirement);
+    });
+    
+    // 监听下拉变化
+    const threatSelects = document.querySelectorAll('.threat-select');
+    threatSelects.forEach(select => {
+        select.addEventListener('change', calculateForceRequirement);
+    });
+    
+    const protectionSelects = document.querySelectorAll('.protection-select');
+    protectionSelects.forEach(select => {
+        select.addEventListener('change', calculateForceRequirement);
+    });
+    
+    // 导出报告
+    document.getElementById('exportBtn').addEventListener('click', () => {
+        alert('报告导出功能：将生成包含目标清单、需求计算、编组建议的PDF报告。');
+    });
+    
+    // 初始化计算
+    calculateForceRequirement();
+</script>
+</body>
+</html>

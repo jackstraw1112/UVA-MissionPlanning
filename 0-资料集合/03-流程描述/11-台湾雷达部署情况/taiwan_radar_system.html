@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>台湾台军雷达预警体系部署情况</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+  :root {
+    --bg-deep: #020810;
+    --bg-panel: #060e1a;
+    --bg-card: #091525;
+    --accent-primary: #00d4ff;
+    --accent-secondary: #00ff88;
+    --accent-warning: #ff6b35;
+    --accent-danger: #ff2d55;
+    --accent-dim: #0a4a6e;
+    --text-primary: #e0f4ff;
+    --text-secondary: #7ab8d4;
+    --text-muted: #3a6a82;
+    --grid-color: rgba(0, 212, 255, 0.04);
+    --border: rgba(0, 212, 255, 0.15);
+    --glow: 0 0 20px rgba(0, 212, 255, 0.3);
+    --glow-green: 0 0 20px rgba(0, 255, 136, 0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Noto Sans SC', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* Header */
+  .header {
+    padding: 24px 40px 20px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(0,212,255,0.05) 0%, transparent 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+  }
+
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .radar-icon {
+    width: 52px; height: 52px;
+    border: 2px solid var(--accent-primary);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    animation: radarPulse 3s ease-in-out infinite;
+    box-shadow: var(--glow);
+  }
+
+  .radar-icon::before {
+    content: '';
+    position: absolute;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    border: 1px solid rgba(0,212,255,0.3);
+    animation: radarRing 3s ease-out infinite;
+  }
+
+  .radar-sweep {
+    width: 20px; height: 20px;
+    border-top: 2px solid var(--accent-primary);
+    border-right: 2px solid var(--accent-primary);
+    border-bottom: 2px solid transparent;
+    border-left: 2px solid transparent;
+    border-radius: 50%;
+    animation: sweep 2s linear infinite;
+    box-shadow: inset var(--glow);
+  }
+
+  @keyframes sweep {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes radarPulse {
+    0%, 100% { box-shadow: var(--glow); }
+    50% { box-shadow: 0 0 40px rgba(0,212,255,0.6); }
+  }
+
+  @keyframes radarRing {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(2); opacity: 0; }
+  }
+
+  .header-title h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent-primary);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    text-shadow: var(--glow);
+  }
+
+  .header-title p {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    margin-top: 3px;
+  }
+
+  .header-meta {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-secondary);
+    background: rgba(0, 255, 136, 0.05);
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent-secondary);
+    animation: blink 1.5s ease-in-out infinite;
+    box-shadow: var(--glow-green);
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .classification {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-warning);
+    letter-spacing: 2px;
+    border: 1px solid rgba(255,107,53,0.4);
+    padding: 4px 10px;
+    border-radius: 3px;
+    background: rgba(255,107,53,0.05);
+  }
+
+  /* Main layout */
+  .main {
+    display: grid;
+    grid-template-columns: 340px 1fr 320px;
+    gap: 0;
+    min-height: calc(100vh - 90px);
+  }
+
+  /* Panels */
+  .panel {
+    padding: 24px;
+    border-right: 1px solid var(--border);
+  }
+
+  .panel:last-child { border-right: none; }
+
+  .panel-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent-primary);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .panel-title::before {
+    content: '';
+    width: 3px; height: 14px;
+    background: var(--accent-primary);
+    box-shadow: var(--glow);
+  }
+
+  /* Organization chart */
+  .org-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .org-node {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .org-node::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent-primary);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+  }
+
+  .org-node:hover { border-color: var(--accent-primary); background: rgba(0,212,255,0.05); }
+  .org-node:hover::before { transform: scaleY(1); }
+
+  .org-node.level-1 { margin-left: 0; }
+  .org-node.level-2 { margin-left: 16px; }
+  .org-node.level-3 { margin-left: 32px; }
+
+  .org-node.level-1 .node-name { color: var(--accent-primary); font-size: 13px; }
+  .org-node.level-2 .node-name { color: var(--text-primary); font-size: 12px; }
+  .org-node.level-3 .node-name { color: var(--text-secondary); font-size: 11px; }
+
+  .node-badge {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+  }
+
+  .badge-cmd { background: rgba(0,212,255,0.15); color: var(--accent-primary); border: 1px solid rgba(0,212,255,0.3); }
+  .badge-unit { background: rgba(0,255,136,0.1); color: var(--accent-secondary); border: 1px solid rgba(0,255,136,0.2); }
+  .badge-sys { background: rgba(255,107,53,0.1); color: var(--accent-warning); border: 1px solid rgba(255,107,53,0.2); }
+
+  .node-name { font-weight: 500; display: block; margin-bottom: 3px; }
+  .node-detail { font-size: 10px; color: var(--text-muted); font-family: 'Share Tech Mono', monospace; }
+
+  /* Map area */
+  .map-area {
+    background: var(--bg-panel);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .taiwan-map-container {
+    position: relative;
+    width: 100%;
+    height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* SVG Taiwan map */
+  .map-svg {
+    width: 280px;
+    height: auto;
+    filter: drop-shadow(0 0 30px rgba(0,212,255,0.2));
+  }
+
+  /* Radar sites */
+  .radar-site {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+  }
+
+  .radar-site:hover .site-label { opacity: 1; transform: translateY(0); }
+  .radar-site:hover .site-ring { animation-duration: 0.5s; }
+
+  .site-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 2px solid;
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+  }
+
+  .site-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid;
+    animation: siteRing 2.5s ease-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes siteRing {
+    0% { width: 12px; height: 12px; opacity: 0.8; top: 0; left: 0; }
+    100% { width: 60px; height: 60px; opacity: 0; top: -24px; left: -24px; }
+  }
+
+  .site-label {
+    position: absolute;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(5px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 20;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .site-label.label-up {
+    top: auto;
+    bottom: 20px;
+  }
+
+  .type-ew .site-dot { background: var(--accent-primary); border-color: var(--accent-primary); box-shadow: var(--glow); }
+  .type-ew .site-ring { border-color: var(--accent-primary); }
+  .type-ew .site-label { border-color: rgba(0,212,255,0.4); color: var(--accent-primary); }
+
+  .type-sam .site-dot { background: var(--accent-secondary); border-color: var(--accent-secondary); box-shadow: var(--glow-green); }
+  .type-sam .site-ring { border-color: var(--accent-secondary); }
+  .type-sam .site-label { border-color: rgba(0,255,136,0.4); color: var(--accent-secondary); }
+
+  .type-obs .site-dot { background: var(--accent-warning); border-color: var(--accent-warning); box-shadow: 0 0 15px rgba(255,107,53,0.5); }
+  .type-obs .site-ring { border-color: var(--accent-warning); }
+  .type-obs .site-label { border-color: rgba(255,107,53,0.4); color: var(--accent-warning); }
+
+  /* Legend */
+  .map-legend {
+    position: absolute;
+    bottom: 30px;
+    left: 30px;
+    background: rgba(6,14,26,0.9);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    backdrop-filter: blur(10px);
+  }
+
+  .legend-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 7px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+  }
+
+  .legend-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent-primary);
+    text-shadow: var(--glow);
+    display: block;
+  }
+
+  .stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    margin-top: 3px;
+    display: block;
+  }
+
+  /* Right panel - radar details */
+  .radar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+  }
+
+  .radar-list::-webkit-scrollbar { width: 3px; }
+  .radar-list::-webkit-scrollbar-track { background: transparent; }
+  .radar-list::-webkit-scrollbar-thumb { background: var(--accent-dim); border-radius: 3px; }
+
+  .radar-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .radar-card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 40px; height: 40px;
+    background: radial-gradient(circle, rgba(0,212,255,0.1) 0%, transparent 70%);
+  }
+
+  .radar-card:hover { border-color: rgba(0,212,255,0.4); transform: translateX(-3px); }
+
+  .radar-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+
+  .radar-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+
+  .radar-type-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px;
+    padding: 3px 7px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  .type-ew-badge { background: rgba(0,212,255,0.15); color: var(--accent-primary); border: 1px solid rgba(0,212,255,0.3); }
+  .type-sam-badge { background: rgba(0,255,136,0.1); color: var(--accent-secondary); border: 1px solid rgba(0,255,136,0.2); }
+  .type-obs-badge { background: rgba(255,107,53,0.1); color: var(--accent-warning); border: 1px solid rgba(255,107,53,0.2); }
+
+  .radar-info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+
+  .info-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+
+  .info-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--text-secondary);
+    text-align: right;
+  }
+
+  .radar-status-bar {
+    margin-top: 10px;
+    height: 2px;
+    background: var(--bg-deep);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .status-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+    border-radius: 1px;
+    animation: statusPulse 3s ease-in-out infinite;
+  }
+
+  @keyframes statusPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* Divider */
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  /* Coverage rings on map */
+  .coverage-area {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px dashed rgba(0,212,255,0.1);
+    pointer-events: none;
+  }
+
+  /* Animated scan line */
+  .scan-line {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0,212,255,0.5), transparent);
+    animation: scanDown 4s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes scanDown {
+    0% { top: 0; opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  /* Corner decorations */
+  .corner-tl, .corner-tr, .corner-bl, .corner-br {
+    position: absolute;
+    width: 16px; height: 16px;
+  }
+  .corner-tl { top: 10px; left: 10px; border-top: 2px solid var(--accent-primary); border-left: 2px solid var(--accent-primary); }
+  .corner-tr { top: 10px; right: 10px; border-top: 2px solid var(--accent-primary); border-right: 2px solid var(--accent-primary); }
+  .corner-bl { bottom: 10px; left: 10px; border-bottom: 2px solid var(--accent-primary); border-left: 2px solid var(--accent-primary); }
+  .corner-br { bottom: 10px; right: 10px; border-bottom: 2px solid var(--accent-primary); border-right: 2px solid var(--accent-primary); }
+
+  .ticker {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    padding: 8px 40px;
+    border-top: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .ticker-inner {
+    display: inline-block;
+    animation: ticker 30s linear infinite;
+  }
+
+  @keyframes ticker {
+    from { transform: translateX(100vw); }
+    to { transform: translateX(-100%); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="radar-icon">
+      <div class="radar-sweep"></div>
+    </div>
+    <div class="header-title">
+      <h1>台湾台军雷达预警体系</h1>
+      <p>TAIWAN MILITARY RADAR & EARLY WARNING SYSTEM DEPLOYMENT OVERVIEW</p>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div class="classification">公开信息整合</div>
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      SYSTEM ACTIVE
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="main">
+
+  <!-- Left: Org Chart -->
+  <div class="panel">
+    <div class="panel-title">组织架构</div>
+    <div class="org-chart">
+
+      <div class="org-node level-1">
+        <span class="node-badge badge-cmd">最高指挥</span>
+        <span class="node-name">台湾防务部门</span>
+        <span class="node-detail">MND · 最高军事指挥机构</span>
+      </div>
+
+      <div class="org-node level-2">
+        <span class="node-badge badge-cmd">联合作战</span>
+        <span class="node-name">联合作战指挥中心</span>
+        <span class="node-detail">JOCC · 汐止北台湾</span>
+      </div>
+
+      <div class="org-node level-2">
+        <span class="node-badge badge-unit">空中作战</span>
+        <span class="node-name">空军作战指挥部</span>
+        <span class="node-detail">AOCC · 大直台北</span>
+      </div>
+
+      <div class="org-node level-3">
+        <span class="node-badge badge-sys">预警系统</span>
+        <span class="node-name">雷达管制单位</span>
+        <span class="node-detail">空军雷达站网络 · 全岛</span>
+      </div>
+
+      <div class="org-node level-3">
+        <span class="node-badge badge-sys">情报整合</span>
+        <span class="node-name">防空识别区管控</span>
+        <span class="node-detail">ADIZ · 台海周边</span>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="org-node level-2">
+        <span class="node-badge badge-unit">陆军防空</span>
+        <span class="node-name">防空炮兵指挥部</span>
+        <span class="node-detail">ADA · 配合雷达引导</span>
+      </div>
+
+      <div class="org-node level-3">
+        <span class="node-badge badge-sys">爱国者营</span>
+        <span class="node-name">PAC-3 防空导弹群</span>
+        <span class="node-detail">3个营 · 北中南部署</span>
+      </div>
+
+      <div class="org-node level-3">
+        <span class="node-badge badge-sys">天弓系统</span>
+        <span class="node-name">天弓三型防空群</span>
+        <span class="node-detail">自研系统 · 多处部署</span>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="org-node level-2">
+        <span class="node-badge badge-unit">海军情报</span>
+        <span class="node-name">海军舰队指挥部</span>
+        <span class="node-detail">NFHQ · 左营高雄</span>
+      </div>
+
+      <div class="org-node level-3">
+        <span class="node-badge badge-sys">海上雷达</span>
+        <span class="node-name">舰载雷达网络</span>
+        <span class="node-detail">基德级·沱江舰 海上预警</span>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="org-node level-1" style="border-color:rgba(0,255,136,0.3); background: rgba(0,255,136,0.03);">
+        <span class="node-badge badge-unit">战略预警</span>
+        <span class="node-name">铺路爪长程预警雷达</span>
+        <span class="node-detail">乐山基地 · 美台共管 AN/FPS-115</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Center: Map -->
+  <div class="map-area">
+    <div class="scan-line"></div>
+    <div class="corner-tl"></div><div class="corner-tr"></div>
+    <div class="corner-bl"></div><div class="corner-br"></div>
+
+    <div class="panel-title">部署位置分布图</div>
+
+    <div class="taiwan-map-container">
+
+      <!-- Taiwan SVG Map -->
+      <svg class="map-svg" viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="islandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#0a2840;stop-opacity:1"/>
+            <stop offset="100%" style="stop-color:#061520;stop-opacity:1"/>
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Taiwan island shape (approximate) -->
+        <path d="M95,20 L110,18 L130,25 L145,40 L155,60 L158,85 L155,110 L150,135 L148,160 L150,185 L148,210 L142,235 L132,258 L118,275 L100,285 L82,278 L68,260 L58,238 L52,215 L50,190 L52,165 L55,140 L58,115 L60,90 L65,65 L75,45 L85,30 Z"
+              fill="url(#islandGrad)" stroke="rgba(0,212,255,0.5)" stroke-width="1.5" filter="url(#glow)"/>
+        <!-- Penghu (simplified) -->
+        <ellipse cx="38" cy="195" rx="8" ry="5" fill="#0a2840" stroke="rgba(0,212,255,0.3)" stroke-width="1"/>
+        <!-- Kinmen (simplified) -->
+        <ellipse cx="22" cy="260" rx="6" ry="4" fill="#0a2840" stroke="rgba(0,212,255,0.3)" stroke-width="1"/>
+
+        <!-- Grid overlay -->
+        <line x1="0" y1="95" x2="200" y2="95" stroke="rgba(0,212,255,0.06)" stroke-width="0.5"/>
+        <line x1="0" y1="190" x2="200" y2="190" stroke="rgba(0,212,255,0.06)" stroke-width="0.5"/>
+        <line x1="0" y1="285" x2="200" y2="285" stroke="rgba(0,212,255,0.06)" stroke-width="0.5"/>
+        <line x1="67" y1="0" x2="67" y2="380" stroke="rgba(0,212,255,0.06)" stroke-width="0.5"/>
+        <line x1="133" y1="0" x2="133" y2="380" stroke="rgba(0,212,255,0.06)" stroke-width="0.5"/>
+
+        <!-- Place labels -->
+        <text x="100" y="60" text-anchor="middle" fill="rgba(0,212,255,0.4)" font-size="8" font-family="Share Tech Mono">台北</text>
+        <text x="105" y="160" text-anchor="middle" fill="rgba(0,212,255,0.3)" font-size="7" font-family="Share Tech Mono">台中</text>
+        <text x="100" y="240" text-anchor="middle" fill="rgba(0,212,255,0.3)" font-size="7" font-family="Share Tech Mono">台南</text>
+        <text x="95" y="270" text-anchor="middle" fill="rgba(0,212,255,0.3)" font-size="7" font-family="Share Tech Mono">高雄</text>
+      </svg>
+
+      <!-- Radar sites positioned relative to container -->
+      <!-- 1. 乐山长程雷达 (北部山区) -->
+      <div class="radar-site type-ew" style="top:110px; left:calc(50% - 30px);" title="乐山铺路爪">
+        <div class="site-ring" style="border-color:var(--accent-primary);"></div>
+        <div class="site-dot"></div>
+        <div class="site-label">乐山 AN/FPS-115<br>铺路爪长程预警</div>
+      </div>
+
+      <!-- 2. 淡水雷达站 -->
+      <div class="radar-site type-ew" style="top:92px; left:calc(50% - 50px);" title="淡水">
+        <div class="site-ring" style="border-color:var(--accent-primary); animation-delay:0.5s;"></div>
+        <div class="site-dot"></div>
+        <div class="site-label">淡水<br>AN/TPS-117</div>
+      </div>
+
+      <!-- 3. 基隆东北角 -->
+      <div class="radar-site type-ew" style="top:78px; left:calc(50% + 30px);">
+        <div class="site-ring" style="animation-delay:1s;"></div>
+        <div class="site-dot"></div>
+        <div class="site-label">基隆东北角<br>空军预警站</div>
+      </div>
+
+      <!-- 4. 花莲空军基地 -->
+      <div class="radar-site type-sam" style="top:195px; left:calc(50% + 55px);">
+        <div class="site-ring" style="animation-delay:0.3s;"></div>
+        <div class="site-dot"></div>
+        <div class="site-label">花莲<br>PAC-3营</div>
+      </div>
+
+      <!-- 5. 台中清泉岗 -->
+      <div class="radar-site type-sam" style="top:220px; left:calc(50% - 20px);">
+        <div class="site-ring" style="animation-delay:0.8s;"></div>
+        <div class="site-dot"></div>
+        <div class="site-label">清泉岗<br>天弓三型</div>
+      </div>
+
+      <!-- 6. 左营 -->
+      <div class="radar-site type-sam" style="top:325px; left:calc(50% - 25px);">
+        <div class="site-ring" style="animation-delay:1.2s;"></div>
+        <div class="site-dot"></div>
+        <div class="site-label label-up">左营海军基地<br>舰载雷达群</div>
+      </div>
+
+      <!-- 7. 澎湖 -->
+      <div class="radar-site type-obs" style="top:245px; left:calc(50% - 100px);">
+        <div class="site-ring" style="animation-delay:0.6s;"></div>
+        <div class="site-dot"></div>
+        <div class="site-label">澎湖<br>AN/TPS-77</div>
+      </div>
+
+      <!-- 8. 金门 -->
+      <div class="radar-site type-obs" style="top:300px; left:calc(50% - 118px);">
+        <div class="site-ring" style="animation-delay:1.5s;"></div>
+        <div class="site-dot"></div>
+        <div class="site-label">金门<br>前沿预警站</div>
+      </div>
+
+      <!-- 9. 马祖 -->
+      <div class="radar-site type-obs" style="top:98px; left:calc(50% - 90px);">
+        <div class="site-ring" style="animation-delay:0.9s;"></div>
+        <div class="site-dot"></div>
+        <div class="site-label">马祖<br>前沿观测站</div>
+      </div>
+
+    </div>
+
+    <!-- Legend -->
+    <div class="map-legend">
+      <div class="legend-title">图例 LEGEND</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent-primary);"></div><span style="color:var(--text-secondary);">远程预警雷达</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent-secondary);"></div><span style="color:var(--text-secondary);">防空导弹雷达</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent-warning);"></div><span style="color:var(--text-secondary);">前沿观测站点</span></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-grid" style="position:absolute; bottom:30px; right:30px; width:220px;">
+      <div class="stat-card">
+        <span class="stat-num">5+</span>
+        <span class="stat-label">主要预警站</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">3</span>
+        <span class="stat-label">PAC-3营</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">3000<small style="font-size:14px">km</small></span>
+        <span class="stat-label">铺路爪射程</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">360°</span>
+        <span class="stat-label">覆盖方位</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: System Details -->
+  <div class="panel">
+    <div class="panel-title">主要系统详情</div>
+    <div class="radar-list">
+
+      <div class="radar-card">
+        <div class="radar-card-header">
+          <div class="radar-name">AN/FPS-115<br>铺路爪预警雷达</div>
+          <span class="radar-type-badge type-ew-badge">远程预警</span>
+        </div>
+        <div class="radar-info-row"><span class="info-label">部署位置</span><span class="info-value">乐山（新竹县）</span></div>
+        <div class="radar-info-row"><span class="info-label">探测距离</span><span class="info-value">3,000 km</span></div>
+        <div class="radar-info-row"><span class="info-label">用途</span><span class="info-value">弹道导弹预警</span></div>
+        <div class="radar-info-row"><span class="info-label">管理方</span><span class="info-value">美台共管</span></div>
+        <div class="radar-status-bar"><div class="status-fill" style="width:95%;"></div></div>
+      </div>
+
+      <div class="radar-card">
+        <div class="radar-card-header">
+          <div class="radar-name">AN/TPS-117<br>机动三维雷达</div>
+          <span class="radar-type-badge type-ew-badge">区域预警</span>
+        </div>
+        <div class="radar-info-row"><span class="info-label">部署位置</span><span class="info-value">北部多处站点</span></div>
+        <div class="radar-info-row"><span class="info-label">探测距离</span><span class="info-value">450 km</span></div>
+        <div class="radar-info-row"><span class="info-label">频段</span><span class="info-value">L波段</span></div>
+        <div class="radar-info-row"><span class="info-label">特点</span><span class="info-value">机动部署能力</span></div>
+        <div class="radar-status-bar"><div class="status-fill" style="width:85%;"></div></div>
+      </div>
+
+      <div class="radar-card">
+        <div class="radar-card-header">
+          <div class="radar-name">AN/TPS-77<br>远程监视雷达</div>
+          <span class="radar-type-badge type-ew-badge">空中监视</span>
+        </div>
+        <div class="radar-info-row"><span class="info-label">部署位置</span><span class="info-value">澎湖、东部沿海</span></div>
+        <div class="radar-info-row"><span class="info-label">探测距离</span><span class="info-value">450 km</span></div>
+        <div class="radar-info-row"><span class="info-label">频段</span><span class="info-value">L波段</span></div>
+        <div class="radar-info-row"><span class="info-label">特点</span><span class="info-value">对海峡西侧覆盖</span></div>
+        <div class="radar-status-bar"><div class="status-fill" style="width:88%;"></div></div>
+      </div>
+
+      <div class="radar-card">
+        <div class="radar-card-header">
+          <div class="radar-name">PAC-3爱国者<br>火控雷达</div>
+          <span class="radar-type-badge type-sam-badge">防空导弹</span>
+        </div>
+        <div class="radar-info-row"><span class="info-label">部署位置</span><span class="info-value">台北/清泉岗/花莲</span></div>
+        <div class="radar-info-row"><span class="info-label">拦截高度</span><span class="info-value">15~40 km</span></div>
+        <div class="radar-info-row"><span class="info-label">配套雷达</span><span class="info-value">AN/MPQ-65</span></div>
+        <div class="radar-info-row"><span class="info-label">数量</span><span class="info-value">3个营</span></div>
+        <div class="radar-status-bar"><div class="status-fill" style="width:92%;"></div></div>
+      </div>
+
+      <div class="radar-card">
+        <div class="radar-card-header">
+          <div class="radar-name">天弓三型<br>防空系统雷达</div>
+          <span class="radar-type-badge type-sam-badge">防空导弹</span>
+        </div>
+        <div class="radar-info-row"><span class="info-label">部署位置</span><span class="info-value">中南部多处</span></div>
+        <div class="radar-info-row"><span class="info-label">拦截距离</span><span class="info-value">200 km</span></div>
+        <div class="radar-info-row"><span class="info-label">研制方</span><span class="info-value">中科院 (台)</span></div>
+        <div class="radar-info-row"><span class="info-label">特点</span><span class="info-value">具反弹道导弹能力</span></div>
+        <div class="radar-status-bar"><div class="status-fill" style="width:80%;"></div></div>
+      </div>
+
+      <div class="radar-card">
+        <div class="radar-card-header">
+          <div class="radar-name">金门/马祖<br>前沿观测站</div>
+          <span class="radar-type-badge type-obs-badge">前沿预警</span>
+        </div>
+        <div class="radar-info-row"><span class="info-label">部署位置</span><span class="info-value">离岛前沿阵地</span></div>
+        <div class="radar-info-row"><span class="info-label">用途</span><span class="info-value">对岸动态监视</span></div>
+        <div class="radar-info-row"><span class="info-label">特点</span><span class="info-value">距福建沿海最近</span></div>
+        <div class="radar-info-row"><span class="info-label">现状</span><span class="info-value">陆续更新装备</span></div>
+        <div class="radar-status-bar"><div class="status-fill" style="width:70%;"></div></div>
+      </div>
+
+      <div class="radar-card">
+        <div class="radar-card-header">
+          <div class="radar-name">基德级驱逐舰<br>AN/SPS-48E雷达</div>
+          <span class="radar-type-badge type-ew-badge">海上机动</span>
+        </div>
+        <div class="radar-info-row"><span class="info-label">部署位置</span><span class="info-value">左营港 (机动)</span></div>
+        <div class="radar-info-row"><span class="info-label">探测距离</span><span class="info-value">400 km</span></div>
+        <div class="radar-info-row"><span class="info-label">数量</span><span class="info-value">4艘</span></div>
+        <div class="radar-info-row"><span class="info-label">特点</span><span class="info-value">海峡机动预警</span></div>
+        <div class="radar-status-bar"><div class="status-fill" style="width:75%;"></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Ticker -->
+<div class="ticker">
+  <span class="ticker-inner">
+    ◈ 铺路爪雷达(乐山)：3000km探测距离，可预警弹道导弹 &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ◈ 台湾防空识别区(ADIZ)每日监控台海周边空情 &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ◈ PAC-3爱国者系统部署北中南三处，形成多层防空 &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ◈ 天弓三型：台湾自研防空导弹系统，具中程反弹道导弹能力 &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ◈ 金门马祖前沿观测站：距福建沿海约10km，战略预警价值极高 &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ◈ 联合作战指挥中心(JOCC)统一协调各军种雷达情报 &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ◈ 信息来源：公开报道与官方公布资料整合 &nbsp;&nbsp;&nbsp;
+  </span>
+</div>
+
+</body>
+</html>

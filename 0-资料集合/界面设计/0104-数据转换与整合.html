@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据转换与整合 - 反辐射无人机仿真系统</title>
+    <!-- Font Awesome 6 (免费) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f0f17;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #1e1e2f;
+            border-bottom: 1px solid #333;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h2 {
+            font-size: 18px;
+            font-weight: 400;
+            color: #ccc;
+        }
+
+        .header i {
+            color: #aaa;
+            margin-left: 16px;
+            cursor: default;
+        }
+
+        .header i:hover {
+            color: #4a9eff;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            overflow: hidden;
+            gap: 16px;
+        }
+
+        /* 数据源面板 */
+        .source-panel {
+            background-color: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .source-panel h3 {
+            font-size: 14px;
+            color: #ccc;
+            margin-bottom: 8px;
+        }
+
+        .source-list {
+            display: flex;
+            gap: 16px;
+        }
+
+        .source-items {
+            flex: 1;
+            background-color: #222236;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 8px;
+            list-style: none;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .source-items li {
+            display: flex;
+            align-items: center;
+            padding: 4px;
+            border-bottom: 1px solid #2a2a3c;
+        }
+
+        .source-items li i {
+            color: #4a9eff;
+            width: 20px;
+        }
+
+        .source-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .source-buttons button {
+            background-color: #2a2a42;
+            border: 1px solid #444;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: default;
+        }
+
+        .source-buttons button:hover {
+            background-color: #3a3a5a;
+        }
+
+        /* 选项卡 */
+        .tab-header {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab-item {
+            padding: 8px 20px;
+            background-color: #1e1e2f;
+            border: 1px solid #333;
+            border-radius: 8px 8px 0 0;
+            color: #aaa;
+            cursor: default;
+        }
+
+        .tab-item.active {
+            background-color: #2a2a42;
+            color: white;
+            border-color: #4a9eff;
+        }
+
+        .tab-pane {
+            display: none;
+            background-color: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 0 8px 8px 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* 参数卡片 */
+        .param-card {
+            background-color: #222236;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 16px;
+        }
+
+        .param-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 10px;
+        }
+
+        .param-row label {
+            width: 100px;
+            color: #aaa;
+        }
+
+        .param-row select, .param-row input {
+            background-color: #2a2a3c;
+            border: 1px solid #444;
+            color: white;
+            padding: 6px 8px;
+            border-radius: 4px;
+            flex: 1;
+        }
+
+        .column-list {
+            background-color: #2a2a3c;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .column-list label {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* 映射表格 */
+        .mapping-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #222236;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .mapping-table th {
+            background-color: #2a2a3c;
+            color: #ccc;
+            font-weight: 400;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .mapping-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #333;
+        }
+
+        .mapping-table tr:hover {
+            background-color: #2a2a42;
+        }
+
+        .mapping-table input, .mapping-table select {
+            background-color: #2a2a3c;
+            border: 1px solid #444;
+            color: white;
+            padding: 4px;
+            width: 100%;
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: none;
+            color: #4a9eff;
+            cursor: default;
+        }
+
+        .btn-icon:hover {
+            color: #7ab9ff;
+        }
+
+        /* 预览表格 */
+        .preview-table {
+            background-color: #222236;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 12px;
+        }
+
+        .preview-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .preview-table th {
+            background-color: #2a2a3c;
+            color: #ccc;
+            font-weight: 400;
+            padding: 6px;
+            text-align: left;
+        }
+
+        .preview-table td {
+            padding: 4px 6px;
+            border-bottom: 1px solid #333;
+        }
+
+        /* 日志区域 */
+        .log-area {
+            background-color: #1a1a2a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 12px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #333;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4a9eff, #6f4aff);
+        }
+
+        .log-box {
+            background-color: #222236;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 8px;
+            height: 80px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+
+        /* 按钮组 */
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn {
+            background-color: #2a2a42;
+            border: 1px solid #444;
+            color: white;
+            padding: 8px 24px;
+            border-radius: 4px;
+            cursor: default;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background-color: #3a3a5a;
+        }
+
+        .btn-primary {
+            background-color: #2a2a5a;
+            border-color: #4a9eff;
+        }
+
+        .btn i {
+            color: #4a9eff;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2><i class="fas fa-sync-alt" style="margin-right:8px; color:#4a9eff;"></i>数据转换与整合</h2>
+        <div>
+            <i class="fas fa-question-circle" title="帮助"></i>
+            <i class="fas fa-user" title="用户"></i>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- 数据源 -->
+        <div class="source-panel">
+            <h3><i class="fas fa-database"></i> 数据源</h3>
+            <div class="source-list">
+                <ul class="source-items">
+                    <li><i class="fas fa-file-csv"></i> radar_data.csv</li>
+                    <li><i class="fas fa-file-csv"></i> uav_data.csv</li>
+                    <li><i class="fas fa-file-excel"></i> threat_data.xlsx</li>
+                </ul>
+                <div class="source-buttons">
+                    <button><i class="fas fa-plus"></i> 添加</button>
+                    <button><i class="fas fa-trash"></i> 移除</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 选项卡头 -->
+        <div class="tab-header">
+            <div class="tab-item active" data-tab="normalize">数据标准化</div>
+            <div class="tab-item" data-tab="integrate">多源整合</div>
+        </div>
+
+        <!-- 数据标准化页 -->
+        <div class="tab-pane active" id="tab-normalize">
+            <div class="param-card">
+                <div class="param-row">
+                    <label>待处理列：</label>
+                    <div class="column-list">
+                        <label><input type="checkbox" checked> 经度</label>
+                        <label><input type="checkbox" checked> 纬度</label>
+                        <label><input type="checkbox"> 高度</label>
+                        <label><input type="checkbox"> 速度</label>
+                    </div>
+                </div>
+                <div class="param-row">
+                    <label>标准化算法：</label>
+                    <select>
+                        <option>Min-Max 归一化 [0,1]</option>
+                        <option>Z-score 标准化</option>
+                        <option>小数定标</option>
+                        <option>Log 变换</option>
+                    </select>
+                </div>
+                <div class="param-row">
+                    <label style="width:auto;">选项：</label>
+                    <input type="checkbox" checked> 替换原列
+                </div>
+            </div>
+        </div>
+
+        <!-- 多源整合页 -->
+        <div class="tab-pane" id="tab-integrate">
+            <div class="param-card">
+                <h4 style="margin-bottom:8px;">字段映射</h4>
+                <table class="mapping-table">
+                    <thead>
+                        <tr><th>源</th><th>源字段</th><th>目标字段</th><th>操作</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>radar_data</td>
+                            <td><input value="timestamp"></td>
+                            <td><input value="time"></td>
+                            <td><i class="fas fa-trash-alt btn-icon"></i></td>
+                        </tr>
+                        <tr>
+                            <td>radar_data</td>
+                            <td><input value="position_x"></td>
+                            <td><input value="x"></td>
+                            <td><i class="fas fa-trash-alt btn-icon"></i></td>
+                        </tr>
+                        <tr>
+                            <td>uav_data</td>
+                            <td><input value="time"></td>
+                            <td><input value="time"></td>
+                            <td><i class="fas fa-trash-alt btn-icon"></i></td>
+                        </tr>
+                        <tr>
+                            <td>uav_data</td>
+                            <td><input value="pos_x"></td>
+                            <td><input value="x"></td>
+                            <td><i class="fas fa-trash-alt btn-icon"></i></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button class="btn" style="padding:4px 12px;"><i class="fas fa-plus"></i> 添加映射</button>
+                    <button class="btn" style="padding:4px 12px;"><i class="fas fa-magic"></i> 自动匹配</button>
+                </div>
+            </div>
+            <div class="param-card" style="margin-top:12px;">
+                <div class="param-row">
+                    <label>连接键：</label>
+                    <input placeholder="例如: time,id">
+                </div>
+                <div class="param-row">
+                    <label>连接类型：</label>
+                    <select>
+                        <option>内连接</option>
+                        <option>左连接</option>
+                        <option>外连接</option>
+                    </select>
+                </div>
+                <div class="param-row">
+                    <label>冲突策略：</label>
+                    <select>
+                        <option>取平均值</option>
+                        <option>取最新值</option>
+                        <option>投票</option>
+                        <option>保留所有</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 预览 -->
+        <div class="preview-table">
+            <div style="margin-bottom:8px;"><i class="fas fa-eye"></i> 数据预览</div>
+            <table>
+                <thead><tr><th>time</th><th>x</th><th>y</th><th>speed</th></tr></thead>
+                <tbody>
+                    <tr><td>12:30:01</td><td>125.32</td><td>78.56</td><td>280</td></tr>
+                    <tr><td>12:30:02</td><td>125.33</td><td>78.57</td><td>282</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 日志与进度 -->
+        <div class="log-area">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:45%;"></div>
+            </div>
+            <div class="log-box">
+                [15:30:45] 开始数据转换...<br>
+                [15:30:46] 标准化: 经度,纬度 → Z-score<br>
+                [15:30:48] 整合: 3个数据源, 连接键 time<br>
+                [15:30:50] 冲突解决: 取平均值<br>
+                [15:30:52] 转换完成, 输出 1250 行。
+            </div>
+        </div>
+
+        <!-- 底部按钮 -->
+        <div class="button-group">
+            <button class="btn"><i class="fas fa-undo"></i> 重置</button>
+            <button class="btn btn-primary"><i class="fas fa-play"></i> 执行转换</button>
+        </div>
+    </div>
+
+    <script>
+        const tabs = document.querySelectorAll('.tab-item');
+        const panes = document.querySelectorAll('.tab-pane');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                panes.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

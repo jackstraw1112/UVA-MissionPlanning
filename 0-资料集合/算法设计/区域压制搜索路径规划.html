@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反辐射无人机 · 区域压制搜索路径规划系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #0a0f1e;
+            color: #e0e4f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background-color: #151e2d;
+            border-radius: 24px;
+            border: 1px solid #2a3548;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        /* 头部 */
+        .header {
+            background-color: #101826;
+            padding: 16px 24px;
+            border-bottom: 1px solid #2a3a50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 500;
+            background: linear-gradient(135deg, #aaccff, #5f8ec9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mission-badge {
+            background-color: #1e4f8a;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #1e3144;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 13px;
+        }
+
+        .dot-green {
+            width: 10px;
+            height: 10px;
+            background-color: #2ecc71;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #2ecc71;
+        }
+
+        /* 场景导航 */
+        .scene-nav {
+            display: flex;
+            background-color: #101826;
+            padding: 8px 24px;
+            gap: 4px;
+            border-bottom: 1px solid #2a3a50;
+            overflow-x: auto;
+        }
+
+        .scene-item {
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            color: #8fa5cf;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .scene-item:hover {
+            background-color: #1e3144;
+        }
+
+        .scene-item.active {
+            background-color: #1e4f8a;
+            color: white;
+        }
+
+        /* 主布局 - 两列 */
+        .main-layout {
+            display: flex;
+            height: calc(100vh - 160px);
+            min-height: 700px;
+        }
+
+        /* 左侧配置面板 */
+        .left-panel {
+            width: 380px;
+            background-color: #101826;
+            border-right: 1px solid #2a3a50;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .section {
+            background-color: #1a2538;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #2f405a;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #aaccff;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-row {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .form-row label {
+            width: 90px;
+            font-size: 13px;
+            color: #b0c8f0;
+        }
+
+        .form-row input, .form-row select {
+            flex: 1;
+            background-color: #1f2b3c;
+            border: 1px solid #3f556d;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: white;
+            font-size: 13px;
+        }
+
+        .range-slider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .range-slider input[type="range"] {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #2f405a;
+            border-radius: 2px;
+        }
+
+        .range-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #5f8ec9;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .value-badge {
+            background-color: #1e4f8a;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 8px 0;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+
+        .radio-item input[type="radio"] {
+            accent-color: #5f8ec9;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            background-color: #1f2b3c;
+            padding: 5px 12px;
+            border-radius: 30px;
+            border: 1px solid #3f556d;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            accent-color: #5f8ec9;
+        }
+
+        /* 算法卡片 */
+        .algorithm-card {
+            background-color: #1f2b3c;
+            border: 1px solid #3f556d;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .algorithm-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .algorithm-name {
+            font-weight: 600;
+            color: #aaccff;
+        }
+
+        .algorithm-confidence {
+            background-color: #1e4f8a;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+
+        .algorithm-desc {
+            font-size: 12px;
+            color: #8fa5cf;
+        }
+
+        .algorithm-params {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            font-size: 11px;
+            color: #5f8ec9;
+        }
+
+        /* 右侧可视化面板 */
+        .right-panel {
+            flex: 1;
+            background-color: #0f1622;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .view-tabs {
+            display: flex;
+            background-color: #101826;
+            padding: 8px 16px;
+            gap: 8px;
+            border-bottom: 1px solid #2a3a50;
+        }
+
+        .view-tab {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #8fa5cf;
+            cursor: pointer;
+        }
+
+        .view-tab.active {
+            background-color: #1e4f8a;
+            color: white;
+        }
+
+        .visualization-container {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 40px);
+            overflow: hidden;
+        }
+
+        /* 场景卡片 - 显示当前场景的搜索策略 */
+        .scene-strategy-card {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(16, 24, 38, 0.95);
+            border: 1px solid #2f405a;
+            border-radius: 12px;
+            padding: 16px;
+            width: 280px;
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        .strategy-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #aaccff;
+            margin-bottom: 8px;
+        }
+
+        .strategy-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .strategy-label {
+            color: #8fa5cf;
+        }
+
+        .strategy-value {
+            color: white;
+        }
+
+        .strategy-tag {
+            display: inline-block;
+            background-color: #1e4f8a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-right: 4px;
+            margin-top: 4px;
+        }
+
+        /* 地图容器 */
+        .map-container {
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(74, 158, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(74, 158, 255, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            position: relative;
+        }
+
+        /* 地图控件 */
+        .map-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 20;
+        }
+
+        .map-btn {
+            width: 40px;
+            height: 40px;
+            background-color: #1a2538;
+            border: 1px solid #3f556d;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .map-btn:hover {
+            background-color: #2f4058;
+        }
+
+        /* 性能指标面板 */
+        .metrics-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(16, 24, 38, 0.95);
+            border: 1px solid #2f405a;
+            border-radius: 12px;
+            padding: 16px;
+            width: 280px;
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        .metrics-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #aaccff;
+            margin-bottom: 12px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .metric-item {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #5f8ec9;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #8fa5cf;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: #2f405a;
+            border-radius: 3px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #5f8ec9, #2ecc71);
+        }
+
+        /* 路径图例 */
+        .path-legend {
+            position: absolute;
+            top: 20px;
+            right: 80px;
+            background-color: rgba(16, 24, 38, 0.95);
+            border: 1px solid #2f405a;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        /* 无人机信息浮层 */
+        .uav-tooltip {
+            position: absolute;
+            background-color: #1a2538;
+            border: 1px solid #5f8ec9;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 11px;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* 按钮 */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid #3f556d;
+            background-color: #263445;
+            color: #e0e8ff;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #2f4058;
+            border-color: #5f8ec9;
+        }
+
+        .btn-primary {
+            background-color: #1e4f8a;
+            border-color: #4280c0;
+        }
+
+        .btn-block {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e2b3c;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3f556d;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 头部 -->
+    <div class="header">
+        <h1>
+            <span>🎯 区域压制搜索路径规划</span>
+            <span class="mission-badge">任务: 区域压制-007</span>
+        </h1>
+        <div class="status">
+            <span class="dot-green"></span>
+            场景识别: 小区域多目标 | 置信度 92%
+        </div>
+    </div>
+
+    <!-- 场景导航 -->
+    <div class="scene-nav">
+        <span class="scene-item active" data-scene="fixed">单一固定目标</span>
+        <span class="scene-item" data-scene="mobile">单一低速机动目标</span>
+        <span class="scene-item" data-scene="decoy">配有诱饵的固定目标</span>
+        <span class="scene-item" data-scene="small">小区域多目标</span>
+        <span class="scene-item" data-scene="large">大区域多目标</span>
+    </div>
+
+    <!-- 主布局 -->
+    <div class="main-layout">
+        <!-- 左侧配置面板 -->
+        <div class="left-panel">
+            <!-- 场景识别结果 -->
+            <div class="section">
+                <div class="section-title">🔍 场景识别结果</div>
+                <div class="algorithm-card">
+                    <div class="algorithm-header">
+                        <span class="algorithm-name">小区域多目标 (6个目标)</span>
+                        <span class="algorithm-confidence">置信度 92%</span>
+                    </div>
+                    <div class="algorithm-desc">
+                        区域面积 180 km²，目标密度 0.033 个/km²
+                    </div>
+                    <div class="algorithm-params">
+                        <span>推荐算法: Voronoi并行搜索</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 目标信息 -->
+            <div class="section">
+                <div class="section-title">🎯 目标信息</div>
+                <div class="form-row">
+                    <label>目标数量</label>
+                    <input type="number" value="6" min="1" max="50">
+                </div>
+                <div class="form-row">
+                    <label>区域半径</label>
+                    <div class="range-slider">
+                        <input type="range" min="5" max="100" value="15">
+                        <span class="value-badge">15 km</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>目标类型</label>
+                    <select multiple size="3" style="height: auto;">
+                        <option selected>火控雷达 (3个)</option>
+                        <option selected>预警雷达 (2个)</option>
+                        <option>诱饵系统 (1个)</option>
+                    </select>
+                </div>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" checked> 有诱饵目标
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox"> 有移动目标
+                    </div>
+                </div>
+            </div>
+
+            <!-- 搜索策略选择 -->
+            <div class="section">
+                <div class="section-title">🧠 搜索策略</div>
+                <div class="algorithm-card" style="border-color: #5f8ec9;">
+                    <div class="algorithm-header">
+                        <span class="algorithm-name">Voronoi并行搜索 (推荐)</span>
+                        <span class="algorithm-confidence">最优</span>
+                    </div>
+                    <div class="algorithm-desc">
+                        基于目标位置聚类，等角度分配搜索区域
+                    </div>
+                </div>
+                <div class="algorithm-card">
+                    <div class="algorithm-header">
+                        <span class="algorithm-name">等面积分区搜索</span>
+                    </div>
+                    <div class="algorithm-desc">
+                        按面积等分区域，适用于均匀分布
+                    </div>
+                </div>
+                <div class="algorithm-card">
+                    <div class="algorithm-header">
+                        <span class="algorithm-name">概率优先搜索</span>
+                    </div>
+                    <div class="algorithm-desc">
+                        基于威胁等级动态调整搜索密度
+                    </div>
+                </div>
+            </div>
+
+            <!-- 多机协同配置 -->
+            <div class="section">
+                <div class="section-title">🤝 多机协同</div>
+                <div class="form-row">
+                    <label>无人机数量</label>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <input type="number" value="4" min="1" max="24" style="width: 60px;">
+                        <span>架</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>协同模式</label>
+                    <select>
+                        <option selected>分区并行 (推荐)</option>
+                        <option>接力搜索</option>
+                        <option>重叠搜索</option>
+                        <option>分层搜索</option>
+                    </select>
+                </div>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" checked> 动态重分配
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" checked> 冲突避免
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox"> 负载均衡
+                    </div>
+                </div>
+            </div>
+
+            <!-- 搜索参数 -->
+            <div class="section">
+                <div class="section-title">⚙️ 搜索参数</div>
+                <div class="form-row">
+                    <label>扫描间距</label>
+                    <div class="range-slider">
+                        <input type="range" min="100" max="800" value="300">
+                        <span class="value-badge">300 m</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>重叠率</label>
+                    <div class="range-slider">
+                        <input type="range" min="5" max="30" value="15">
+                        <span class="value-badge">15%</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>搜索高度</label>
+                    <div class="range-slider">
+                        <input type="range" min="500" max="5000" value="2000">
+                        <span class="value-badge">2000 m</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <button class="btn btn-primary btn-block">生成搜索路径</button>
+            <button class="btn btn-block">保存方案</button>
+        </div>
+
+        <!-- 右侧可视化面板 -->
+        <div class="right-panel">
+            <!-- 视图切换 -->
+            <div class="view-tabs">
+                <span class="view-tab active">2D 地图视图</span>
+                <span class="view-tab">3D 态势视图</span>
+                <span class="view-tab">概率分布图</span>
+                <span class="view-tab">覆盖热力图</span>
+            </div>
+
+            <!-- 可视化容器 -->
+            <div class="visualization-container">
+                <!-- 当前场景策略卡片 -->
+                <div class="scene-strategy-card">
+                    <div class="strategy-title">当前场景: 小区域多目标</div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">搜索算法</span>
+                        <span class="strategy-value">Voronoi并行搜索</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">区域分解</span>
+                        <span class="strategy-value">4 个子区域</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">搜索模式</span>
+                        <span class="strategy-value">平行扫海</span>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <span class="strategy-tag">威胁优先</span>
+                        <span class="strategy-tag">动态重分配</span>
+                        <span class="strategy-tag">冲突避免</span>
+                    </div>
+                </div>
+
+                <!-- 地图容器 -->
+                <div class="map-container" id="mapContainer">
+                    <!-- SVG 路径绘制 - 小区域多目标场景 -->
+                    <svg width="100%" height="100%" style="position: absolute; top: 0; left: 0;">
+                        <!-- 背景网格已经由CSS提供 -->
+                        
+                        <!-- 搜索区域边界 -->
+                        <rect x="200" y="100" width="600" height="400" stroke="#5f8ec9" stroke-width="2" fill="none" stroke-dasharray="5,3"/>
+                        
+                        <!-- 子区域划分 -->
+                        <line x1="200" y1="300" x2="800" y2="300" stroke="#3f556d" stroke-width="1" stroke-dasharray="3,3"/>
+                        <line x1="500" y1="100" x2="500" y2="500" stroke="#3f556d" stroke-width="1" stroke-dasharray="3,3"/>
+                        
+                        <!-- 子区域标签 -->
+                        <text x="350" y="200" fill="#8fa5cf" font-size="12">子区域1</text>
+                        <text x="650" y="200" fill="#8fa5cf" font-size="12">子区域2</text>
+                        <text x="350" y="400" fill="#8fa5cf" font-size="12">子区域3</text>
+                        <text x="650" y="400" fill="#8fa5cf" font-size="12">子区域4</text>
+                        
+                        <!-- UAV-01 路径 (北左) - 蓝色 -->
+                        <path d="M200,200 L350,200 L350,250 L500,250 L500,200 L650,200" 
+                              stroke="#5f8ec9" stroke-width="3" fill="none"/>
+                        
+                        <!-- UAV-02 路径 (北右) - 橙色 -->
+                        <path d="M500,150 L650,150 L650,250 L800,250" 
+                              stroke="#f39c12" stroke-width="3" fill="none"/>
+                        
+                        <!-- UAV-03 路径 (南左) - 绿色 -->
+                        <path d="M200,400 L350,400 L350,350 L500,350 L500,400 L650,400" 
+                              stroke="#2ecc71" stroke-width="3" fill="none"/>
+                        
+                        <!-- UAV-04 路径 (南右) - 红色 -->
+                        <path d="M500,450 L650,450 L650,350 L800,350" 
+                              stroke="#e74c3c" stroke-width="3" fill="none"/>
+                        
+                        <!-- 目标点 -->
+                        <circle cx="280" cy="180" r="6" fill="#e74c3c" stroke="white" stroke-width="2"/>
+                        <circle cx="420" cy="220" r="6" fill="#e74c3c" stroke="white" stroke-width="2"/>
+                        <circle cx="550" cy="160" r="6" fill="#e74c3c" stroke="white" stroke-width="2"/>
+                        <circle cx="680" cy="240" r="6" fill="#e74c3c" stroke="white" stroke-width="2"/>
+                        <circle cx="320" cy="380" r="6" fill="#f39c12" stroke="white" stroke-width="2"/>
+                        <circle cx="580" cy="420" r="6" fill="#f39c12" stroke="white" stroke-width="2"/>
+                        
+                        <!-- 威胁区域 -->
+                        <circle cx="400" cy="300" r="50" fill="rgba(231, 76, 60, 0.15)" stroke="#e74c3c" stroke-width="2" stroke-dasharray="5,3"/>
+                        
+                        <!-- 航点标记 -->
+                        <circle cx="200" cy="200" r="4" fill="#5f8ec9" stroke="white" stroke-width="1"/>
+                        <circle cx="500" cy="150" r="4" fill="#f39c12" stroke="white" stroke-width="1"/>
+                        <circle cx="200" cy="400" r="4" fill="#2ecc71" stroke="white" stroke-width="1"/>
+                        <circle cx="500" cy="450" r="4" fill="#e74c3c" stroke="white" stroke-width="1"/>
+                    </svg>
+
+                    <!-- 地图控件 -->
+                    <div class="map-controls">
+                        <div class="map-btn">➕</div>
+                        <div class="map-btn">➖</div>
+                        <div class="map-btn">🗺️</div>
+                        <div class="map-btn">🎯</div>
+                    </div>
+
+                    <!-- 路径图例 -->
+                    <div class="path-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #5f8ec9;"></div>
+                            <span>UAV-01 子区域1</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #f39c12;"></div>
+                            <span>UAV-02 子区域2</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #2ecc71;"></div>
+                            <span>UAV-03 子区域3</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #e74c3c;"></div>
+                            <span>UAV-04 子区域4</span>
+                        </div>
+                    </div>
+
+                    <!-- 性能指标面板 -->
+                    <div class="metrics-panel">
+                        <div class="metrics-title">📊 搜索效能</div>
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <div class="metric-value">78.3%</div>
+                                <div class="metric-label">区域覆盖率</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value">12.5%</div>
+                                <div class="metric-label">重复覆盖率</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value">86.5%</div>
+                                <div class="metric-label">截获概率</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value">28 min</div>
+                                <div class="metric-label">剩余时间</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:78%"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #8fa5cf; margin-top: 4px;">
+                            <span>目标 95%</span>
+                            <span>已完成 78%</span>
+                        </div>
+                        
+                        <div style="margin-top: 12px; font-size: 12px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>预计总时间</span>
+                                <span>1h 24min</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>威胁规避次数</span>
+                                <span>3次</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 模拟的无人机信息浮层 (仅在hover时显示，此处为静态示例) -->
+                    <div class="uav-tooltip" style="left: 350px; top: 180px; display: none;">UAV-01: 搜索进度82%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 场景切换功能
+    const sceneItems = document.querySelectorAll('.scene-item');
+    
+    sceneItems.forEach(item => {
+        item.addEventListener('click', function() {
+            // 移除所有active类
+            sceneItems.forEach(s => s.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 这里可以根据不同场景更新界面内容
+            // 为简化演示，仅做样式变化
+        });
+    });
+
+    // 视图切换
+    const viewTabs = document.querySelectorAll('.view-tab');
+    
+    viewTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            viewTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // 模拟鼠标移动显示无人机信息
+    const uavPaths = document.querySelectorAll('path[stroke="#5f8ec9"], path[stroke="#f39c12"], path[stroke="#2ecc71"], path[stroke="#e74c3c"]');
+    const tooltip = document.querySelector('.uav-tooltip');
+    
+    uavPaths.forEach((path, index) => {
+        path.addEventListener('mouseenter', function(e) {
+            const colors = ['#5f8ec9', '#f39c12', '#2ecc71', '#e74c3c'];
+            const uavNames = ['UAV-01', 'UAV-02', 'UAV-03', 'UAV-04'];
+            const progresses = ['82%', '75%', '68%', '60%'];
+            
+            const color = this.getAttribute('stroke');
+            const idx = colors.indexOf(color);
+            
+            if (idx !== -1) {
+                tooltip.style.display = 'block';
+                tooltip.style.left = (e.clientX - 350) + 'px';
+                tooltip.style.top = (e.clientY - 150) + 'px';
+                tooltip.innerHTML = `${uavNames[idx]}: 搜索进度 ${progresses[idx]}`;
+            }
+        });
+        
+        path.addEventListener('mouseleave', function() {
+            tooltip.style.display = 'none';
+        });
+    });
+</script>
+</body>
+</html>

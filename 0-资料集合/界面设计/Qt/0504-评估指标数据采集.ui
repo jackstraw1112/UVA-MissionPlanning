@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DataAcquisitionWidget</class>
+ <widget class="QMainWindow" name="DataAcquisitionWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1000</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>评估指标数据采集</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <!-- 顶部工具栏 -->
+    <item>
+     <widget class="QToolBar" name="toolBar">
+      <property name="iconSize">
+       <size>
+        <width>24</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="toolButtonStyle">
+       <enum>Qt::ToolButtonTextUnderIcon</enum>
+      </property>
+      <addaction name="actionStart"/>
+      <addaction name="actionStop"/>
+      <addaction name="separator"/>
+      <addaction name="actionSaveConfig"/>
+      <addaction name="actionLoadConfig"/>
+      <addaction name="separator"/>
+      <addaction name="actionClearData"/>
+     </widget>
+    </item>
+    <!-- 主分割区域 -->
+    <item>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="handleWidth">
+       <number>6</number>
+      </property>
+      <!-- 左侧指标映射配置 -->
+      <widget class="QWidget" name="leftPanel" native="true">
+       <property name="minimumWidth">
+        <number>300</number>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QLabel" name="labelMappingTitle">
+          <property name="text">
+           <string>指标映射规则</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="tableMapping">
+          <property name="columnCount">
+           <number>4</number>
+          </property>
+          <attribute name="horizontalHeaderStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>指标名称</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>数据源</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>转换规则</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>采集频率(Hz)</string>
+           </property>
+          </column>
+          <row>
+           <property name="text">
+            <string>目标摧毁概率</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>无人机生存率</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>压制时间</string>
+           </property>
+          </row>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QPushButton" name="btnAddRule">
+            <property name="text">
+             <string>添加</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnEditRule">
+            <property name="text">
+             <string>编辑</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnDeleteRule">
+            <property name="text">
+             <string>删除</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <!-- 右侧状态监控 -->
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <!-- 采集状态页 -->
+       <widget class="QWidget" name="tabStatus">
+        <attribute name="title">
+         <string>采集状态</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QGroupBox" name="groupBoxStatus">
+           <property name="title">
+            <string>当前采集</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout">
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelDataSource">
+              <property name="text">
+               <string>数据源：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="labelDataSourceValue">
+              <property name="text">
+               <string>仿真引擎 (共享内存)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelSampleRate">
+              <property name="text">
+               <string>采样频率：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="labelSampleRateValue">
+              <property name="text">
+               <string>100 Hz</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="labelDataCount">
+              <property name="text">
+               <string>已采集数据量：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="labelDataCountValue">
+              <property name="text">
+               <string>1,234,567 条</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="labelLastUpdate">
+              <property name="text">
+               <string>最后更新时间：</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLabel" name="labelLastUpdateValue">
+              <property name="text">
+               <string>2025-03-18 15:30:45</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxProgress">
+           <property name="title">
+            <string>采集进度</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="QProgressBar" name="progressBar">
+              <property name="value">
+               <number>45</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelProgressDetail">
+              <property name="text">
+               <string>已完成 45% (任务时间 00:12:34 / 01:00:00)</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxRecent">
+           <property name="title">
+            <string>最近采集记录</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <item>
+             <widget class="QTableWidget" name="tableRecent">
+              <property name="columnCount">
+               <number>2</number>
+              </property>
+              <attribute name="horizontalHeaderStretchLastSection">
+               <bool>true</bool>
+              </attribute>
+              <column>
+               <property name="text">
+                <string>时间</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>指标值</string>
+               </property>
+              </column>
+              <row>
+               <property name="text">
+                <string>15:30:45</string>
+               </property>
+              </row>
+              <row>
+               <property name="text">
+                <string>15:30:44</string>
+               </property>
+              </row>
+              <row>
+               <property name="text">
+                <string>15:30:43</string>
+               </property>
+              </row>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <!-- 实时数据预览页 -->
+       <widget class="QWidget" name="tabPreview">
+        <attribute name="title">
+         <string>实时数据预览</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <item>
+          <widget class="QComboBox" name="comboPreviewIndicator">
+           <item>
+            <property name="text">
+             <string>目标摧毁概率</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>无人机生存率</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTableWidget" name="tablePreview">
+           <property name="columnCount">
+            <number>3</number>
+           </property>
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+           <column>
+            <property name="text">
+             <string>实体ID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>原始值</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>标准化值</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <!-- 统计信息页 -->
+       <widget class="QWidget" name="tabStats">
+        <attribute name="title">
+         <string>统计信息</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_7">
+         <item>
+          <widget class="QListWidget" name="listStats">
+           <item>
+            <property name="text">
+             <string>目标摧毁概率 - 均值: 0.82, 标准差: 0.12</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>无人机生存率 - 均值: 0.75, 标准差: 0.08</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1000</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <addaction name="actionSaveConfig"/>
+    <addaction name="actionLoadConfig"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuControl">
+    <property name="title">
+     <string>控制</string>
+    </property>
+    <addaction name="actionStart"/>
+    <addaction name="actionStop"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>视图</string>
+    </property>
+    <addaction name="actionShowToolbar"/>
+    <addaction name="actionShowStatusbar"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuControl"/>
+   <addaction name="menuView"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionStart">
+   <property name="text">
+    <string>开始采集</string>
+   </property>
+   <property name="toolTip">
+    <string>启动数据采集</string>
+   </property>
+  </action>
+  <action name="actionStop">
+   <property name="text">
+    <string>停止采集</string>
+   </property>
+   <property name="toolTip">
+    <string>停止数据采集</string>
+   </property>
+  </action>
+  <action name="actionSaveConfig">
+   <property name="text">
+    <string>保存配置</string>
+   </property>
+  </action>
+  <action name="actionLoadConfig">
+   <property name="text">
+    <string>加载配置</string>
+   </property>
+  </action>
+  <action name="actionClearData">
+   <property name="text">
+    <string>清空数据</string>
+   </property>
+   <property name="toolTip">
+    <string>清空已采集的数据</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>退出</string>
+   </property>
+  </action>
+  <action name="actionShowToolbar">
+   <property name="text">
+    <string>显示工具栏</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionShowStatusbar">
+   <property name="text">
+    <string>显示状态栏</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

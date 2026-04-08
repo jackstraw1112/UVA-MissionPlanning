@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反辐射无人机协同作战 - 任务场景编辑器</title>
+    
+    <!-- 引入 Leaflet 地图样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- 引入 FontAwesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <style>
+        :root {
+            --bg-dark: #1a1a1d;
+            --bg-panel: #2d2d35;
+            --accent-color: #4caf50; /* 战术绿 */
+            --danger-color: #f44336; /* 威胁红 */
+            --warning-color: #ff9800;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --border-color: #444;
+            --header-height: 50px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 顶部导航栏 */
+        header {
+            height: var(--header-height);
+            background-color: #000;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--accent-color);
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 5px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn:hover { background: #3d3d45; }
+        .btn-primary { background: var(--accent-color); color: #fff; border: none; }
+        .btn-primary:hover { background: #43a047; }
+        .btn-danger { background: var(--danger-color); color: #fff; border: none; }
+
+        /* 主布局 */
+        .main-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - var(--header-height));
+        }
+
+        /* 左侧工具栏 (图层与基础操作) */
+        .sidebar-left {
+            width: 60px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10px;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .tool-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+
+        .tool-icon.active, .tool-icon:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--accent-color);
+        }
+
+        /* 地图区域 */
+        #map {
+            flex: 1;
+            background: #0f0f12;
+            z-index: 1;
+        }
+
+        /* 右侧属性编辑面板 */
+        .sidebar-right {
+            width: 380px;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.3);
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 5px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+            background: rgba(76, 175, 80, 0.05);
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .panel-section {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .panel-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            background: #1a1a1d;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .list-item {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid var(--border-color);
+        }
+
+        .list-item.threat { border-left-color: var(--danger-color); }
+        .list-item.friend { border-left-color: var(--accent-color); }
+        .list-item.target { border-left-color: var(--warning-color); }
+
+        .item-info h4 { font-size: 0.9rem; margin-bottom: 2px; }
+        .item-info p { font-size: 0.75rem; color: var(--text-muted); }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+        }
+        .action-btn:hover { color: #fff; }
+
+        /* 地图覆盖物样式模拟 */
+        .legend-box {
+            background: rgba(45, 45, 53, 0.9);
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            font-size: 0.8rem;
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        
+        /* 滚动条美化 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1a1a1d; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+    </style>
+</head>
+<body>
+
+    <!-- 顶部导航 -->
+    <header>
+        <div class="logo-area">
+            <i class="fa-solid fa-jet-fighter-up"></i>
+            <span>ARD-SIM | 反辐射无人机任务规划系统</span>
+        </div>
+        <div class="toolbar">
+            <button class="btn" onclick="alert('场景已重置')"><i class="fa-solid fa-rotate-left"></i> 重置</button>
+            <button class="btn" onclick="alert('场景验证通过：逻辑无冲突')"><i class="fa-solid fa-check-double"></i> 逻辑校验</button>
+            <button class="btn btn-primary" onclick="saveScenario()"><i class="fa-solid fa-save"></i> 保存任务想定</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- 左侧工具栏 -->
+        <aside class="sidebar-left">
+            <div class="tool-icon active" title="选择/移动" onclick="setTool('select')"><i class="fa-solid fa-arrow-pointer"></i></div>
+            <div class="tool-icon" title="绘制航路点" onclick="setTool('waypoint')"><i class="fa-solid fa-route"></i></div>
+            <div class="tool-icon" title="标注辐射源" onclick="setTool('radar')"><i class="fa-solid fa-tower-broadcast"></i></div>
+            <div class="tool-icon" title="划定禁飞区" onclick="setTool('zone')"><i class="fa-solid fa-circle-stop"></i></div>
+            <div class="tool-icon" title="测距/测角" onclick="setTool('measure')"><i class="fa-solid fa-ruler"></i></div>
+            <div style="flex:1"></div>
+            <div class="tool-icon" title="图层管理"><i class="fa-solid fa-layer-group"></i></div>
+        </aside>
+
+        <!-- 地图容器 -->
+        <div id="map"></div>
+
+        <!-- 右侧编辑面板 -->
+        <aside class="sidebar-right">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('background')">任务背景</div>
+                <div class="tab" onclick="switchTab('targets')">任务目标</div>
+                <div class="tab" onclick="switchTab('threats')">威胁要素</div>
+                <div class="tab" onclick="switchTab('forces')">兵力部署</div>
+                <div class="tab" onclick="switchTab('actions')">作战行动</div>
+            </div>
+
+            <div class="panel-content">
+                
+                <!-- 1. 任务背景 -->
+                <div id="background" class="panel-section active">
+                    <div class="form-group">
+                        <label class="form-label">想定名称</label>
+                        <input type="text" class="form-control" value="蓝军防空压制作战-01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">作战区域</label>
+                        <select class="form-control">
+                            <option>东部沿海丘陵地带</option>
+                            <option>西部高原荒漠</option>
+                            <option>城市复杂电磁环境</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">气象条件</label>
+                        <div style="display:flex; gap:10px;">
+                            <select class="form-control"><option>晴朗</option><option>小雨</option><option>雷暴</option></select>
+                            <select class="form-control"><option>能见度: 高</option><option>能见度: 低</option></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">电磁环境背景</label>
+                        <textarea class="form-control" rows="4">背景噪声水平：中等。存在民用通信干扰频段 (2.4GHz/5.8GHz)。蓝军雷达开机概率：60%。</textarea>
+                    </div>
+                </div>
+
+                <!-- 2. 任务目标 -->
+                <div id="targets" class="panel-section">
+                    <button class="btn btn-primary" style="width:100%; margin-bottom:15px;" onclick="addListItem('targets-list', 'target')">+ 新增打击目标</button>
+                    <div id="targets-list">
+                        <div class="list-item target">
+                            <div class="item-info">
+                                <h4><i class="fa-solid fa-crosshairs"></i> 远程预警雷达 (A)</h4>
+                                <p>坐标: 34.52, 118.30 | 类型: S波段</p>
+                            </div>
+                            <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                        <div class="list-item target">
+                            <div class="item-info">
+                                <h4><i class="fa-solid fa-crosshairs"></i> 火控照射雷达 (B)</h4>
+                                <p>坐标: 34.55, 118.35 | 类型: X波段</p>
+                            </div>
+                            <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. 威胁要素 -->
+                <div id="threats" class="panel-section">
+                    <button class="btn btn-danger" style="width:100%; margin-bottom:15px;" onclick="addListItem('threats-list', 'threat')">+ 新增威胁源</button>
+                    <div id="threats-list">
+                        <div class="list-item threat">
+                            <div class="item-info">
+                                <h4><i class="fa-solid fa-triangle-exclamation"></i> 便携式防空导弹 (MANPADS)</h4>
+                                <p>覆盖半径: 5km | 威胁等级: 高</p>
+                            </div>
+                            <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                        <div class="list-item threat">
+                            <div class="item-info">
+                                <h4><i class="fa-solid fa-triangle-exclamation"></i> 电子干扰车</h4>
+                                <p>干扰频段: 全频段阻塞 | 位置: 移动中</p>
+                            </div>
+                            <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. 兵力部署 -->
+                <div id="forces" class="panel-section">
+                    <div class="form-group">
+                        <label class="form-label">无人机编队配置</label>
+                        <select class="form-control">
+                            <option>双机协同 (1侦察+1攻击)</option>
+                            <option>四机蜂群 (饱和攻击)</option>
+                            <option>单机渗透</option>
+                        </select>
+                    </div>
+                    <div id="forces-list">
+                        <div class="list-item friend">
+                            <div class="item-info">
+                                <h4><i class="fa-solid fa-plane-departure"></i> ARD-01 (长机)</h4>
+                                <p>挂载: 反辐射导引头 + 爆破战斗部 | 油量: 100%</p>
+                            </div>
+                            <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                        <div class="list-item friend">
+                            <div class="item-info">
+                                <h4><i class="fa-solid fa-plane-departure"></i> ARD-02 (僚机)</h4>
+                                <p>挂载: 电子侦察吊舱 | 油量: 100%</p>
+                            </div>
+                            <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top:15px;">
+                        <label class="form-label">起飞点设置</label>
+                        <input type="text" class="form-control" value="前线临时起降场 (FOL-03)" readonly>
+                        <button class="btn" style="width:100%; margin-top:5px;" onclick="alert('请在地图上点击设置起飞点')"><i class="fa-solid fa-map-location-dot"></i> 地图选取</button>
+                    </div>
+                </div>
+
+                <!-- 5. 作战行动 -->
+                <div id="actions" class="panel-section">
+                    <div class="form-group">
+                        <label class="form-label">进攻发起时间 (H-Hour)</label>
+                        <input type="datetime-local" class="form-control" value="2026-03-20T04:00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">交战规则 (ROE)</label>
+                        <select class="form-control">
+                            <option>雷达开机即摧毁</option>
+                            <option>仅攻击确认的高价值目标</option>
+                            <option>先侦察后决策 (人工确认)</option>
+                        </select>
+                    </div>
+                    
+                    <label class="form-label" style="margin-top:10px;">航路规划序列</label>
+                    <div style="background:#1a1a1d; padding:10px; border-radius:4px; border:1px solid #444; min-height:100px;">
+                        <div style="font-size:0.8rem; color:#888; margin-bottom:5px;">WP1: 起飞 -> WP2: 隐蔽接近点 -> WP3: 攻击阵位 -> WP4: 撤离</div>
+                        <div style="color:var(--accent-color); font-size:0.9rem;"><i class="fa-solid fa-play"></i> 待规划</div>
+                    </div>
+                    <button class="btn" style="width:100%; margin-top:10px;" onclick="setTool('waypoint')"><i class="fa-solid fa-pen-to-square"></i> 编辑飞行航路</button>
+                </div>
+
+            </div>
+        </aside>
+    </div>
+
+    <!-- 引入 Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 初始化地图 (使用暗色底图模拟军事风格，这里用标准图代替，实际项目可加载离线瓦片)
+        const map = L.map('map').setView([34.53, 118.32], 11);
+
+        // 加载开源地图图层 (实际系统中通常使用离线卫星图或专用军事地图)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        // 模拟添加一些初始标记
+        const radarIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: "<div style='background-color:#f44336; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px #f44336;'></div>",
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+
+        const droneIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: "<div style='background-color:#4caf50; width:14px; height:14px; transform: rotate(45deg); border:2px solid white; box-shadow:0 0 10px #4caf50;'></div>",
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        // 添加示例威胁点
+        L.marker([34.52, 118.30], {icon: radarIcon}).addTo(map).bindPopup("敌远程预警雷达 (高危)");
+        L.marker([34.55, 118.35], {icon: radarIcon}).addTo(map).bindPopup("敌火控雷达");
+        
+        // 添加示例无人机
+        L.marker([34.48, 118.28], {icon: droneIcon}).addTo(map).bindPopup("ARD-01 待命");
+
+        // 添加一个圆形威胁范围示意
+        L.circle([34.52, 118.30], {
+            color: '#f44336',
+            fillColor: '#f44336',
+            fillOpacity: 0.1,
+            radius: 5000
+        }).addTo(map).bindPopup("雷达探测覆盖范围 (5km)");
+
+        // 标签切换逻辑
+        function switchTab(tabId) {
+            // 隐藏所有面板
+            document.querySelectorAll('.panel-section').forEach(el => el.classList.remove('active'));
+            // 取消所有标签激活状态
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            
+            // 激活当前
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // 工具选择逻辑
+        function setTool(toolName) {
+            document.querySelectorAll('.tool-icon').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            let msg = "";
+            switch(toolName) {
+                case 'select': msg = "模式：选择/拖动对象"; break;
+                case 'waypoint': msg = "模式：请在地图上点击添加航路点"; break;
+                case 'radar': msg = "模式：请在地图上点击标注辐射源"; break;
+                case 'zone': msg = "模式：请拖拽绘制禁飞区"; break;
+                case 'measure': msg = "模式：测距工具已激活"; break;
+            }
+            console.log(msg);
+            // 实际项目中这里会激活地图的绘图交互逻辑
+        }
+
+        // 模拟列表添加
+        function addListItem(listId, type) {
+            const list = document.getElementById(listId);
+            const div = document.createElement('div');
+            let className = 'list-item';
+            let icon = '';
+            let title = '新增项';
+            let desc = '待配置参数';
+
+            if(type === 'target') {
+                className += ' target';
+                icon = '<i class="fa-solid fa-crosshairs"></i>';
+                title = '新打击目标';
+            } else if (type === 'threat') {
+                className += ' threat';
+                icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                title = '新威胁源';
+            }
+
+            div.className = className;
+            div.innerHTML = `
+                <div class="item-info">
+                    <h4>${icon} ${title}</h4>
+                    <p>${desc}</p>
+                </div>
+                <button class="action-btn"><i class="fa-solid fa-pen"></i></button>
+            `;
+            list.appendChild(div);
+        }
+
+        function saveScenario() {
+            alert("任务想定已保存至数据库。\n包含：\n- 2个打击目标\n- 2个威胁源\n- 2架无人机编队\n- 预设航路");
+        }
+
+        // 模拟地图点击交互（仅演示）
+        map.on('click', function(e) {
+            const activeTool = document.querySelector('.tool-icon.active i').className;
+            if(activeTool.includes('route') || activeTool.includes('radar')) {
+                // 这里可以添加实际的绘图逻辑
+                console.log("地图坐标点击:", e.latlng);
+            }
+        });
+
+    </script>
+</body>
+</html>

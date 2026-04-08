@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TestDataManagement</class>
+ <widget class="QMainWindow" name="TestDataManagement">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1200</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>试验数据管理 - 反辐射无人机仿真系统</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <!-- 顶部工具栏 -->
+    <item>
+     <widget class="QToolBar" name="toolBar">
+      <property name="iconSize">
+       <size>
+        <width>24</width>
+        <height>24</height>
+       </size>
+      </property>
+      <property name="toolButtonStyle">
+       <enum>Qt::ToolButtonTextUnderIcon</enum>
+      </property>
+      <addaction name="actionImport"/>
+      <addaction name="actionExport"/>
+      <addaction name="separator"/>
+      <addaction name="actionClean"/>
+      <addaction name="actionQuery"/>
+      <addaction name="separator"/>
+      <addaction name="actionRefresh"/>
+     </widget>
+    </item>
+    <!-- 主分割区域 -->
+    <item>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="handleWidth">
+       <number>6</number>
+      </property>
+      <!-- 左侧数据导航 -->
+      <widget class="QWidget" name="leftPanel" native="true">
+       <property name="minimumWidth">
+        <number>250</number>
+       </property>
+       <property name="maximumWidth">
+        <number>350</number>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QLabel" name="labelDataFiles">
+          <property name="text">
+           <string>试验数据文件</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTreeView" name="treeViewData">
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::ExtendedSelection</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBoxFileInfo">
+          <property name="title">
+           <string>文件信息</string>
+          </property>
+          <layout class="QFormLayout" name="formLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="labelFileName">
+             <property name="text">
+              <string>文件名：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLabel" name="labelFileNameValue">
+             <property name="text">
+              <string>-</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="labelFileSize">
+             <property name="text">
+              <string>大小：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLabel" name="labelFileSizeValue">
+             <property name="text">
+              <string>-</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="labelFileModified">
+             <property name="text">
+              <string>修改时间：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="labelFileModifiedValue">
+             <property name="text">
+              <string>-</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="labelRecordCount">
+             <property name="text">
+              <string>记录数：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLabel" name="labelRecordCountValue">
+             <property name="text">
+              <string>-</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <!-- 右侧主工作区 -->
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <!-- 数据预览页 -->
+       <widget class="QWidget" name="tabPreview">
+        <attribute name="title">
+         <string>数据预览</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QTableWidget" name="tablePreview">
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelPreviewInfo">
+           <property name="text">
+            <string>共 0 条记录</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <!-- 数据统计页 -->
+       <widget class="QWidget" name="tabStatistics">
+        <attribute name="title">
+         <string>数据统计</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QTableWidget" name="tableStatistics">
+           <property name="columnCount">
+            <number>4</number>
+           </property>
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+           <column>
+            <property name="text">
+             <string>字段名</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>最小值</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>最大值</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>平均值</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <!-- 数据清洗页 -->
+       <widget class="QWidget" name="tabCleaning">
+        <attribute name="title">
+         <string>数据清洗</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QGroupBox" name="groupBoxMissing">
+           <property name="title">
+            <string>缺失值处理</string>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QCheckBox" name="checkRemoveMissing">
+              <property name="text">
+               <string>删除缺失值行</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="checkFillMissing">
+              <property name="text">
+               <string>填充缺失值</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="comboFillMethod">
+              <item>
+               <property name="text">
+                <string>均值填充</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>中位数填充</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>前向填充</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxOutlier">
+           <property name="title">
+            <string>异常值检测</string>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QCheckBox" name="checkOutlierStd">
+              <property name="text">
+               <string>标准差法 (k=3)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="checkOutlierIQR">
+              <property name="text">
+               <string>四分位距法</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btnApplyCleaning">
+              <property name="text">
+               <string>应用清洗</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTextEdit" name="textCleaningLog">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="placeholderText">
+            <string>清洗日志将显示在这里...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </widget>
+    </item>
+    <!-- 底部状态栏 -->
+    <item>
+     <widget class="QStatusBar" name="statusbar">
+      <property name="sizeGripEnabled">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1200</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <addaction name="actionImport"/>
+    <addaction name="actionExport"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>编辑</string>
+    </property>
+    <addaction name="actionClean"/>
+    <addaction name="actionQuery"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>视图</string>
+    </property>
+    <addaction name="actionRefresh"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>帮助</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <action name="actionImport">
+   <property name="text">
+    <string>导入数据</string>
+   </property>
+   <property name="toolTip">
+    <string>从文件导入试验数据</string>
+   </property>
+  </action>
+  <action name="actionExport">
+   <property name="text">
+    <string>导出数据</string>
+   </property>
+   <property name="toolTip">
+    <string>导出当前数据到文件</string>
+   </property>
+  </action>
+  <action name="actionClean">
+   <property name="text">
+    <string>数据清洗</string>
+   </property>
+   <property name="toolTip">
+    <string>对数据进行清洗处理</string>
+   </property>
+  </action>
+  <action name="actionQuery">
+   <property name="text">
+    <string>数据查询</string>
+   </property>
+   <property name="toolTip">
+    <string>查询数据</string>
+   </property>
+  </action>
+  <action name="actionRefresh">
+   <property name="text">
+    <string>刷新</string>
+   </property>
+   <property name="toolTip">
+    <string>刷新数据视图</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>退出</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

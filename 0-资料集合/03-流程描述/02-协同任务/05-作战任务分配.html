@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反辐射无人机 · 作战任务分配系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #0a0f1e;
+            color: #e0e4f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background-color: #151e2d;
+            border-radius: 24px;
+            border: 1px solid #2a3548;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        /* 头部 */
+        .header {
+            background-color: #101826;
+            padding: 16px 24px;
+            border-bottom: 1px solid #2a3a50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 500;
+            background: linear-gradient(135deg, #aaccff, #5f8ec9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge {
+            background-color: #1e4f8a;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #1e3144;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 13px;
+        }
+
+        .dot-green {
+            width: 10px;
+            height: 10px;
+            background-color: #2ecc71;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #2ecc71;
+        }
+
+        /* 兵力摘要栏 */
+        .force-summary {
+            display: flex;
+            gap: 20px;
+            padding: 16px 24px;
+            background-color: #1a2538;
+            border-bottom: 1px solid #2a3a50;
+        }
+
+        .summary-card {
+            background-color: #1f2b3c;
+            border-radius: 12px;
+            padding: 12px 20px;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .summary-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #5f8ec9;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: #8fa5cf;
+            margin-top: 4px;
+        }
+
+        /* 主布局 - 三列 */
+        .main-layout {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            min-height: calc(100vh - 200px);
+        }
+
+        /* 左侧 - 待分配兵力池 */
+        .left-panel {
+            flex: 1;
+            background-color: #101826;
+            border-radius: 16px;
+            border: 1px solid #2a3a50;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 中间 - 兵力编成 */
+        .center-panel {
+            flex: 1.5;
+            background-color: #101826;
+            border-radius: 16px;
+            border: 1px solid #2a3a50;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 右侧 - 目标分配 */
+        .right-panel {
+            flex: 1.2;
+            background-color: #101826;
+            border-radius: 16px;
+            border: 1px solid #2a3a50;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 14px 20px;
+            background-color: #1a2538;
+            border-bottom: 1px solid #2f405a;
+            font-size: 15px;
+            font-weight: 600;
+            color: #aaccff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-content {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* 无人机池样式 */
+        .uav-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .uav-item {
+            background-color: #1f2b3c;
+            border: 1px solid #3f556d;
+            border-radius: 30px;
+            padding: 6px 14px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .uav-item:hover {
+            background-color: #2a3a50;
+            border-color: #5f8ec9;
+        }
+
+        .uav-item.selected {
+            background-color: #1e4f8a;
+            border-color: #5f8ec9;
+        }
+
+        .uav-id {
+            font-family: monospace;
+            font-weight: 500;
+        }
+
+        .uav-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-available { background-color: #2ecc71; }
+        .status-assigned { background-color: #f39c12; }
+        .status-reserved { background-color: #5f8ec9; }
+
+        /* 编队卡片 */
+        .formation-card {
+            background-color: #1a2538;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #2f405a;
+            overflow: hidden;
+        }
+
+        .formation-header {
+            padding: 12px 16px;
+            background-color: #1f2b3c;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .formation-name {
+            font-weight: 600;
+            color: #aaccff;
+        }
+
+        .formation-stats {
+            font-size: 12px;
+            color: #8fa5cf;
+        }
+
+        .formation-body {
+            padding: 12px 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .assigned-uav {
+            background-color: #1e4f8a;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .remove-btn {
+            cursor: pointer;
+            opacity: 0.6;
+        }
+
+        .remove-btn:hover {
+            opacity: 1;
+        }
+
+        /* 目标分配表格 */
+        .target-assign-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .target-assign-table th {
+            text-align: left;
+            padding: 10px 8px;
+            background-color: #1f2b3c;
+            color: #b0c8f0;
+            font-weight: 500;
+            border-bottom: 1px solid #3f556d;
+        }
+
+        .target-assign-table td {
+            padding: 8px;
+            border-bottom: 1px solid #2a3a50;
+        }
+
+        .assign-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 16px;
+            font-size: 11px;
+            background-color: #1e4f8a;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: none;
+            background-color: #1e4f8a;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #2563a5;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #3f556d;
+        }
+
+        .btn-outline:hover {
+            background-color: #1f2b3c;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .threat-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+        }
+        .threat-critical { background-color: #8a2e2e; color: #ffb3b3; }
+        .threat-high { background-color: #c0392b; color: #ffcccc; }
+        .threat-medium { background-color: #8a5f1e; color: #ffd966; }
+        .threat-low { background-color: #1e6f5c; color: #a3e4d7; }
+
+        .footer {
+            padding: 12px 20px;
+            background-color: #101826;
+            border-top: 1px solid #2a3a50;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #8fa5cf;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: #2f405a;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #5f8ec9, #2ecc71);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 头部 -->
+    <div class="header">
+        <h1>
+            <span>⚙️ 作战任务分配系统</span>
+            <span class="badge">反辐射无人机兵力编成</span>
+        </h1>
+        <div class="status">
+            <span class="dot-green"></span>
+            分配模式: 自动优化 | 编队数: 4
+        </div>
+    </div>
+
+    <!-- 兵力摘要 -->
+    <div class="force-summary">
+        <div class="summary-card">
+            <div class="summary-number" id="totalUAV">240</div>
+            <div class="summary-label">可用无人机总数</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-number" id="allocatedUAV">0</div>
+            <div class="summary-label">已分配无人机</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-number" id="unallocatedUAV">240</div>
+            <div class="summary-label">待分配无人机</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-number" id="formationCount">4</div>
+            <div class="summary-label">编队数量</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-number" id="targetCount">9</div>
+            <div class="summary-label">打击目标数</div>
+        </div>
+    </div>
+
+    <!-- 主布局 -->
+    <div class="main-layout">
+        <!-- 左侧：待分配兵力池 -->
+        <div class="left-panel">
+            <div class="panel-header">
+                <span>🛩️</span> 待分配兵力池
+                <span style="margin-left: auto; font-size: 12px;" id="poolCount">240 架可用</span>
+            </div>
+            <div class="panel-content">
+                <div class="uav-pool" id="uavPool">
+                    <!-- 动态生成无人机列表 -->
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-outline btn-sm" id="selectAllBtn">全选</button>
+                    <button class="btn btn-outline btn-sm" id="clearSelectBtn">清空选择</button>
+                    <button class="btn btn-sm" id="batchAssignBtn">批量分配到选中编队</button>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-outline btn-sm" id="autoBalanceBtn">⚖️ 自动均衡分配</button>
+                    <button class="btn btn-outline btn-sm" id="resetBtn">重置分配</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中间：兵力编成 -->
+        <div class="center-panel">
+            <div class="panel-header">
+                <span>🚩</span> 兵力编成
+                <span style="margin-left: auto; font-size: 12px;">拖拽或点击分配无人机</span>
+            </div>
+            <div class="panel-content" id="formationsContainer">
+                <!-- 动态生成编队卡片 -->
+            </div>
+            <div class="btn-group" style="margin: 0 16px 16px 16px;">
+                <button class="btn btn-outline btn-sm" id="addFormationBtn">+ 添加编队</button>
+                <button class="btn btn-sm" id="optimizeFormationBtn">优化编队结构</button>
+            </div>
+        </div>
+
+        <!-- 右侧：目标分配 -->
+        <div class="right-panel">
+            <div class="panel-header">
+                <span>🎯</span> 目标分配
+            </div>
+            <div class="panel-content">
+                <table class="target-assign-table" id="targetTable">
+                    <thead>
+                        <tr><th>目标类型</th><th>数量</th><th>威胁等级</th><th>分配编队</th><th>无人机数</th></tr>
+                    </thead>
+                    <tbody id="targetTableBody">
+                        <!-- 动态生成目标行 -->
+                    </tbody>
+                </table>
+                <div class="btn-group">
+                    <button class="btn btn-outline btn-sm" id="autoAllocateBtn">🎯 智能目标分配</button>
+                    <button class="btn btn-outline btn-sm" id="viewReportBtn">📄 分配报告</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部 -->
+    <div class="footer">
+        <div>分配策略: 按威胁等级分配兵力，高威胁目标优先分配</div>
+        <div id="allocationStatus">就绪 | 点击分配按钮开始任务分配</div>
+    </div>
+</div>
+
+<script>
+    // 全局数据
+    let uavs = [];
+    let formations = [];
+    let targets = [];
+
+    // 初始化无人机数据 (240架)
+    function initUAVs() {
+        uavs = [];
+        for (let i = 1; i <= 240; i++) {
+            uavs.push({
+                id: i,
+                model: i <= 120 ? 'JWS-01' : (i <= 180 ? 'JWS-02' : 'JWS-03'),
+                status: 'available',  // available, assigned
+                formationId: null
+            });
+        }
+    }
+
+    // 初始化编队
+    function initFormations() {
+        formations = [
+            { id: 1, name: '主攻编队-北', role: 'main', targetTypes: ['火控雷达', '制导雷达'], uavIds: [], requiredCount: 60 },
+            { id: 2, name: '主攻编队-南', role: 'main', targetTypes: ['预警雷达', '多功能相控阵'], uavIds: [], requiredCount: 50 },
+            { id: 3, name: '诱饵编队', role: 'decoy', targetTypes: ['搜索雷达', '跟踪雷达'], uavIds: [], requiredCount: 40 },
+            { id: 4, name: '支援评估编队', role: 'support', targetTypes: ['导航雷达', '战术数据链', '通信中继站'], uavIds: [], requiredCount: 30 }
+        ];
+    }
+
+    // 初始化目标
+    function initTargets() {
+        targets = [
+            { type: '火控雷达', count: 2, threat: 'critical', formationId: 1, uavCount: 0, requiredPerTarget: 4 },
+            { type: '制导雷达', count: 1, threat: 'critical', formationId: 1, uavCount: 0, requiredPerTarget: 4 },
+            { type: '预警雷达', count: 1, threat: 'high', formationId: 2, uavCount: 0, requiredPerTarget: 3 },
+            { type: '多功能相控阵', count: 1, threat: 'high', formationId: 2, uavCount: 0, requiredPerTarget: 3 },
+            { type: '搜索雷达', count: 2, threat: 'medium', formationId: 3, uavCount: 0, requiredPerTarget: 2 },
+            { type: '跟踪雷达', count: 1, threat: 'medium', formationId: 3, uavCount: 0, requiredPerTarget: 2 },
+            { type: '导航雷达', count: 2, threat: 'low', formationId: 4, uavCount: 0, requiredPerTarget: 1 },
+            { type: '战术数据链', count: 1, threat: 'medium', formationId: 4, uavCount: 0, requiredPerTarget: 1 },
+            { type: '通信中继站', count: 1, threat: 'low', formationId: 4, uavCount: 0, requiredPerTarget: 1 }
+        ];
+        
+        // 计算各编队需求
+        formations.forEach(f => {
+            let total = 0;
+            targets.filter(t => t.formationId === f.id).forEach(t => {
+                total += t.count * t.requiredPerTarget;
+            });
+            f.requiredCount = total;
+        });
+    }
+
+    // 计算各编队需求数量
+    function updateFormationRequirements() {
+        formations.forEach(f => {
+            let total = 0;
+            targets.filter(t => t.formationId === f.id).forEach(t => {
+                total += t.count * t.requiredPerTarget;
+            });
+            f.requiredCount = total;
+        });
+    }
+
+    // 渲染无人机池
+    function renderUAVPool() {
+        const pool = document.getElementById('uavPool');
+        const availableUAVs = uavs.filter(u => u.status === 'available');
+        document.getElementById('poolCount').innerHTML = `${availableUAVs.length} 架可用`;
+        
+        pool.innerHTML = '';
+        availableUAVs.forEach(uav => {
+            const div = document.createElement('div');
+            div.className = 'uav-item';
+            div.setAttribute('data-id', uav.id);
+            div.innerHTML = `
+                <span class="uav-status status-available"></span>
+                <span class="uav-id">${uav.model}-${uav.id.toString().padStart(3,'0')}</span>
+            `;
+            div.onclick = (e) => {
+                e.stopPropagation();
+                div.classList.toggle('selected');
+            };
+            pool.appendChild(div);
+        });
+        
+        updateSummary();
+    }
+
+    // 渲染编队
+    function renderFormations() {
+        const container = document.getElementById('formationsContainer');
+        container.innerHTML = '';
+        
+        formations.forEach(formation => {
+            const assignedUAVs = uavs.filter(u => u.formationId === formation.id);
+            const currentCount = assignedUAVs.length;
+            const required = formation.requiredCount;
+            const percentage = required > 0 ? (currentCount / required) * 100 : 0;
+            
+            const card = document.createElement('div');
+            card.className = 'formation-card';
+            card.innerHTML = `
+                <div class="formation-header">
+                    <span class="formation-name">${formation.name}</span>
+                    <span class="formation-stats">${currentCount}/${required} 架 | ${Math.min(100, Math.round(percentage))}%</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: ${Math.min(100, percentage)}%"></div></div>
+                <div class="formation-body" data-formation-id="${formation.id}">
+                    ${assignedUAVs.map(uav => `
+                        <span class="assigned-uav" data-uav-id="${uav.id}">
+                            ${uav.model}-${uav.id.toString().padStart(3,'0')}
+                            <span class="remove-btn" onclick="removeUAVFromFormation(${uav.id})">✕</span>
+                        </span>
+                    `).join('')}
+                    ${assignedUAVs.length === 0 ? '<span style="color:#5f8ec9; font-size:12px;">拖拽或点击左侧无人机分配</span>' : ''}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+        
+        updateSummary();
+    }
+
+    // 渲染目标表格
+    function renderTargetTable() {
+        const tbody = document.getElementById('targetTableBody');
+        tbody.innerHTML = '';
+        
+        targets.forEach(target => {
+            const formation = formations.find(f => f.id === target.formationId);
+            const assignedUAVs = uavs.filter(u => u.formationId === target.formationId);
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${target.type}</td>
+                <td>${target.count}</td>
+                <td><span class="threat-badge threat-${target.threat}">${target.threat === 'critical' ? '极高' : (target.threat === 'high' ? '高' : (target.threat === 'medium' ? '中' : '低'))}</span></td>
+                <td><span class="assign-badge">${formation ? formation.name : '未分配'}</span></td>
+                <td>${assignedUAVs.length} / ${target.count * target.requiredPerTarget}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    // 更新摘要
+    function updateSummary() {
+        const allocated = uavs.filter(u => u.status === 'assigned').length;
+        const unallocated = uavs.length - allocated;
+        document.getElementById('allocatedUAV').innerText = allocated;
+        document.getElementById('unallocatedUAV').innerText = unallocated;
+        
+        // 更新编队需求显示
+        updateFormationRequirements();
+        renderFormations();
+        renderTargetTable();
+    }
+
+    // 分配无人机到编队
+    function assignUAVsToFormation(formationId, uavIds) {
+        uavIds.forEach(uavId => {
+            const uav = uavs.find(u => u.id === uavId);
+            if (uav && uav.status === 'available') {
+                uav.status = 'assigned';
+                uav.formationId = formationId;
+            }
+        });
+        renderUAVPool();
+        renderFormations();
+        renderTargetTable();
+        updateSummary();
+    }
+
+    // 从编队移除无人机
+    window.removeUAVFromFormation = function(uavId) {
+        const uav = uavs.find(u => u.id === uavId);
+        if (uav) {
+            uav.status = 'available';
+            uav.formationId = null;
+        }
+        renderUAVPool();
+        renderFormations();
+        renderTargetTable();
+        updateSummary();
+    };
+
+    // 自动均衡分配
+    function autoBalance() {
+        // 重置所有分配
+        uavs.forEach(uav => {
+            uav.status = 'available';
+            uav.formationId = null;
+        });
+        
+        // 按编队需求分配
+        formations.forEach(formation => {
+            let needed = formation.requiredCount;
+            const availableUAVs = uavs.filter(u => u.status === 'available');
+            const toAssign = availableUAVs.slice(0, needed);
+            assignUAVsToFormation(formation.id, toAssign.map(u => u.id));
+        });
+    }
+
+    // 智能目标分配
+    function autoAllocateTargets() {
+        // 按威胁等级排序目标
+        const sortedTargets = [...targets].sort((a, b) => {
+            const threatOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+            return threatOrder[b.threat] - threatOrder[a.threat];
+        });
+        
+        // 重新计算各编队需求
+        formations.forEach(f => {
+            let total = 0;
+            targets.filter(t => t.formationId === f.id).forEach(t => {
+                total += t.count * t.requiredPerTarget;
+            });
+            f.requiredCount = total;
+        });
+        
+        autoBalance();
+        alert('智能目标分配完成，已按威胁等级优化兵力分配');
+    }
+
+    // 重置所有分配
+    function resetAllocation() {
+        uavs.forEach(uav => {
+            uav.status = 'available';
+            uav.formationId = null;
+        });
+        renderUAVPool();
+        renderFormations();
+        renderTargetTable();
+        updateSummary();
+    }
+
+    // 获取选中的无人机
+    function getSelectedUAVs() {
+        const selected = [];
+        document.querySelectorAll('#uavPool .uav-item.selected').forEach(el => {
+            const id = parseInt(el.getAttribute('data-id'));
+            selected.push(id);
+        });
+        return selected;
+    }
+
+    // 事件绑定
+    document.getElementById('selectAllBtn').onclick = () => {
+        document.querySelectorAll('#uavPool .uav-item').forEach(el => el.classList.add('selected'));
+    };
+    document.getElementById('clearSelectBtn').onclick = () => {
+        document.querySelectorAll('#uavPool .uav-item').forEach(el => el.classList.remove('selected'));
+    };
+    document.getElementById('batchAssignBtn').onclick = () => {
+        const selected = getSelectedUAVs();
+        if (selected.length === 0) {
+            alert('请先选择要分配的无人机');
+            return;
+        }
+        const formationId = prompt('请输入编队ID (1-4):', '1');
+        if (formationId && formations.find(f => f.id == formationId)) {
+            assignUAVsToFormation(parseInt(formationId), selected);
+            document.getElementById('clearSelectBtn').click();
+        } else {
+            alert('无效的编队ID');
+        }
+    };
+    document.getElementById('autoBalanceBtn').onclick = autoBalance;
+    document.getElementById('resetBtn').onclick = resetAllocation;
+    document.getElementById('autoAllocateBtn').onclick = autoAllocateTargets;
+    document.getElementById('addFormationBtn').onclick = () => {
+        const newId = formations.length + 1;
+        formations.push({ id: newId, name: `新增编队-${newId}`, role: 'general', targetTypes: [], uavIds: [], requiredCount: 0 });
+        renderFormations();
+        document.getElementById('formationCount').innerText = formations.length;
+    };
+    document.getElementById('optimizeFormationBtn').onclick = () => {
+        autoBalance();
+        alert('编队结构已优化');
+    };
+    document.getElementById('viewReportBtn').onclick = () => {
+        alert('分配报告：\n' + 
+            `总兵力: ${uavs.length}架\n` +
+            `已分配: ${uavs.filter(u => u.status === 'assigned').length}架\n` +
+            `编队数量: ${formations.length}个\n` +
+            `目标数量: ${targets.length}个\n` +
+            `分配完成率: ${Math.round(uavs.filter(u => u.status === 'assigned').length / uavs.length * 100)}%`);
+    };
+
+    // 初始化
+    initUAVs();
+    initFormations();
+    initTargets();
+    renderUAVPool();
+    renderFormations();
+    renderTargetTable();
+    updateSummary();
+</script>
+</body>
+</html>

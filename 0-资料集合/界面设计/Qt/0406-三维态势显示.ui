@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ThreeDimensionalViewWidget</class>
+ <widget class="QMainWindow" name="ThreeDimensionalViewWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1200</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>三维态势显示 - 反辐射无人机仿真系统</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <!-- 左侧面板 -->
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="handleWidth">
+      <number>6</number>
+     </property>
+     <!-- 左侧实体列表区域 -->
+     <widget class="QWidget" name="leftPanel">
+      <property name="minimumWidth">
+       <number>280</number>
+      </property>
+      <property name="maximumWidth">
+       <number>350</number>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QLabel" name="labelTitle">
+         <property name="text">
+          <string>战场实体</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+           <weight>75</weight>
+          </font>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="editFilter">
+         <property name="placeholderText">
+          <string>过滤实体 (输入ID或类型)...</string>
+         </property>
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="listEntities">
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <item>
+          <property name="text">
+           <string>UAV-001 (反辐射无人机) [攻击]</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>UAV-002 (反辐射无人机) [搜索]</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>UAV-003 (反辐射无人机) [规避]</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>RAD-01 (预警雷达) [工作]</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>SAM-01 (防空系统) [跟踪]</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AC-01 (作战飞机) [巡航]</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>BM-01 (弹道导弹) [飞行中]</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBoxLayers">
+         <property name="title">
+          <string>图层控制</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <widget class="QCheckBox" name="checkTerrain">
+            <property name="text">
+             <string>地形</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkImagery">
+            <property name="text">
+             <string>卫星影像</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkEntities">
+            <property name="text">
+             <string>实体模型</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkGrid">
+            <property name="text">
+             <string>网格</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkThreat">
+            <property name="text">
+             <string>威胁区域</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <!-- 中央三维视图区域 -->
+     <widget class="QWidget" name="viewPanel">
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QLabel" name="labelViewPlaceholder">
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt; font-weight:600; color:#808080;&quot;&gt;三维视图区域&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; color:#808080;&quot;&gt;此处将嵌入 OpenGL 或 Cesium 三维渲染控件。&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: #1a1a2a; color: white; border: 1px solid #333;</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <!-- 右侧属性面板（可折叠/停靠） -->
+     <widget class="QDockWidget" name="dockProperties">
+      <property name="features">
+       <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetMovable|QDockWidget::DockWidgetFloatable</set>
+      </property>
+      <property name="windowTitle">
+       <string>实体属性</string>
+      </property>
+      <widget class="QWidget" name="dockContents">
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QLabel" name="labelPropTitle">
+          <property name="text">
+           <string>&lt;b&gt;UAV-001&lt;/b&gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QFrame" name="frame">
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QFormLayout" name="formLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="labelType">
+             <property name="text">
+              <string>类型：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLabel" name="labelTypeValue">
+             <property name="text">
+              <string>反辐射无人机</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="labelPos">
+             <property name="text">
+              <string>位置：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLabel" name="labelPosValue">
+             <property name="text">
+              <string>125.32, 78.56</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="labelAltitude">
+             <property name="text">
+              <string>高度：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="labelAltitudeValue">
+             <property name="text">
+              <string>3500 m</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="labelSpeed">
+             <property name="text">
+              <string>速度：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLabel" name="labelSpeedValue">
+             <property name="text">
+              <string>280 km/h</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="labelStatus">
+             <property name="text">
+              <string>状态：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLabel" name="labelStatusValue">
+             <property name="text">
+              <string>攻击中</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="labelAmmo">
+             <property name="text">
+              <string>剩余弹药：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QLabel" name="labelAmmoValue">
+             <property name="text">
+              <string>2/4</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <widget class="QLabel" name="labelTarget">
+             <property name="text">
+              <string>当前目标：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="QLabel" name="labelTargetValue">
+             <property name="text">
+              <string>RAD-01</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </widget>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1200</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>视图</string>
+    </property>
+    <addaction name="actionGlobalView"/>
+    <addaction name="actionFollowEntity"/>
+    <addaction name="actionResetView"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>工具</string>
+    </property>
+    <addaction name="actionMeasureDistance"/>
+    <addaction name="actionMeasureArea"/>
+    <addaction name="actionLineOfSight"/>
+   </widget>
+   <widget class="QMenu" name="menuLayers">
+    <property name="title">
+     <string>图层</string>
+    </property>
+    <addaction name="actionTerrain"/>
+    <addaction name="actionImagery"/>
+    <addaction name="actionEntities"/>
+   </widget>
+   <addaction name="menuView"/>
+   <addaction name="menuTools"/>
+   <addaction name="menuLayers"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionGlobalView"/>
+   <addaction name="actionFollowEntity"/>
+   <addaction name="actionResetView"/>
+   <addaction name="separator"/>
+   <addaction name="actionMeasureDistance"/>
+   <addaction name="actionMeasureArea"/>
+   <addaction name="actionLineOfSight"/>
+   <addaction name="separator"/>
+   <addaction name="actionTerrain"/>
+   <addaction name="actionImagery"/>
+   <addaction name="actionEntities"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="sizeGripEnabled">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <action name="actionGlobalView">
+   <property name="text">
+    <string>全局视图</string>
+   </property>
+   <property name="toolTip">
+    <string>切换到全局俯视视角</string>
+   </property>
+  </action>
+  <action name="actionFollowEntity">
+   <property name="text">
+    <string>跟随实体</string>
+   </property>
+   <property name="toolTip">
+    <string>相机跟随选中实体</string>
+   </property>
+  </action>
+  <action name="actionResetView">
+   <property name="text">
+    <string>重置视角</string>
+   </property>
+  </action>
+  <action name="actionMeasureDistance">
+   <property name="text">
+    <string>距离测量</string>
+   </property>
+  </action>
+  <action name="actionMeasureArea">
+   <property name="text">
+    <string>面积测量</string>
+   </property>
+  </action>
+  <action name="actionLineOfSight">
+   <property name="text">
+    <string>视线分析</string>
+   </property>
+  </action>
+  <action name="actionTerrain">
+   <property name="text">
+    <string>地形</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionImagery">
+   <property name="text">
+    <string>影像</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionEntities">
+   <property name="text">
+    <string>实体</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
