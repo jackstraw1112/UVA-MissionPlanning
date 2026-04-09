@@ -25,6 +25,7 @@ cmake-build-relwithdebinfo/
 
 # 笔记配置文件夹
 .obsidian
+0-历史记录
 
 # Visual Studio 2015 cache/options directory
 .vs/
