@@ -11,7 +11,7 @@ set(CMAKE_PREFIX_PATH "C:/Qt/Qt5.12.12/5.12.12/msvc2017_64")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
 
 # 查找Qt库
-find_package(Qt5 COMPONENTS Core Widgets  REQUIRED)
+find_package(Qt5 COMPONENTS Core Widgets Sql REQUIRED)
 
 # 源文件列表（包含当前路径下所有.cpp文件）
 file(GLOB SOURCES "*.cpp")
@@ -37,6 +37,7 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     Qt5::Core
     Qt5::Widgets
+    Qt5::Sql
 )
 
 # 设置应用程序属性

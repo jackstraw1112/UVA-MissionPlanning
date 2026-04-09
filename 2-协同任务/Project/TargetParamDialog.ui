@@ -1,0 +1,589 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TargetParamDialog</class>
+ <widget class="QDialog" name="TargetParamDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>520</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>目标参数装订</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_5">
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QWidget" name="titleWidget" native="true">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>40</height>
+      </size>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_9">
+      <property name="leftMargin">
+       <number>12</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>12</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="titleLabel">
+        <property name="styleSheet">
+         <string notr="true">color: #e8f4ff;
+font-weight: 500;
+font-size: 13px;</string>
+        </property>
+        <property name="text">
+         <string>目标参数装订</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="titleSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="closeButton">
+        <property name="maximumSize">
+         <size>
+          <width>30</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background: rgba(255,60,60,0.15);
+border: 1px solid rgba(255,60,60,0.3);
+border-radius: 2px;
+color: #ff6666;
+font-size: 14px;</string>
+        </property>
+        <property name="text">
+         <string>×</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="contentWidget" native="true">
+     <layout class="QVBoxLayout" name="verticalLayout_6">
+      <property name="leftMargin">
+       <number>16</number>
+      </property>
+      <property name="topMargin">
+       <number>12</number>
+      </property>
+      <property name="rightMargin">
+       <number>16</number>
+      </property>
+      <property name="bottomMargin">
+       <number>12</number>
+      </property>
+      <item>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
+         <widget class="QLabel" name="targetIdLabel">
+          <property name="text">
+           <string>目标编号</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="targetIdEdit">
+          <property name="placeholderText">
+           <string>请输入目标编号</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QLabel" name="targetTypeLabel">
+          <property name="text">
+           <string>目标类型</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QComboBox" name="targetTypeComboBox">
+          <item>
+           <property name="text">
+            <string>雷达</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>电台</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>通信对抗</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>雷达对抗</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QStackedWidget" name="paramStackedWidget">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="radarPage">
+         <layout class="QGridLayout" name="radarLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="freqMinLabel">
+            <property name="text">
+             <string>频率范围最小值(MHz)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="radarFreqMinEdit">
+            <property name="placeholderText">
+             <string>如：8500</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="freqMaxLabel">
+            <property name="text">
+             <string>频率范围最大值(MHz)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLineEdit" name="radarFreqMaxEdit">
+            <property name="placeholderText">
+             <string>如：10500</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="pulseWidthMinLabel">
+            <property name="text">
+             <string>脉宽范围最小值(μs)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="radarPulseWidthMinEdit">
+            <property name="placeholderText">
+             <string>如：0.5</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="pulseWidthMaxLabel">
+            <property name="text">
+             <string>脉宽范围最大值(μs)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLineEdit" name="radarPulseWidthMaxEdit">
+            <property name="placeholderText">
+             <string>如：2.0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="repPeriodMinLabel">
+            <property name="text">
+             <string>重复周期最小值(ms)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="radarRepPeriodMinEdit">
+            <property name="placeholderText">
+             <string>如：1.5</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QLabel" name="repPeriodMaxLabel">
+            <property name="text">
+             <string>重复周期最大值(ms)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QLineEdit" name="radarRepPeriodMaxEdit">
+            <property name="placeholderText">
+             <string>如：3.5</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="workingModeLabel">
+            <property name="text">
+             <string>工作模式</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1" colspan="3">
+           <widget class="QComboBox" name="radarWorkingModeComboBox">
+            <item>
+             <property name="text">
+              <string>跟踪制导</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>预警搜索</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>火控制导</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>边扫描边跟踪</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="radioPage">
+         <layout class="QGridLayout" name="radioLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="radioFreqMinLabel">
+            <property name="text">
+             <string>频率范围最小值(MHz)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="radioFreqMinEdit">
+            <property name="placeholderText">
+             <string>如：25</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="radioFreqMaxLabel">
+            <property name="text">
+             <string>频率范围最大值(MHz)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLineEdit" name="radioFreqMaxEdit">
+            <property name="placeholderText">
+             <string>如：35</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="modulationModeLabel">
+            <property name="text">
+             <string>调制方式</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="radioModulationModeComboBox">
+            <item>
+             <property name="text">
+              <string>AM</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>SSB</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>FM</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="signalBandwidthLabel">
+            <property name="text">
+             <string>信号带宽(kHz)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLineEdit" name="radioSignalBandwidthEdit">
+            <property name="placeholderText">
+             <string>如：3~12</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="transmitPowerLabel">
+            <property name="text">
+             <string>发射功率(kW)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1" colspan="3">
+           <widget class="QLineEdit" name="radioTransmitPowerEdit">
+            <property name="placeholderText">
+             <string>如：50</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="commPage">
+         <layout class="QGridLayout" name="commLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="commFreqLabel">
+            <property name="text">
+             <string>干扰频率(MHz)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="commFreqEdit">
+            <property name="placeholderText">
+             <string>如：500</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="commModeLabel">
+            <property name="text">
+             <string>干扰样式</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QComboBox" name="commModeComboBox">
+            <item>
+             <property name="text">
+              <string>压制干扰</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>欺骗干扰</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>噪声干扰</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="commPowerLabel">
+            <property name="text">
+             <string>干扰功率(kW)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="commPowerEdit">
+            <property name="placeholderText">
+             <string>如：60</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="commCoverageLabel">
+            <property name="text">
+             <string>覆盖范围(km)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLineEdit" name="commCoverageEdit">
+            <property name="placeholderText">
+             <string>如：50</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="rcmPage">
+         <layout class="QGridLayout" name="rcmLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="rcmFreqLabel">
+            <property name="text">
+             <string>干扰频率(GHz)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="rcmFreqEdit">
+            <property name="placeholderText">
+             <string>如：10</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="rcmModeLabel">
+            <property name="text">
+             <string>干扰样式</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QComboBox" name="rcmModeComboBox">
+            <item>
+             <property name="text">
+              <string>压制干扰</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>欺骗干扰</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>噪声干扰</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="rcmPowerLabel">
+            <property name="text">
+             <string>干扰功率(kW)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="rcmPowerEdit">
+            <property name="placeholderText">
+             <string>如：60</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="rcmCoverageLabel">
+            <property name="text">
+             <string>覆盖范围(km)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLineEdit" name="rcmCoverageEdit">
+            <property name="placeholderText">
+             <string>如：50</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="buttonWidget" native="true">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>50</height>
+      </size>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_10">
+      <property name="leftMargin">
+       <number>16</number>
+      </property>
+      <property name="topMargin">
+       <number>8</number>
+      </property>
+      <property name="rightMargin">
+       <number>16</number>
+      </property>
+      <property name="bottomMargin">
+       <number>8</number>
+      </property>
+      <item>
+       <spacer name="buttonSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="cancelButton">
+        <property name="styleSheet">
+         <string notr="true">background: rgba(0,140,220,0.2);
+border: 1px solid rgba(0,160,255,0.35);
+border-radius: 3px;
+color: #c8e8ff;
+padding: 4px 20px;
+font-size: 12px;</string>
+        </property>
+        <property name="text">
+         <string>取消</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="okButton">
+        <property name="styleSheet">
+         <string notr="true">background: rgba(0,140,220,0.35);
+border: 1px solid rgba(0,160,255,0.5);
+border-radius: 3px;
+color: #ffffff;
+padding: 4px 20px;
+font-size: 12px;</string>
+        </property>
+        <property name="text">
+         <string>确定</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
