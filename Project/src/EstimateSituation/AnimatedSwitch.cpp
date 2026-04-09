@@ -4,21 +4,7 @@
 AnimatedSwitch::AnimatedSwitch(QWidget *parent)
     : QCheckBox(parent), m_handlePos(0)
 {
-    setStyleSheet(R"(
-        QCheckBox {
-            spacing: 0;
-        }
-        QCheckBox::indicator {
-            width: 40px;
-            height: 20px;
-            border-radius: 20px;
-            background-color: rgba(30, 50, 70, 0.8);
-            border: none;
-        }
-        QCheckBox::indicator:checked {
-            background-color: rgba(91, 192, 255, 0.5);
-        }
-    )");
+    // 移除样式表设置
 }
 
 void AnimatedSwitch::setHandlePos(qreal v)
