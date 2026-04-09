@@ -2,7 +2,8 @@
 #include <QStyleFactory>
 #include <QTextCodec>
 #include "SourceRadiation.h"
-#include "situationcontrol.h"
+#include "FirepowerControl.h"
+#include "SituationControl.h"
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -13,8 +14,11 @@ int main(int argc, char *argv[])
     // 创建并显示主窗口
     SourceRadiation w;
     w.show();
-    // SituationControl window;
-    // window.show();
+    SituationControl window;
+    window.show();
+    FirepowerControl firepower;
+    firepower.show();
+
 
     return app.exec();
 }

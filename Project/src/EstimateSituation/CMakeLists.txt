@@ -4,6 +4,21 @@ cmake_minimum_required(VERSION 3.16)
 # 设置工程名称以及版本
 project(EstimateSituation)
 
+# 设置 C++ 标准
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# 确保使用正确的 C++ 标准库
+if(MSVC)
+    # MSVC 会自动根据 CMAKE_CXX_STANDARD 设置选择正确的标准
+endif()
+
+# 启用 Qt 自动生成
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
 # =================================================================================
 # 设置：包含目录与库目录
 # =================================================================================
@@ -50,6 +65,11 @@ file(GLOB HEADERS
         "*.h"
 )
 
+# 收集 UI 文件
+file(GLOB UI_FILES
+        "*.ui"
+)
+
 # 添加资源文件
 #qt5_add_resource(RESOURCE ${CMAKE_CURRENT_SOURCE_DIR}/xxx.qrc)
 
@@ -82,7 +102,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 
 # 设置目标输出名称
 set_target_properties(${PROJECT_NAME} PROPERTIES
-        OUTPUT_NAME "情况研判"
+        OUTPUT_NAME "EstimateSituation"
 )
 
 # =================================================================================
@@ -101,6 +121,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 # =================================================================================
 
 # 设置Release调试-方法1-仅在当前工程使用时有效
-set(CMAKE_C_FLAGS_RELWITHDEBINFO "/Zi /Ob0 /Od /DNDEBUG")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/Zi /Ob0 /Od /DNDEBUG")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "/Zi /Ob0 /Od /DNDEBUG /FS")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/Zi /Ob0 /Od /DNDEBUG /FS")
+
+# 添加 /FS 选项以解决 PDB 文件冲突
+if(MSVC)
+    add_compile_options(/FS)
+endif()
 
