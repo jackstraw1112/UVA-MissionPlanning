@@ -4,6 +4,8 @@
 #include "SourceRadiation.h"
 #include "FirepowerControl.h"
 #include "SituationControl.h"
+#include "RZSourceRadiation.h"
+
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -12,12 +14,12 @@ int main(int argc, char *argv[])
     app.setStyle(QStyleFactory::create("Fusion"));
     
     // 创建并显示主窗口
-    SourceRadiation w;
+    RZSourceRadiation w;
     w.show();
-    SituationControl window;
-    window.show();
-    FirepowerControl firepower;
-    firepower.show();
+    // SituationControl window;
+    // window.show();
+    // FirepowerControl firepower;
+    // firepower.show();
 
 
     return app.exec();
