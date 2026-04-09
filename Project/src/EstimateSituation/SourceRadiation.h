@@ -25,15 +25,10 @@ public:
     explicit SourceRadiation(QWidget *parent = nullptr);
     ~SourceRadiation() override;
 
+public:
+
+
 private:
-    Ui::SourceRadiation *ui;
-    
-    // 动画组
-    QPropertyAnimation *radarAnim;
-    QPropertyAnimation *radioAnim;
-    QPropertyAnimation *comJamAnim;
-    QPropertyAnimation *radarJamAnim;
-    
     // 初始化雷达数据
     void initRadarData();
     // 初始化电台数据
@@ -42,9 +37,18 @@ private:
     void initComJamData();
     // 初始化雷达对抗数据
     void initRadarJamData();
-    
+
     // 设置按钮样式
     void setButtonStyle(const QString& activeButton);
+
+private:
+    Ui::SourceRadiation *ui;
+    
+    // 动画组
+    QPropertyAnimation *radarAnim;
+    QPropertyAnimation *radioAnim;
+    QPropertyAnimation *comJamAnim;
+    QPropertyAnimation *radarJamAnim;
 };
 
 #endif //SOURCERADIATION_H

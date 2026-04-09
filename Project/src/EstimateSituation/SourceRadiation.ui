@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1700</width>
+    <width>1686</width>
     <height>500</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>1700</width>
-    <height>500</height>
+    <width>0</width>
+    <height>0</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -176,7 +176,7 @@
            <string>电台</string>
           </property>
           <property name="icon">
-           <iconset resource="resources.qrc">
+           <iconset>
             <normaloff>:/image/link.png</normaloff>:/image/link.png</iconset>
           </property>
           <property name="iconSize">
@@ -244,7 +244,7 @@
            <string>雷达对抗</string>
           </property>
           <property name="icon">
-           <iconset resource="resources.qrc">
+           <iconset>
             <normaloff>:/image/countermeasures.png</normaloff>:/image/countermeasures.png</iconset>
           </property>
           <property name="iconSize">

@@ -2,7 +2,6 @@
 // Created by admin on "2026.04.08 T 15:03:39".
 //
 
-
 // You may need to build the project (run Qt uic code generator) to get "ui_SourceRadiation.h" resolved
 
 #include "SourceRadiation.h"
@@ -19,41 +18,52 @@
 #include <QIcon>
 
 // 自定义代理用于绘制圆角背景的威胁等级
-class ThreatLevelDelegate : public QStyledItemDelegate {
+class ThreatLevelDelegate : public QStyledItemDelegate
+{
 public:
-    explicit ThreatLevelDelegate(QObject *parent = nullptr) : QStyledItemDelegate(parent) {}
-    
-    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override {
+    explicit ThreatLevelDelegate(QObject *parent = nullptr)
+        : QStyledItemDelegate(parent)
+    {
+    }
+
+    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override
+    {
         QString value = index.data().toString();
-        if (value.isEmpty()) return;
-        
+        if (value.isEmpty())
+            return;
+
         painter->save();
         painter->setRenderHint(QPainter::Antialiasing);
-        
+
         // 根据内容确定颜色
         QColor bgColor;
-        if (value == "高") {
+        if (value == "高")
+        {
             bgColor = QColor(139, 0, 0, 180);
-        } else if (value == "中") {
+        }
+        else if (value == "中")
+        {
             bgColor = QColor(218, 165, 32, 180);
-        } else {
+        }
+        else
+        {
             bgColor = QColor(100, 100, 100, 180);
         }
-        
+
         // 绘制圆角矩形背景
         QRect rect = option.rect;
         QRect ellipseRect(rect.x() + 5, rect.y() + (rect.height() - 20) / 2, rect.width() - 10, 20);
         painter->setBrush(bgColor);
         painter->setPen(Qt::NoPen);
         painter->drawEllipse(ellipseRect);
-        
+
         // 绘制文字
         painter->setPen(QColor(255, 255, 255));
         QFont font = option.font;
         font.setPointSize(10);
         painter->setFont(font);
         painter->drawText(ellipseRect, Qt::AlignCenter, value);
-        
+
         painter->restore();
     }
 };
@@ -62,30 +72,31 @@ SourceRadiation::SourceRadiation(QWidget *parent)
     : QWidget(parent), ui(new Ui::SourceRadiation)
 {
     ui->setupUi(this);
-    
+
     // 初始化雷达数据（默认显示）
     initRadarData();
 
     // 设置列标题样式
     QHeaderView *headerView = ui->tableView->horizontalHeader();
     headerView->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    headerView->setStyleSheet("QHeaderView::section { background-color: #0f3460; color: #ffffff; padding: 8px; border: none; border-bottom: 1px solid #1e2a4a; font-size: 20px; }");
+    headerView->setStyleSheet(
+            "QHeaderView::section { background-color: #0f3460; color: #ffffff; padding: 8px; border: none; border-bottom: 1px solid #1e2a4a; font-size: 20px; }");
 
     // 设置表格属性
     ui->tableView->setShowGrid(false);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    
+
     // 为威胁等级列设置自定义代理
     ThreatLevelDelegate *delegate = new ThreatLevelDelegate(this);
     ui->tableView->setItemDelegateForColumn(5, delegate);
-    
+
     // 设置按钮图标大小
     ui->radarButton->setIconSize(QSize(24, 24));
     ui->radioButton->setIconSize(QSize(24, 24));
     ui->comJamButton->setIconSize(QSize(24, 24));
     ui->radarJamButton->setIconSize(QSize(24, 24));
-    
+
     // 连接按钮点击信号
     connect(ui->radarButton, &QPushButton::clicked, this, &SourceRadiation::initRadarData);
     connect(ui->radioButton, &QPushButton::clicked, this, &SourceRadiation::initRadioData);
@@ -102,7 +113,7 @@ SourceRadiation::~SourceRadiation()
 void SourceRadiation::initRadarData()
 {
     QStandardItemModel *model = new QStandardItemModel(3, 6, this);
-    
+
     // 第一行：AN/MPQ-53 相控阵雷达
     QStandardItem *item00 = new QStandardItem("  AN/MPQ-53 相控阵雷达");
     item00->setIcon(QIcon(":/image/radar.png"));
@@ -161,7 +172,7 @@ void SourceRadiation::initRadarData()
 void SourceRadiation::initRadioData()
 {
     QStandardItemModel *model = new QStandardItemModel(3, 6, this);
-    
+
     // 第一行：Link-16 战术数据链
     QStandardItem *item00 = new QStandardItem("  Link-16 战术数据链");
     item00->setIcon(QIcon(":/image/link.png"));
@@ -220,7 +231,7 @@ void SourceRadiation::initRadioData()
 void SourceRadiation::initComJamData()
 {
     QStandardItemModel *model = new QStandardItemModel(3, 6, this);
-    
+
     // 第一行：R-3302h 通信干扰系统
     QStandardItem *item00 = new QStandardItem("  R-3302h 通信干扰系统");
     item00->setIcon(QIcon(":/image/countermeasures.png"));
@@ -279,7 +290,7 @@ void SourceRadiation::initComJamData()
 void SourceRadiation::initRadarJamData()
 {
     QStandardItemModel *model = new QStandardItemModel(3, 7, this);
-    
+
     // 第一行：SPECTRAL 侦察干扰吊舱
     QStandardItem *item00 = new QStandardItem("  SPECTRAL 侦察干扰吊舱");
     item00->setIcon(QIcon(":/image/countermeasures.png"));

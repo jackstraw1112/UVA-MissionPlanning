@@ -13,8 +13,8 @@ int main(int argc, char *argv[])
     // 创建并显示主窗口
     SourceRadiation w;
     w.show();
-    SituationControl window;
-    window.show();
+    // SituationControl window;
+    // window.show();
 
     return app.exec();
 }
