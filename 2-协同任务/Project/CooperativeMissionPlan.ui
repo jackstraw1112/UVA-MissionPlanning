@@ -23,6 +23,11 @@ QWidget {
     font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
     font-size: 12px;
 }
+QWidget#iconToolbarWidget
+{
+	background: rgba(5,15,35,0.95);
+	border-bottom: 1px solid rgba(0,160,255,0.35);
+}
 
 QTabWidget::pane {
     border: 1px solid rgba(0,160,255,0.35);
@@ -79,8 +84,20 @@ QTableWidget {
     gridline-color: rgba(0,140,220,0.12);
     selection-background-color: rgba(0,180,255,0.18);
     selection-color: #e8f4ff;
+	color: rgb(255, 255, 255);
 }
-
+QTableWidget::item 
+{
+	background-color: rgba(5,25,55,0.95);
+}
+QTableWidget::item:alternate
+{ 
+	background-color: rgba(255,255,255,0.02);
+}
+QTableWidget::item:hover
+{
+	background-color: rgba(0,180,255,0.08);
+}
 QHeaderView::section {
     background-color: rgba(0,120,200,0.25);
     border-bottom: 1px solid rgba(0,160,255,0.35);
@@ -149,8 +166,7 @@ QLineEdit:focus, QComboBox:focus {
        </size>
       </property>
       <property name="styleSheet">
-       <string notr="true">background: linear-gradient(90deg, rgba(0,200,255,0.15), rgba(0,100,255,0.15));
-border-bottom: 1px solid rgba(0,160,255,0.35);</string>
+       <string notr="true"/>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <property name="spacing">
@@ -470,8 +486,7 @@ font-size: 16px;</string>
        </size>
       </property>
       <property name="styleSheet">
-       <string notr="true">background: rgba(5,15,35,0.95);
-border-bottom: 1px solid rgba(0,160,255,0.35);</string>
+       <string notr="true"/>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <property name="spacing">
@@ -518,53 +533,6 @@ border-bottom: 1px solid rgba(0,160,255,0.35);</string>
         </widget>
        </item>
        <item>
-        <spacer name="horizontalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="addTaskButton">
-         <property name="text">
-          <string>新增任务</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="editTaskButton">
-         <property name="text">
-          <string> 编辑任务</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="deleteTaskButton">
-         <property name="text">
-          <string>删除任务</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_4">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
         <widget class="QPushButton" name="calculateForceButton">
          <property name="text">
           <string>计算兵力</string>
@@ -584,19 +552,6 @@ border-bottom: 1px solid rgba(0,160,255,0.35);</string>
           <string>手动调整</string>
          </property>
         </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_5">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
        </item>
        <item>
         <widget class="QPushButton" name="planPathButton">
@@ -620,6 +575,13 @@ border-bottom: 1px solid rgba(0,160,255,0.35);</string>
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="settingsButton">
+         <property name="text">
+          <string>设置</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer_6">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -631,13 +593,6 @@ border-bottom: 1px solid rgba(0,160,255,0.35);</string>
           </size>
          </property>
         </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="settingsButton">
-         <property name="text">
-          <string>设置</string>
-         </property>
-        </widget>
        </item>
       </layout>
      </widget>
@@ -839,7 +794,7 @@ font-size: 11px;</string>
           <item>
            <widget class="QTableWidget" name="taskTable">
             <property name="alternatingRowColors">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="rowCount">
              <number>0</number>
@@ -962,20 +917,10 @@ font-size: 11px;</string>
                <property name="text">
                 <string>⚡ 兵力计算</string>
                </property>
+               <property name="checkable">
+                <bool>false</bool>
+               </property>
               </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_8">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
              </item>
             </layout>
            </widget>
@@ -1222,6 +1167,19 @@ border-radius: 4px;</string>
            <number>0</number>
           </property>
           <item>
+           <widget class="QTableWidget" name="allocationTable">
+            <property name="alternatingRowColors">
+             <bool>false</bool>
+            </property>
+            <property name="rowCount">
+             <number>0</number>
+            </property>
+            <property name="columnCount">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QWidget" name="taskAllocationHeader" native="true">
             <property name="minimumSize">
              <size>
@@ -1313,33 +1271,7 @@ font-size: 11px;</string>
                </property>
               </widget>
              </item>
-             <item>
-              <spacer name="horizontalSpacer_13">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
             </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QTableWidget" name="allocationTable">
-            <property name="alternatingRowColors">
-             <bool>false</bool>
-            </property>
-            <property name="rowCount">
-             <number>0</number>
-            </property>
-            <property name="columnCount">
-             <number>0</number>
-            </property>
            </widget>
           </item>
          </layout>

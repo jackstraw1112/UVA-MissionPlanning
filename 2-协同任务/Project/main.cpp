@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     
     // Set application style
-    a.setStyle(QStyleFactory::create("Fusion"));
+    //a.setStyle(QStyleFactory::create("Fusion"));
     
     // Set application information
     QApplication::setApplicationName("无人机任务规划与效能评估系统");

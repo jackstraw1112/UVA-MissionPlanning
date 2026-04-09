@@ -1,9 +1,8 @@
-#include "SituationAnalysis.h"
 #include <QApplication>
 #include <QStyleFactory>
 #include <QTextCodec>
 #include "SourceRadiation.h"
-
+#include "situationcontrol.h"
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -12,8 +11,10 @@ int main(int argc, char *argv[])
     app.setStyle(QStyleFactory::create("Fusion"));
     
     // 创建并显示主窗口
-    SourceRadiation window;
+    SourceRadiation w;
+    w.show();
+    SituationControl window;
     window.show();
-    
+
     return app.exec();
 }

@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>SituationControl</class>
+  <widget class="QWidget" name="SituationControl">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1700</width>
+        <height>500</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>态势控制</string>
+    </property>
+    <property name="styleSheet">
+      <string notr="true">QWidget#SituationControl {
+  background-color: #0a0f1e;
+}
+
+/* 所有标签默认白色 */
+QLabel {
+  color: #ffffff;
+}
+
+/* 顶部标题栏 */
+QWidget#titleWidget {
+  background-color: rgba(12, 20, 35, 0.8);
+  border-bottom: 1px solid rgba(72, 187, 255, 0.3);
+}
+
+QLabel#titleLabel {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+QLabel#subtitleLabel {
+  color: #ffffff;
+  font-size: 12px;
+}
+
+/* 辐射源威力范围区域 */
+QWidget#radiationGroup {
+  background-color: rgba(8, 16, 30, 0.75);
+}
+
+QLabel#radiationTitle {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 列表项 */
+QWidget#listItem {
+  background-color: rgba(8, 16, 30, 0.75);
+}
+
+QLabel#itemName {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+QLabel#itemIcon {
+  color: #ffffff;
+  font-size: 14px;
+}
+
+/* 开关按钮 */
+QCheckBox {
+  spacing: 0px;
+}
+
+/* 开关整体背景（深蓝色圆角条） */
+QCheckBox::indicator {
+  width: 40px;
+  height: 20px;
+  border-radius: 20px;
+  background-color: rgba(30, 50, 70, 0.8);
+  border: none;
+}
+
+/* 打开时背景变亮蓝色 */
+QCheckBox::indicator:checked {
+  background-color: rgba(91, 192, 255, 0.5);
+}
+
+/* 关闭时背景为深色 */
+QCheckBox::indicator:unchecked {
+  background-color: rgba(30, 50, 70, 0.8);
+}
+
+/* 滑块（圆形） */
+QCheckBox::indicator::handle {
+  border-radius: 7px;
+  background-color: #8E9CB9;
+  width: 14px;
+  height: 14px;
+  margin: 3px;
+}
+
+/* 未选中：滑块在左，灰白色 */
+QCheckBox::indicator:unchecked::handle {
+  x: 3px;
+  background-color: #8E9CB9;
+}
+
+/* 选中：滑块在右，亮蓝色 */
+QCheckBox::indicator:checked::handle {
+  x: 23px;
+  background-color: #5BC0FF;
+}
+
+/* 分隔线 */
+QFrame#separator {
+  background-color: rgba(72, 120, 160, 0.2);
+  max-height: 1px;
+}
+
+/* 威力范围按钮 */
+QPushButton#powerRangeButton {
+  background-color: rgba(20, 40, 65, 0.6);
+  color: #5BC0FF;
+  border: 1px solid rgba(64, 128, 255, 0.3);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+QPushButton#powerRangeButton:hover {
+  background-color: rgba(91, 192, 255, 0.1);
+}
+</string>
+    </property>
+    <layout class="QVBoxLayout" name="mainLayout">
+      <property name="spacing">
+        <number>0</number>
+      </property>
+      <property name="leftMargin">
+        <number>0</number>
+      </property>
+      <property name="topMargin">
+        <number>0</number>
+      </property>
+      <property name="rightMargin">
+        <number>0</number>
+      </property>
+      <property name="bottomMargin">
+        <number>0</number>
+      </property>
+      
+      <!-- 顶部标题栏 -->
+      <item>
+        <widget class="QWidget" name="titleWidget">
+          <property name="fixedHeight">
+            <number>50</number>
+          </property>
+          <layout class="QHBoxLayout" name="titleLayout">
+            <property name="leftMargin">
+              <number>20</number>
+            </property>
+            <property name="topMargin">
+              <number>12</number>
+            </property>
+            <property name="rightMargin">
+              <number>20</number>
+            </property>
+            <property name="bottomMargin">
+              <number>12</number>
+            </property>
+            <item>
+              <widget class="QLabel" name="iconLabel">
+                <property name="text">
+                  <string/>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QLabel" name="titleLabel">
+                <property name="text">
+                  <string>态势控制</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <spacer name="horizontalSpacer">
+                <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                  <size>
+                    <width>40</width>
+                    <height>20</height>
+                  </size>
+                </property>
+              </spacer>
+            </item>
+            <item>
+              <widget class="QPushButton" name="powerRangeButton">
+                <property name="text">
+                  <string>威力范围</string>
+                </property>
+                <property name="styleSheet">
+                  <string>
+QPushButton {
+  background-color: #1a3a5c;
+  color: #ffffff;
+  border: 1px solid #2a4d6d;
+  border-radius: 15px;
+  padding: 5px 15px;
+  font-size: 12px;
+}
+QPushButton:hover {
+  background-color: #2a4d6d;
+}
+                  </string>
+                </property>
+              </widget>
+            </item>
+          </layout>
+        </widget>
+      </item>
+      
+      <!-- 内容区域 -->
+            <item>
+              <widget class="QWidget" name="contentWidget">
+                <layout class="QVBoxLayout" name="contentLayout">
+                  <property name="leftMargin">
+                    <number>20</number>
+                  </property>
+                  <property name="topMargin">
+                    <number>15</number>
+                  </property>
+                  <property name="rightMargin">
+                    <number>20</number>
+                  </property>
+                  <property name="bottomMargin">
+                    <number>15</number>
+                  </property>
+                  <property name="spacing">
+                    <number>12</number>
+                  </property>
+            
+            <!-- 辐射源威力范围 -->
+            <item>
+              <widget class="QWidget" name="radiationGroup">
+                <layout class="QVBoxLayout" name="radiationLayout">
+                  <property name="spacing">
+                    <number>12</number>
+                  </property>
+                  <item>
+                    <widget class="QLabel" name="radiationTitle">
+                      <property name="text">
+                        <string>辐射源威力范围</string>
+                      </property>
+                    </widget>
+                  </item>
+                  
+                  <!-- 雷达 -->
+                  <item>
+                    <widget class="QWidget" name="radarItem">
+                      <layout class="QHBoxLayout" name="radarLayout">
+                        <item>
+                          <widget class="QLabel" name="radarLabel">
+                            <property name="text">
+                              <string>雷达</string>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <spacer name="radarSpacer">
+                            <property name="orientation">
+                              <enum>Qt::Horizontal</enum>
+                            </property>
+                            <property name="sizeHint" stdset="0">
+                              <size>
+                                <width>40</width>
+                                <height>20</height>
+                              </size>
+                            </property>
+                          </spacer>
+                        </item>
+                        <item>
+                          <widget class="QCheckBox" name="radarSwitch">
+                            <property name="layoutDirection">
+                              <enum>Qt::RightToLeft</enum>
+                            </property>
+                          </widget>
+                        </item>
+                      </layout>
+                    </widget>
+                  </item>
+                  
+                  <!-- 电台 -->
+                  <item>
+                    <widget class="QWidget" name="radioItem">
+                      <layout class="QHBoxLayout" name="radioLayout">
+                        <item>
+                          <widget class="QLabel" name="radioLabel">
+                            <property name="text">
+                              <string>电台</string>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <spacer name="radioSpacer">
+                            <property name="orientation">
+                              <enum>Qt::Horizontal</enum>
+                            </property>
+                            <property name="sizeHint" stdset="0">
+                              <size>
+                                <width>40</width>
+                                <height>20</height>
+                              </size>
+                            </property>
+                          </spacer>
+                        </item>
+                        <item>
+                          <widget class="QCheckBox" name="radioSwitch">
+                            <property name="layoutDirection">
+                              <enum>Qt::RightToLeft</enum>
+                            </property>
+                          </widget>
+                        </item>
+                      </layout>
+                    </widget>
+                  </item>
+                  
+                  <!-- 通信对抗 -->
+                  <item>
+                    <widget class="QWidget" name="commJamItem">
+                      <layout class="QHBoxLayout" name="commJamLayout">
+                        <item>
+                          <widget class="QLabel" name="commJamLabel">
+                            <property name="text">
+                              <string>通信对抗</string>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <spacer name="commJamSpacer">
+                            <property name="orientation">
+                              <enum>Qt::Horizontal</enum>
+                            </property>
+                            <property name="sizeHint" stdset="0">
+                              <size>
+                                <width>40</width>
+                                <height>20</height>
+                              </size>
+                            </property>
+                          </spacer>
+                        </item>
+                        <item>
+                          <widget class="QCheckBox" name="commJamSwitch">
+                            <property name="layoutDirection">
+                              <enum>Qt::RightToLeft</enum>
+                            </property>
+                          </widget>
+                        </item>
+                      </layout>
+                    </widget>
+                  </item>
+                  
+                  <!-- 雷达对抗 -->
+                  <item>
+                    <widget class="QWidget" name="radarJamItem">
+                      <layout class="QHBoxLayout" name="radarJamLayout">
+                        <item>
+                          <widget class="QLabel" name="radarJamLabel">
+                            <property name="text">
+                              <string>雷达对抗</string>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <spacer name="radarJamSpacer">
+                            <property name="orientation">
+                              <enum>Qt::Horizontal</enum>
+                            </property>
+                            <property name="sizeHint" stdset="0">
+                              <size>
+                                <width>40</width>
+                                <height>20</height>
+                              </size>
+                            </property>
+                          </spacer>
+                        </item>
+                        <item>
+                          <widget class="QCheckBox" name="radarJamSwitch">
+                            <property name="layoutDirection">
+                              <enum>Qt::RightToLeft</enum>
+                            </property>
+                          </widget>
+                        </item>
+                      </layout>
+                    </widget>
+                  </item>
+                </layout>
+              </widget>
+            </item>
+            
+            <!-- 分隔线 -->
+            <item>
+              <widget class="QFrame" name="separator1">
+                <property name="frameShape">
+                  <enum>QFrame::HLine</enum>
+                </property>
+              </widget>
+            </item>
+            
+            <!-- 防控火力 -->
+            <item>
+              <widget class="QWidget" name="defenseGroup">
+                <layout class="QVBoxLayout" name="defenseLayout">
+                  <property name="spacing">
+                    <number>12</number>
+                  </property>
+                  <item>
+                    <widget class="QWidget" name="defenseFireItem">
+                      <layout class="QHBoxLayout" name="defenseFireLayout">
+                        <item>
+                          <widget class="QLabel" name="defenseFireLabel">
+                            <property name="text">
+                              <string>防控火力</string>
+                            </property>
+                          </widget>
+                        </item>
+                      </layout>
+                    </widget>
+                  </item>
+                  
+                  <!-- 防控火力显示 -->
+                  <item>
+                    <widget class="QWidget" name="defenseFireDisplayItem">
+                      <layout class="QHBoxLayout" name="defenseFireDisplayLayout">
+                        <item>
+                          <widget class="QLabel" name="defenseFireDisplayIcon">
+                            <property name="text">
+                              <string/>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <widget class="QLabel" name="defenseFireDisplayLabel">
+                            <property name="text">
+                              <string>防控火力显示</string>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <spacer name="defenseFireDisplaySpacer">
+                            <property name="orientation">
+                              <enum>Qt::Horizontal</enum>
+                            </property>
+                            <property name="sizeHint" stdset="0">
+                              <size>
+                                <width>40</width>
+                                <height>20</height>
+                              </size>
+                            </property>
+                          </spacer>
+                        </item>
+                        <item>
+                          <widget class="QCheckBox" name="defenseFireDisplaySwitch">
+                            <property name="layoutDirection">
+                              <enum>Qt::RightToLeft</enum>
+                            </property>
+                          </widget>
+                        </item>
+                      </layout>
+                    </widget>
+                  </item>
+                </layout>
+              </widget>
+            </item>
+            
+            <item>
+              <spacer name="verticalSpacer">
+                <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                  <size>
+                    <width>20</width>
+                    <height>40</height>
+                  </size>
+                </property>
+              </spacer>
+            </item>
+          </layout>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <resources/>
+  <connections/>
+</ui>
