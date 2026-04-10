@@ -5,7 +5,10 @@
 #include <QList>
 #include <QTime>
 
-// 任务信息结构体（对应taskTable）
+/**
+ * @brief 任务信息结构体
+ * @details 存储任务的基本信息，包括任务名称、类型、目标、时间等
+ */
 struct TaskInfo {
     QString planName;           // 方案名称
     QString coordinationName;    // 协同规划名称
@@ -17,12 +20,19 @@ struct TaskInfo {
     QTime endTime;             // 结束时间
     QString allocatedUAVs;     // 分配无人机（逗号分隔）
 
-    // 获取时间范围字符串
+    /**
+     * @brief 获取时间范围字符串
+     * @return 格式为"HH:mm~HH:mm"的时间范围字符串
+     */
     QString getTimeRange() const {
         return startTime.toString("HH:mm") + "~" + endTime.toString("HH:mm");
     }
 
-    // 重载==操作符
+    /**
+     * @brief 重载等于操作符
+     * @param other 另一个任务信息结构体
+     * @return 是否相等
+     */
     bool operator==(const TaskInfo& other) const {
         return planName == other.planName &&
                coordinationName == other.coordinationName &&
@@ -36,7 +46,10 @@ struct TaskInfo {
     }
 };
 
-// 兵力需求计算结构体（对应forceCalculationTable）
+/**
+ * @brief 兵力需求计算结构体
+ * @details 存储根据任务计算得出的兵力需求信息
+ */
 struct ForceCalculation {
     QString planName;           // 方案名称
     QString coordinationName;    // 协同规划名称
@@ -48,24 +61,36 @@ struct ForceCalculation {
     int adjustedCount;         // 调整数量
 };
 
-// 无人机信息结构体（用于兵力资源管理）
+/**
+ * @brief 无人机信息结构体
+ * @details 存储单个无人机的基本信息
+ */
 struct UAVInfo {
     QString uavName;           // 无人机名称
     QString status;            // 状态（就绪、待命、故障）
 };
 
-// 装备型号结构体（用于兵力资源管理）
+/**
+ * @brief 装备型号结构体
+ * @details 存储装备型号及其下属的无人机列表
+ */
 struct EquipmentType {
     QString equipmentName;     // 装备型号名称
     QList<UAVInfo> uavList;    // 该型号下的无人机列表
 };
 
-// 编组信息结构体（对应forceTree）
+/**
+ * @brief 编组信息结构体
+ * @details 存储编组信息及其包含的装备型号列表
+ */
 struct GroupInfo {
     QString groupName;         // 编组名称
     QList<EquipmentType> equipmentList;  // 该编组下的装备型号列表
-    
-    // 获取编组中的无人机总数
+
+    /**
+     * @brief 获取编组中的无人机总数
+     * @return 无人机总数
+     */
     int getTotalUAVCount() const {
         int count = 0;
         for (const auto& equipment : equipmentList) {
@@ -73,8 +98,11 @@ struct GroupInfo {
         }
         return count;
     }
-    
-    // 获取编组中的可用无人机数（就绪状态）
+
+    /**
+     * @brief 获取编组中的可用无人机数（就绪状态）
+     * @return 可用无人机数量
+     */
     int getAvailableUAVCount() const {
         int count = 0;
         for (const auto& equipment : equipmentList) {
@@ -88,7 +116,10 @@ struct GroupInfo {
     }
 };
 
-// 任务分配结构体（对应allocationTable）
+/**
+ * @brief 任务分配结构体
+ * @details 存储任务分配给无人机的具体信息
+ */
 struct TaskAllocation {
     QString planName;           // 方案名称
     QString coordinationName;    // 协同规划名称
@@ -100,7 +131,10 @@ struct TaskAllocation {
     QString formation;         // 编队
 };
 
-// 路径点结构体
+/**
+ * @brief 路径点结构体
+ * @details 存储路径规划中单个点的坐标信息
+ */
 struct PathPoint {
     double latitude;      // 纬度
     double longitude;      // 经度
@@ -108,7 +142,10 @@ struct PathPoint {
     int pointOrder;        // 点序号
 };
 
-// 路径规划结构体（对应pathTable）
+/**
+ * @brief 路径规划结构体
+ * @details 存储无人机的路径规划信息
+ */
 struct PathPlanning {
     QString planName;           // 方案名称
     QString coordinationName;    // 协同规划名称
@@ -119,7 +156,10 @@ struct PathPlanning {
     QList<PathPoint> pathPoints; // 路径点列表
 };
 
-// 雷达目标参数结构体
+/**
+ * @brief 雷达目标参数结构体
+ * @details 存储雷达目标的详细参数信息
+ */
 struct RadarTargetParam {
     QString planName;           // 方案名称
     QString coordinationName;    // 协同规划名称
@@ -130,7 +170,10 @@ struct RadarTargetParam {
     QString workingMode;       // 工作模式
 };
 
-// 电台目标参数结构体
+/**
+ * @brief 电台目标参数结构体
+ * @details 存储无线电目标的详细参数信息
+ */
 struct RadioTargetParam {
     QString planName;           // 方案名称
     QString coordinationName;    // 协同规划名称
@@ -141,7 +184,10 @@ struct RadioTargetParam {
     QString transmitPower;     // 发射功率(kW)
 };
 
-// 通信对抗参数结构体
+/**
+ * @brief 通信对抗参数结构体
+ * @details 存储通信干扰的详细参数信息
+ */
 struct CommJammingParam {
     QString planName;           // 方案名称
     QString coordinationName;    // 协同规划名称
@@ -152,7 +198,10 @@ struct CommJammingParam {
     QString coverageRange;     // 覆盖范围(km)
 };
 
-// 雷达对抗参数结构体
+/**
+ * @brief 雷达对抗参数结构体
+ * @details 存储雷达干扰的详细参数信息
+ */
 struct RcmJammingParam {
     QString planName;           // 方案名称
     QString coordinationName;    // 协同规划名称

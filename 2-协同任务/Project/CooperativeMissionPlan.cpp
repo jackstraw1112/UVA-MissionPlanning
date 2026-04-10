@@ -40,12 +40,16 @@ CooperativeMissionPlan::~CooperativeMissionPlan()
     delete ui;
 }
 
+// 更新系统时钟显示
+// 定时器每秒钟触发一次，更新界面上的时间标签
 void CooperativeMissionPlan::updateClock()
 {
     QDateTime currentTime = QDateTime::currentDateTime();
-    ui->timeLabel->setText(currentTime.toString("yyyy-MM-dd hh:mm:ss")); // 使用timeLabel代替clockLabel和dateLabel
+    ui->timeLabel->setText(currentTime.toString("yyyy-MM-dd hh:mm:ss"));
 }
 
+// 建立信号与槽的连接
+// 连接所有按钮的点击信号到对应的处理槽函数
 void CooperativeMissionPlan::setupConnections()
 {
     // Toolbar buttons
@@ -107,9 +111,10 @@ void CooperativeMissionPlan::setupConnections()
     });
 }
 
+// 配置界面样式
+// 设置窗口标题、表格表头样式、选择模式等界面属性
 void CooperativeMissionPlan::setupStyles()
 {
-    // Set window icon and title
     setWindowTitle("无人机任务规划与效能评估系统");
     
     // Configure table headers
@@ -222,6 +227,8 @@ void CooperativeMissionPlan::setupStyles()
 
 
 
+// 添加新的编组到兵力资源管理
+// 弹出添加编组对话框，用户确认后添加到编组列表并刷新树形显示
 void CooperativeMissionPlan::onAddForce()
 {
     AddForceDialog dialog(this);
@@ -229,15 +236,19 @@ void CooperativeMissionPlan::onAddForce()
     dialog.exec();
 }
 
+// 处理编组添加信号
+// 将新添加的编组信息添加到列表并刷新显示
 void CooperativeMissionPlan::onForceAdded(const GroupInfo& groupInfo)
 {
     groupList.append(groupInfo);
-    
+
     DisplayForceTreeToData(groupList);
-    
+
     showToast(QString("已添加编组：%1").arg(groupInfo.groupName));
 }
 
+// 删除选中的编组或节点
+// 支持删除编组、装备型号、无人机三个层级的节点
 void CooperativeMissionPlan::onDeleteForce()
 {
     QTreeWidgetItem* selectedItem = ui->forceTree->currentItem();
@@ -292,6 +303,8 @@ void CooperativeMissionPlan::onDeleteForce()
     DisplayForceTreeToData(groupList);
 }
 
+// 处理路径标签页切换
+// 根据切换的标签页显示对应的路径列表（巡航路径或搜索路径）
 void CooperativeMissionPlan::onPathTabChanged(int index)
 {
     QPushButton* tabs[] = { ui->flightPathTab, ui->searchPathTab };
@@ -310,11 +323,15 @@ void CooperativeMissionPlan::onPathTabChanged(int index)
     }
 }
 
+// 处理目标参数标签页切换
+// 切换目标参数显示的标签页（雷达、电台、通信对抗、雷达对抗）
 void CooperativeMissionPlan::onTargetTabChanged(int index)
 {
     QString tabNames[] = { "雷达", "电台", "通信对抗", "雷达对抗" };
 }
 
+// 为选中的无人机生成路径
+// 将选中无人机对应的巡航路径和搜索路径状态从"待生成"改为"已生成"
 void CooperativeMissionPlan::onGenerateSelectedPath()
 {
     int currentRow = ui->pathTable->currentRow();
@@ -349,6 +366,8 @@ void CooperativeMissionPlan::onGenerateSelectedPath()
     }
 }
 
+// 为所有无人机生成路径
+// 将所有待生成状态的路径标记为已生成
 void CooperativeMissionPlan::onGenerateAllPaths()
 {
     int generatedCount = 0;
@@ -372,6 +391,8 @@ void CooperativeMissionPlan::onGenerateAllPaths()
     showToast(QString("所有路径生成完成，已生成 %1 条路径").arg(generatedCount));
 }
 
+// 显示路径详情对话框
+// 双击路径表格时显示选中无人机的路径详细信息
 void CooperativeMissionPlan::onShowPathDetail()
 {
     int currentRow = ui->pathTable->currentRow();
@@ -409,6 +430,8 @@ void CooperativeMissionPlan::onShowPathDetail()
     }
 }
 
+// 添加目标参数
+// 弹出目标参数对话框，支持添加雷达、电台、通信对抗、雷达对抗四类目标参数
 void CooperativeMissionPlan::onAddTargetParam()
 {
     TargetParamDialog dialog(this);
@@ -420,6 +443,8 @@ void CooperativeMissionPlan::onAddTargetParam()
     dialog.exec();
 }
 
+// 处理雷达目标添加信号
+// 将新添加的雷达目标参数添加到列表并刷新表格显示
 void CooperativeMissionPlan::onRadarTargetAdded(const RadarTargetParam& radar)
 {
     radarTargetList.append(radar);
@@ -427,6 +452,8 @@ void CooperativeMissionPlan::onRadarTargetAdded(const RadarTargetParam& radar)
     showToast(QString("已添加雷达目标：%1").arg(radar.targetId));
 }
 
+// 处理电台目标添加信号
+// 将新添加的电台目标参数添加到列表并刷新表格显示
 void CooperativeMissionPlan::onRadioTargetAdded(const RadioTargetParam& radio)
 {
     radioTargetList.append(radio);
@@ -434,6 +461,8 @@ void CooperativeMissionPlan::onRadioTargetAdded(const RadioTargetParam& radio)
     showToast(QString("已添加电台目标：%1").arg(radio.targetId));
 }
 
+// 处理通信对抗添加信号
+// 将新添加的通信对抗参数添加到列表并刷新表格显示
 void CooperativeMissionPlan::onCommJammingAdded(const CommJammingParam& comm)
 {
     commJammingList.append(comm);
@@ -441,6 +470,8 @@ void CooperativeMissionPlan::onCommJammingAdded(const CommJammingParam& comm)
     showToast(QString("已添加通信对抗：%1").arg(comm.targetId));
 }
 
+// 处理雷达对抗添加信号
+// 将新添加的雷达对抗参数添加到列表并刷新表格显示
 void CooperativeMissionPlan::onRcmJammingAdded(const RcmJammingParam& rcm)
 {
     rcmJammingList.append(rcm);
@@ -448,6 +479,8 @@ void CooperativeMissionPlan::onRcmJammingAdded(const RcmJammingParam& rcm)
     showToast(QString("已添加雷达对抗：%1").arg(rcm.targetId));
 }
 
+// 编辑目标参数
+// 根据当前选中的标签页编辑对应类型的目标参数
 void CooperativeMissionPlan::onEditTargetParam()
 {
     int currentTab = ui->tabWidget->currentIndex();
@@ -518,6 +551,8 @@ void CooperativeMissionPlan::onEditTargetParam()
     dialog.exec();
 }
 
+// 处理雷达目标更新信号
+// 更新列表中对应索引的雷达目标参数并刷新显示
 void CooperativeMissionPlan::onRadarTargetUpdated(const RadarTargetParam& radar, int index)
 {
     Q_UNUSED(index);
@@ -529,6 +564,8 @@ void CooperativeMissionPlan::onRadarTargetUpdated(const RadarTargetParam& radar,
     }
 }
 
+// 处理电台目标更新信号
+// 更新列表中对应索引的电台目标参数并刷新显示
 void CooperativeMissionPlan::onRadioTargetUpdated(const RadioTargetParam& radio, int index)
 {
     Q_UNUSED(index);
@@ -540,6 +577,8 @@ void CooperativeMissionPlan::onRadioTargetUpdated(const RadioTargetParam& radio,
     }
 }
 
+// 处理通信对抗更新信号
+// 更新列表中对应索引的通信对抗参数并刷新显示
 void CooperativeMissionPlan::onCommJammingUpdated(const CommJammingParam& comm, int index)
 {
     Q_UNUSED(index);
@@ -551,6 +590,8 @@ void CooperativeMissionPlan::onCommJammingUpdated(const CommJammingParam& comm, 
     }
 }
 
+// 处理雷达对抗更新信号
+// 更新列表中对应索引的雷达对抗参数并刷新显示
 void CooperativeMissionPlan::onRcmJammingUpdated(const RcmJammingParam& rcm, int index)
 {
     Q_UNUSED(index);
@@ -562,12 +603,15 @@ void CooperativeMissionPlan::onRcmJammingUpdated(const RcmJammingParam& rcm, int
     }
 }
 
+// 保存任务分配结果
+// 将当前任务分配列表保存到数据库
 void CooperativeMissionPlan::onSaveAllocation()
 {
 
 }
 
 // 接收任务添加信号的槽函数
+// 将新添加的任务信息添加到列表并刷新表格显示
 void CooperativeMissionPlan::onTaskAdded(const TaskInfo& taskInfo)
 {
     // 将任务添加到内部数据列表
@@ -581,6 +625,7 @@ void CooperativeMissionPlan::onTaskAdded(const TaskInfo& taskInfo)
 }
 
 // 接收任务更新信号的槽函数
+// 更新列表中指定索引的任务信息并刷新表格显示
 void CooperativeMissionPlan::onTaskUpdated(int index, const TaskInfo& taskInfo)
 {
     // 检查索引是否有效
@@ -596,7 +641,8 @@ void CooperativeMissionPlan::onTaskUpdated(int index, const TaskInfo& taskInfo)
     }
 }
 
-// 显示任务表格数据
+// 显示任务列表到表格
+// 将任务信息列表绑定到任务表格控件，包括方案名称、协同规划名称、任务名称等字段
 void CooperativeMissionPlan::DisplayTaskTableToData(const QList<TaskInfo>& taskList)
 {
     this->taskList = taskList;
@@ -619,7 +665,8 @@ void CooperativeMissionPlan::DisplayTaskTableToData(const QList<TaskInfo>& taskL
     }
 }
 
-// 显示兵力需求计算表格数据
+// 显示兵力需求计算列表到表格
+// 将兵力需求计算列表绑定到兵力计算表格控件，包括方案名称、协同规划名称、任务名称、威胁等级等
 void CooperativeMissionPlan::DisplayForceCalculationTableToData(const QList<ForceCalculation>& forceList)
 {
     ui->forceCalculationTable->clearContents();
@@ -640,7 +687,8 @@ void CooperativeMissionPlan::DisplayForceCalculationTableToData(const QList<Forc
     }
 }
 
-// 显示任务分配表格数据
+// 显示任务分配列表到表格
+// 将任务分配列表绑定到任务分配表格控件，包括方案名称、协同规划名称、任务名称、目标类型等
 void CooperativeMissionPlan::DisplayAllocationTableToData(const QList<TaskAllocation>& allocationList)
 {
     ui->allocationTable->clearContents();
@@ -661,7 +709,8 @@ void CooperativeMissionPlan::DisplayAllocationTableToData(const QList<TaskAlloca
     }
 }
 
-// 显示路径规划表格数据
+// 显示路径规划列表到表格
+// 将路径规划列表绑定到路径表格控件，包括方案名称、协同规划名称、无人机名称、关联任务等
 void CooperativeMissionPlan::DisplayPathTableToData(const QList<PathPlanning>& pathList)
 {
     ui->pathTable->clearContents();
@@ -680,6 +729,8 @@ void CooperativeMissionPlan::DisplayPathTableToData(const QList<PathPlanning>& p
     }
 }
 
+// 显示雷达目标参数列表到表格
+// 将雷达目标参数列表绑定到雷达目标表格控件，包括方案名称、协同规划名称、目标编号、频率范围等
 void CooperativeMissionPlan::DisplayRadarTargetTableToData(const QList<RadarTargetParam>& radarList)
 {
     ui->radartargetTable->clearContents();
@@ -699,6 +750,8 @@ void CooperativeMissionPlan::DisplayRadarTargetTableToData(const QList<RadarTarg
     }
 }
 
+// 显示无线电目标参数列表到表格
+// 将无线电目标参数列表绑定到电台目标表格控件，包括方案名称、协同规划名称、目标编号、频率范围等
 void CooperativeMissionPlan::DisplayRadioTargetTableToData(const QList<RadioTargetParam>& radioList)
 {
     ui->radiotargetTable->clearContents();
@@ -718,6 +771,8 @@ void CooperativeMissionPlan::DisplayRadioTargetTableToData(const QList<RadioTarg
     }
 }
 
+// 显示通信对抗参数列表到表格
+// 将通信对抗参数列表绑定到表格控件，包括方案名称、协同规划名称、目标编号、干扰频率等
 void CooperativeMissionPlan::DisplayCommJammingTableToData(const QList<CommJammingParam>& commList)
 {
     ui->radiofighttargetTable->clearContents();
@@ -737,6 +792,8 @@ void CooperativeMissionPlan::DisplayCommJammingTableToData(const QList<CommJammi
     }
 }
 
+// 显示雷达对抗参数列表到表格
+// 将雷达对抗参数列表绑定到表格控件，包括方案名称、协同规划名称、目标编号、干扰频率等
 void CooperativeMissionPlan::DisplayRcmJammingTableToData(const QList<RcmJammingParam>& rcmList)
 {
     ui->radarfighttargetTable->clearContents();
@@ -758,7 +815,8 @@ void CooperativeMissionPlan::DisplayRcmJammingTableToData(const QList<RcmJamming
 
 
 
-//显示兵力树资源
+// 显示兵力资源管理树
+// 将编组信息列表以树形结构显示，包括编组、装备型号、无人机三个层级
 void CooperativeMissionPlan::DisplayForceTreeToData(const QList<GroupInfo>& groupList)
 {
     // 清空现有内容
@@ -807,12 +865,15 @@ void CooperativeMissionPlan::DisplayForceTreeToData(const QList<GroupInfo>& grou
     }
 }
 
+// 显示提示消息对话框
+// 使用QMessageBox显示简短的提示信息
 void CooperativeMissionPlan::showToast(const QString& message)
 {
     QMessageBox::information(this, "提示", message);
 }
 
-// 保存任务到文件（辅助函数）
+// 保存任务列表到JSON文件
+// 将当前任务列表序列化为JSON格式并写入指定文件
 bool CooperativeMissionPlan::saveTasksToFile(const QString& filePath)
 {
     QFile file(filePath);
@@ -851,7 +912,8 @@ bool CooperativeMissionPlan::saveTasksToFile(const QString& filePath)
     return true;
 }
 
-// 从文件加载任务（辅助函数）
+// 从JSON文件加载任务列表
+// 读取指定JSON文件并反序列化为任务列表，更新界面显示
 bool CooperativeMissionPlan::loadTasksFromFile(const QString& filePath)
 {
     QFile file(filePath);
@@ -898,6 +960,8 @@ bool CooperativeMissionPlan::loadTasksFromFile(const QString& filePath)
     return true;
 }
 
+// 新建协同任务
+// 弹出任务对话框，创建新的协同任务
 void CooperativeMissionPlan::onNewTask()
 {
     TaskDialog dialog;
@@ -910,6 +974,7 @@ void CooperativeMissionPlan::onNewTask()
 }
 
 // 打开任务文件
+// 弹出文件对话框，选择JSON格式的任务文件并加载
 void CooperativeMissionPlan::onOpenTask()
 {
     // 打开文件对话框
@@ -928,7 +993,8 @@ void CooperativeMissionPlan::onOpenTask()
     }
 }
 
-// 保存任务到文件
+// 保存任务到数据库
+// 将当前所有任务数据保存到SQLite数据库
 void CooperativeMissionPlan::onSaveTask()
 {
     if (DatabaseManager::instance().saveAllData(
@@ -949,6 +1015,7 @@ void CooperativeMissionPlan::onSaveTask()
 }
 
 // 另存为新文件
+// 弹出文件保存对话框，将当前任务保存为新的JSON文件
 void CooperativeMissionPlan::onSaveAs()
 {
     // 打开文件对话框
@@ -967,11 +1034,15 @@ void CooperativeMissionPlan::onSaveAs()
     }
 }
 
+// 导出数据
+// 导出当前任务数据为指定格式（待实现）
 void CooperativeMissionPlan::onExport()
 {
     showToast("正在导出...");
 }
 
+// 编辑选中的协同任务
+// 弹出任务编辑对话框，修改选中的任务信息
 void CooperativeMissionPlan::onEditTask()
 {
     // 获取当前选中的行
@@ -1002,6 +1073,8 @@ void CooperativeMissionPlan::onEditTask()
     dialog.exec();
 }
 
+// 删除选中的协同任务
+// 从任务列表中移除选中的任务并刷新表格显示
 void CooperativeMissionPlan::onDeleteTask()
 {
     int selectedRow = ui->taskTable->currentRow();
@@ -1023,6 +1096,8 @@ void CooperativeMissionPlan::onDeleteTask()
     showToast("任务已删除");
 }
 
+// 打开任务规划管理器
+// 弹出任务规划管理对话框，进行任务的新增、编辑、删除操作
 void CooperativeMissionPlan::onOpenTaskPlanManager()
 {
     TaskPlanManagerDialog dialog(this);
@@ -1036,6 +1111,8 @@ void CooperativeMissionPlan::onOpenTaskPlanManager()
     }
 }
 
+// 处理任务规划选中信号
+// 更新当前方案名称和协同规划名称，选中对应的任务表格行
 void CooperativeMissionPlan::onTaskPlanSelected(const TaskInfo& taskPlan)
 {
     currentPlanName = taskPlan.planName;
@@ -1050,6 +1127,8 @@ void CooperativeMissionPlan::onTaskPlanSelected(const TaskInfo& taskPlan)
     showToast(QString("已选择方案: %1 - %2").arg(taskPlan.planName).arg(taskPlan.taskName));
 }
 
+// 计算兵力需求
+// 根据任务列表中的任务类型（打击、压制等）计算所需的无人机数量和编队配置
 void CooperativeMissionPlan::onCalculateForce()
 {
     // 清空现有兵力需求计算列表和编组信息
@@ -1177,6 +1256,8 @@ void CooperativeMissionPlan::onCalculateForce()
               .arg(totalRequired).arg(strikeTeamCount).arg(suppressTeamCount));
 }
 
+// 自动分配任务
+// 根据计算的兵力和任务需求，自动将无人机分配到各任务并生成巡航和搜索路径
 void CooperativeMissionPlan::onAutoAllocate()
 {
     allocationList.clear();
@@ -1310,6 +1391,8 @@ void CooperativeMissionPlan::onAutoAllocate()
     showToast(QString("自动分配完成，已分配 %1 架无人机").arg(usedUAVs.size()));
 }
 
+// 生成路径规划
+// 将所有待生成状态的路径标记为已生成
 void CooperativeMissionPlan::onGeneratePath()
 {
     int generatedCount = 0;
@@ -1333,16 +1416,22 @@ void CooperativeMissionPlan::onGeneratePath()
     showToast(QString("路径生成完成，已生成 %1 条路径").arg(generatedCount));
 }
 
+// 绑定目标参数
+// 将配置的目标参数装载到系统（待实现）
 void CooperativeMissionPlan::onBindParameters()
 {
     showToast("目标参数已装载");
 }
 
+// 打开设置对话框
+// 弹出系统设置界面（待实现）
 void CooperativeMissionPlan::onSettings()
 {
     showToast("打开设置");
 }
 
+// 处理任务选择事件
+// 当用户在任务表格中点击某行时，更新当前选中的任务索引
 void CooperativeMissionPlan::onTaskSelected(int index)
 {
 
@@ -1350,6 +1439,8 @@ void CooperativeMissionPlan::onTaskSelected(int index)
 
 
 
+// 处理旋钮值变化
+// 当用户旋转旋钮时，根据旋钮ID和变化量更新对应参数（待实现）
 void CooperativeMissionPlan::onSpinValueChanged(int id, int delta)
 {
     Q_UNUSED(id);
@@ -1357,12 +1448,16 @@ void CooperativeMissionPlan::onSpinValueChanged(int id, int delta)
     // Implementation for spin controls
 }
 
+// 处理树形项展开/折叠事件
+// 当用户展开或折叠树形节点时，显示对应的提示信息
 void CooperativeMissionPlan::onTreeItemToggled(const QString& path, bool expanded)
 {
     Q_UNUSED(path);
     showToast(expanded ? "展开节点" : "折叠节点");
 }
 
+// 关闭应用程序
+// 退出当前应用程序
 void CooperativeMissionPlan::onShutdown()
 {
     // 关闭应用程序
