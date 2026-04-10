@@ -12,16 +12,28 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class EstimateSituation; }
 QT_END_NAMESPACE
 
+/**
+ * @brief 态势估计主窗口
+ * @details 主应用窗口，包含各种态势估计相关的子窗口。
+ */
 class EstimateSituation : public QWidget
 {
     Q_OBJECT
 
 public:
+    /**
+     * @brief 构造函数
+     * @param parent 父窗口指针
+     */
     explicit EstimateSituation(QWidget *parent = nullptr);
+
+    /**
+     * @brief 析构函数
+     */
     ~EstimateSituation() override;
 
 private:
-    Ui::EstimateSituation *ui;
+    Ui::EstimateSituation *ui; ///< UI对象指针
 };
 
 
