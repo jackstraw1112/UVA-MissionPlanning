@@ -8,6 +8,11 @@
 #include "ui_SpectrumAnalysis.h"
 #include <QPainter>
 #include <QMouseEvent>
+<<<<<<< HEAD
+=======
+#include <QLinearGradient>
+#include <QGraphicsDropShadowEffect>
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 #include <QFrame>
 
 // ==============================================================================
@@ -33,6 +38,7 @@ SpectrumChart::SpectrumChart(QWidget *parent)
     // 初始化为空场景，后续会根据窗口大小和数据动态创建
 }
 
+<<<<<<< HEAD
 // 设置辐射源数据
 void SpectrumChart::setRadiationData(const QVector<RadarSource> &radarSource, 
                                    const QVector<RadioSource> &radioSource, 
@@ -260,6 +266,8 @@ void SpectrumChart::updateBandSignalCount(QVector<SpectrumBand> &bands, const QS
     }
 }
 
+=======
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 void SpectrumChart::generateTestData()
 {
     // 重新生成测试数据前先清空容器，避免重复追加
@@ -270,7 +278,11 @@ void SpectrumChart::generateTestData()
     hfBand.name = QString::fromUtf8("HF");
     hfBand.range = QString::fromUtf8("3-30MHz");
     hfBand.color = QColor(Qt::blue);
+<<<<<<< HEAD
     hfBand.height = 50;
+=======
+    hfBand.height = 25;
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     hfBand.signalCount = 2;
     hfBand.rect = QRectF();
     hfBand.rectItem = nullptr;
@@ -282,7 +294,11 @@ void SpectrumChart::generateTestData()
     vhfBand.name = QString::fromUtf8("VHF");
     vhfBand.range = QString::fromUtf8("30-300MHz");
     vhfBand.color = QColor(Qt::red);
+<<<<<<< HEAD
     vhfBand.height = 50;
+=======
+    vhfBand.height = 45;
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     vhfBand.signalCount = 5;
     vhfBand.rect = QRectF();
     vhfBand.rectItem = nullptr;
@@ -294,7 +310,11 @@ void SpectrumChart::generateTestData()
     uhfBand.name = QString::fromUtf8("UHF");
     uhfBand.range = QString::fromUtf8("300-1000MHz");
     uhfBand.color = QColor(Qt::yellow);
+<<<<<<< HEAD
     uhfBand.height = 50;
+=======
+    uhfBand.height = 60;
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     uhfBand.signalCount = 8;
     uhfBand.rect = QRectF();
     uhfBand.rectItem = nullptr;
@@ -306,7 +326,11 @@ void SpectrumChart::generateTestData()
     lBand.name = QString::fromUtf8("L");
     lBand.range = QString::fromUtf8("1-2GHz");
     lBand.color = QColor(Qt::green);
+<<<<<<< HEAD
     lBand.height = 50;
+=======
+    lBand.height = 40;
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     lBand.signalCount = 4;
     lBand.rect = QRectF();
     lBand.rectItem = nullptr;
@@ -318,7 +342,11 @@ void SpectrumChart::generateTestData()
     sBand.name = QString::fromUtf8("S");
     sBand.range = QString::fromUtf8("2-4GHz");
     sBand.color = QColor(Qt::cyan);
+<<<<<<< HEAD
     sBand.height = 50;
+=======
+    sBand.height = 75;
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     sBand.signalCount = 9;
     sBand.rect = QRectF();
     sBand.rectItem = nullptr;
@@ -330,7 +358,11 @@ void SpectrumChart::generateTestData()
     cBand.name = QString::fromUtf8("C");
     cBand.range = QString::fromUtf8("4-8GHz");
     cBand.color = QColor(Qt::magenta);
+<<<<<<< HEAD
     cBand.height = 50;
+=======
+    cBand.height = 55;
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     cBand.signalCount = 6;
     cBand.rect = QRectF();
     cBand.rectItem = nullptr;
@@ -340,16 +372,60 @@ void SpectrumChart::generateTestData()
     // ---------- 7. X 频段 ----------
     SpectrumBand xBand;
     xBand.name = QString::fromUtf8("X");
+<<<<<<< HEAD
     xBand.range = QString::fromUtf8("8-13GHz");
     xBand.color = QColor(Qt::red);
     xBand.height = 50;
+=======
+    xBand.range = QString::fromUtf8("8-12GHz");
+    xBand.color = QColor(Qt::red);
+    xBand.height = 85;
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     xBand.signalCount = 11;
     xBand.rect = QRectF();
     xBand.rectItem = nullptr;
     xBand.labelItem = nullptr;
     m_spectrumData.append(xBand);
 
+<<<<<<< HEAD
 
+=======
+    // ---------- 8. Ku 频段 ----------
+    SpectrumBand kuBand;
+    kuBand.name = QString::fromUtf8("Ku");
+    kuBand.range = QString::fromUtf8("12-18GHz");
+    kuBand.color = QColor(Qt::darkGreen);
+    kuBand.height = 50;
+    kuBand.signalCount = 5;
+    kuBand.rect = QRectF();
+    kuBand.rectItem = nullptr;
+    kuBand.labelItem = nullptr;
+    m_spectrumData.append(kuBand);
+
+    // ---------- 9. K 频段 ----------
+    SpectrumBand kBand;
+    kBand.name = QString::fromUtf8("K");
+    kBand.range = QString::fromUtf8("18-27GHz");
+    kBand.color = QColor(Qt::darkYellow);
+    kBand.height = 30;
+    kBand.signalCount = 3;
+    kBand.rect = QRectF();
+    kBand.rectItem = nullptr;
+    kBand.labelItem = nullptr;
+    m_spectrumData.append(kBand);
+
+    // ---------- 10. Ka 频段 ----------
+    SpectrumBand kaBand;
+    kaBand.name = QString::fromUtf8("Ka");
+    kaBand.range = QString::fromUtf8("27-40GHz");
+    kaBand.color = QColor(Qt::blue);
+    kaBand.height = 20;
+    kaBand.signalCount = 2;
+    kaBand.rect = QRectF();
+    kaBand.rectItem = nullptr;
+    kaBand.labelItem = nullptr;
+    m_spectrumData.append(kaBand);
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 
     // 生成数据后创建频谱条
     createSpectrumBars();
@@ -373,6 +449,7 @@ void SpectrumChart::createSpectrumBars()
         // 如果没有数据，只绘制背景
         return;
     }
+<<<<<<< HEAD
     float chartHeight = sceneHeight - 40;
 
     // 计算每个频段的频率范围大小（单位：MHz）
@@ -421,10 +498,25 @@ void SpectrumChart::createSpectrumBars()
         float y = sceneHeight - 30 - barHeight;
 
         band.rect = QRectF(x, y, barWidth - 2, barHeight);
+=======
+    float barWidth = (sceneWidth - 100) / barCount;
+    float chartHeight = sceneHeight - 40;
+
+    for (int i = 0; i < barCount; ++i)
+    {
+        SpectrumBand &band = m_spectrumData[i];
+
+        float x = 50 + i * barWidth;
+        float barHeight = chartHeight * band.height / 100.0;
+        float y = sceneHeight - 30 - barHeight;
+
+        band.rect = QRectF(x, y, barWidth - 10, barHeight);
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 
         band.rectItem = m_scene->addRect(band.rect, QPen(band.color, 1));
         band.rectItem->setBrush(QBrush(band.color));
 
+<<<<<<< HEAD
         // 移除频段名称标签
 
         band.rectItem->setAcceptHoverEvents(true);
@@ -432,6 +524,14 @@ void SpectrumChart::createSpectrumBars()
 
         // 更新下一个频段的起始位置
         x += barWidth;
+=======
+        band.labelItem = m_scene->addText(band.name);
+        band.labelItem->setPos(x + (barWidth - 10) / 2 - band.labelItem->boundingRect().width() / 2,
+                               sceneHeight - 25);
+
+        band.rectItem->setAcceptHoverEvents(true);
+        band.rectItem->setData(0, i);
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     }
 
     m_tooltipItem = m_scene->addText("");
@@ -444,8 +544,11 @@ void SpectrumChart::createSpectrumBars()
     m_tooltipBg->hide();
 }
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 void SpectrumChart::updateSpectrumData()
 {
     createSpectrumBars();
@@ -531,9 +634,16 @@ void SpectrumChart::leaveEvent(QEvent *event)
     QGraphicsView::leaveEvent(event);
 }
 
+<<<<<<< HEAD
 
 
 
+=======
+void SpectrumChart::updateTooltip()
+{
+    // 实现工具提示更新逻辑
+}
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 
 // ==============================================================================
 // SpectrumAnalysis 类实现
@@ -571,17 +681,27 @@ void SpectrumAnalysis::initObject()
     // 创建频谱图表
     m_spectrumChart = new SpectrumChart();
     m_spectrumChart->setMinimumHeight(220);
+<<<<<<< HEAD
     m_spectrumChart->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_spectrumChart->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     // 将辐射源数据传递给频谱图表
     m_spectrumChart->setRadiationData(m_radarSource, m_radioSource, m_radarJammerSource, m_radioJammerSource);
+=======
+
+    // 生成测试数据
+    m_spectrumChart->generateTestData();
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 
     // 初始化样式表
     initStyles();
 
     // 添加到布局
+<<<<<<< HEAD
     ui->gridLayout->addWidget(m_spectrumChart, 0, 0);
+=======
+    ui->gridLayout->addWidget(m_spectrumChart);
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 }
 
 void SpectrumAnalysis::initStyles()
@@ -751,7 +871,11 @@ void SpectrumAnalysis::addDataImpl(const RadarSource &data)
     m_radarSource.append(data);
     if (m_spectrumChart)
     {
+<<<<<<< HEAD
         m_spectrumChart->setRadiationData(m_radarSource, m_radioSource, m_radarJammerSource, m_radioJammerSource);
+=======
+        m_spectrumChart->updateSpectrumData();
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     }
 }
 
@@ -765,7 +889,11 @@ void SpectrumAnalysis::addDataImpl(const RadioSource &data)
     m_radioSource.append(data);
     if (m_spectrumChart)
     {
+<<<<<<< HEAD
         m_spectrumChart->setRadiationData(m_radarSource, m_radioSource, m_radarJammerSource, m_radioJammerSource);
+=======
+        m_spectrumChart->updateSpectrumData();
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     }
 }
 
@@ -779,7 +907,11 @@ void SpectrumAnalysis::addDataImpl(const RadarJammerSource &data)
     m_radarJammerSource.append(data);
     if (m_spectrumChart)
     {
+<<<<<<< HEAD
         m_spectrumChart->setRadiationData(m_radarSource, m_radioSource, m_radarJammerSource, m_radioJammerSource);
+=======
+        m_spectrumChart->updateSpectrumData();
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     }
 }
 
@@ -793,7 +925,11 @@ void SpectrumAnalysis::addDataImpl(const RadioJammerSource &data)
     m_radioJammerSource.append(data);
     if (m_spectrumChart)
     {
+<<<<<<< HEAD
         m_spectrumChart->setRadiationData(m_radarSource, m_radioSource, m_radarJammerSource, m_radioJammerSource);
+=======
+        m_spectrumChart->updateSpectrumData();
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     }
 }
 
@@ -813,7 +949,11 @@ void SpectrumAnalysis::updateDataImpl(const RadarSource &data)
     m_radarSource[row] = data;
     if (m_spectrumChart)
     {
+<<<<<<< HEAD
         m_spectrumChart->setRadiationData(m_radarSource, m_radioSource, m_radarJammerSource, m_radioJammerSource);
+=======
+        m_spectrumChart->updateSpectrumData();
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     }
 }
 
@@ -833,7 +973,11 @@ void SpectrumAnalysis::updateDataImpl(const RadioSource &data)
     m_radioSource[row] = data;
     if (m_spectrumChart)
     {
+<<<<<<< HEAD
         m_spectrumChart->setRadiationData(m_radarSource, m_radioSource, m_radarJammerSource, m_radioJammerSource);
+=======
+        m_spectrumChart->updateSpectrumData();
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     }
 }
 
@@ -853,7 +997,11 @@ void SpectrumAnalysis::updateDataImpl(const RadarJammerSource &data)
     m_radarJammerSource[row] = data;
     if (m_spectrumChart)
     {
+<<<<<<< HEAD
         m_spectrumChart->setRadiationData(m_radarSource, m_radioSource, m_radarJammerSource, m_radioJammerSource);
+=======
+        m_spectrumChart->updateSpectrumData();
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     }
 }
 
@@ -873,7 +1021,11 @@ void SpectrumAnalysis::updateDataImpl(const RadioJammerSource &data)
     m_radioJammerSource[row] = data;
     if (m_spectrumChart)
     {
+<<<<<<< HEAD
         m_spectrumChart->setRadiationData(m_radarSource, m_radioSource, m_radarJammerSource, m_radioJammerSource);
+=======
+        m_spectrumChart->updateSpectrumData();
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     }
 }
 
@@ -892,7 +1044,11 @@ void SpectrumAnalysis::deleteRadarDataByName(const QString &name)
     m_radarSource.removeAt(row);
     if (m_spectrumChart)
     {
+<<<<<<< HEAD
         m_spectrumChart->setRadiationData(m_radarSource, m_radioSource, m_radarJammerSource, m_radioJammerSource);
+=======
+        m_spectrumChart->updateSpectrumData();
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     }
 }
 
@@ -911,7 +1067,11 @@ void SpectrumAnalysis::deleteRadioDataByName(const QString &name)
     m_radioSource.removeAt(row);
     if (m_spectrumChart)
     {
+<<<<<<< HEAD
         m_spectrumChart->setRadiationData(m_radarSource, m_radioSource, m_radarJammerSource, m_radioJammerSource);
+=======
+        m_spectrumChart->updateSpectrumData();
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     }
 }
 
@@ -930,7 +1090,11 @@ void SpectrumAnalysis::deleteRadarJammerDataByName(const QString &name)
     m_radarJammerSource.removeAt(row);
     if (m_spectrumChart)
     {
+<<<<<<< HEAD
         m_spectrumChart->setRadiationData(m_radarSource, m_radioSource, m_radarJammerSource, m_radioJammerSource);
+=======
+        m_spectrumChart->updateSpectrumData();
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     }
 }
 
@@ -949,8 +1113,14 @@ void SpectrumAnalysis::deleteRadioJammerDataByName(const QString &name)
     m_radioJammerSource.removeAt(row);
     if (m_spectrumChart)
     {
+<<<<<<< HEAD
         m_spectrumChart->setRadiationData(m_radarSource, m_radioSource, m_radarJammerSource, m_radioJammerSource);
     }
 }
 
 
+=======
+        m_spectrumChart->updateSpectrumData();
+    }
+}
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871

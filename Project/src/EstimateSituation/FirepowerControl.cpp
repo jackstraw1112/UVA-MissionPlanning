@@ -184,7 +184,10 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
 
     // 设备状态
     QLabel *statusLabel = new QLabel;
+<<<<<<< HEAD
     statusLabel->setProperty("name", "statusLabel");
+=======
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 
     if (item.status == QString::fromUtf8("active"))
     {
@@ -267,7 +270,10 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     rangeFrameLayout->setSpacing(4);
 
     QLabel *rangeTitle = new QLabel(QString::fromUtf8("拦截概率"));
+<<<<<<< HEAD
     rangeTitle->setProperty("name", "rangeTitle");
+=======
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 
     QFrame *rangeBar = new QFrame;
     rangeBar->setProperty("name", "rangeBar");
@@ -275,7 +281,10 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     rangeBarLayout->setContentsMargins(0, 0, 0, 0);
 
     QFrame *rangeFill = new QFrame;
+<<<<<<< HEAD
     rangeFill->setProperty("name", "rangeFill");
+=======
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 
     if (item.intercept != QString::fromUtf8("-"))
     {

@@ -10,6 +10,13 @@
 #include <QGraphicsScene>
 #include <QGraphicsRectItem>
 #include <QGraphicsTextItem>
+<<<<<<< HEAD
+=======
+#include <QLabel>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QGroupBox>
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 #include <QVector>
 #include <type_traits>
 #include "EstimateSituationStruct.h"
@@ -33,12 +40,15 @@ public:
     explicit SpectrumChart(QWidget *parent = nullptr);
     void updateSpectrumData();
     void generateTestData();
+<<<<<<< HEAD
     
     // 设置辐射源数据
     void setRadiationData(const QVector<RadarSource> &radarSource, 
                          const QVector<RadioSource> &radioSource, 
                          const QVector<RadarJammerSource> &radarJammerSource, 
                          const QVector<RadioJammerSource> &radioJammerSource);
+=======
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -62,6 +72,7 @@ private:
     };
 
     QGraphicsScene* m_scene;                // 场景
+<<<<<<< HEAD
     QVector<SpectrumBand> m_spectrumData;   // 频谱数据
     int m_hoveredIndex;                     // 悬停索引
     QGraphicsTextItem* m_tooltipItem;       // 工具提示文本
@@ -74,6 +85,12 @@ private:
     QVector<RadioJammerSource> m_radioJammerSource;  // 通信干扰辐射源数据
     
     double m_totalRange;                    // 总频率范围
+=======
+    QList<SpectrumBand> m_spectrumData;     // 频谱数据
+    int m_hoveredIndex;                     // 悬停索引
+    QGraphicsTextItem* m_tooltipItem;       // 工具提示文本
+    QGraphicsRectItem* m_tooltipBg;         // 工具提示背景
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 
     /**
      * @brief 创建频谱条
@@ -83,6 +100,7 @@ private:
      * @brief 更新工具提示
      */
     void updateTooltip();
+<<<<<<< HEAD
     
     /**
      * @brief 生成频谱数据
@@ -98,6 +116,8 @@ private:
      * @brief 更新频段的信号数量
      */
     void updateBandSignalCount(QVector<SpectrumBand> &bands, const QString &frequencyStr);
+=======
+>>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 };
 
 /**
