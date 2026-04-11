@@ -8,6 +8,7 @@
 #include <QWidget>
 #include <QVector>
 #include <type_traits>
+#include "EstimateSituationStruct.h"
 #include "AnimatedSwitch.h"
 
 QT_BEGIN_NAMESPACE
@@ -18,30 +19,6 @@ namespace Ui
 QT_END_NAMESPACE
 
 /**
- * @brief 态势控制数据结构体
- * @details 存储态势控制相关的配置数据
- */
-struct SituationControlData {
-    QString type;       // 控制类型（radar/radio/commJam/radarJam/defenseFire）
-    bool enabled;       // 是否启用
-    QString description; // 描述信息
-
-    /**
-     * @brief 默认构造函数
-     */
-    SituationControlData() = default;
-
-    /**
-     * @brief 构造函数
-     * @param t 控制类型
-     * @param e 是否启用
-     * @param desc 描述信息
-     */
-    SituationControlData(const QString &t, bool e, const QString &desc)
-        : type(t), enabled(e), description(desc) {}
-};
-
-/**
  * @brief 态势控制窗口
  * @details 管理态势显示相关的控制选项，如辐射源威力范围显示、防控火力显示等
  */
@@ -50,24 +27,8 @@ class SituationControl : public QWidget
     Q_OBJECT
 
 public:
-    /**
-     * @brief 构造函数
-     * @param parent 父窗口指针
-     */
     explicit SituationControl(QWidget *parent = nullptr);
-
-    /**
-     * @brief 析构函数
-     */
     ~SituationControl() override;
-
-private:
-    // 初始化参数（预留扩展）
-    void initParams();
-    // 初始化对象（数据、视图）
-    void initObject();
-    // 关联信号与槽函数
-    void initConnect();
 
 public:
     /**
@@ -115,8 +76,36 @@ signals:
     void controlStateChanged(const QString &type, bool enabled);
 
 private:
-    Ui::SituationControl *ui; ///< UI对象指针
-    QVector<SituationControlData> m_controlData; ///< 态势控制数据列表
+    // 初始化参数（预留扩展）
+    void initParams();
+    // 初始化对象（数据、视图）
+    void initObject();
+    // 关联信号与槽函数
+    void initConnect();
+
+    /**
+     * @brief 生成测试数据
+     * @details 生成态势控制测试数据
+     */
+    void generateTestData();
+
+private slots:
+    void onRadarSwitchChanged(bool checked);
+    void onRadioSwitchChanged(bool checked);
+    void onCommJamSwitchChanged(bool checked);
+    void onRadarJamSwitchChanged(bool checked);
+    void onDefenseFireDisplaySwitchChanged(bool checked);
+
+private:
+    Ui::SituationControl *ui;
+    QVector<SituationControlData> m_controlData;
+
+    // 动画开关指针缓存，用于后续状态同步
+    AnimatedSwitch *m_radarSwitch;
+    AnimatedSwitch *m_radioSwitch;
+    AnimatedSwitch *m_commJamSwitch;
+    AnimatedSwitch *m_radarJamSwitch;
+    AnimatedSwitch *m_defenseFireSwitch;
 
 private:
     // 类型化增删改实现：由模板公共接口分发调用
@@ -150,42 +139,23 @@ private:
 
     /**
      * @brief 根据类型查找索引
+     * @tparam T 数据类型
      * @param container 数据容器
      * @param type 目标类型
      * @return 找到的索引，未找到返回 -1
      */
-    int findIndexByType(const QVector<SituationControlData> &container, const QString &type);
-
-private slots:
-    /**
-     * @brief 雷达开关状态变更
-     * @param checked 是否启用
-     */
-    void onRadarSwitchChanged(bool checked);
-
-    /**
-     * @brief 电台开关状态变更
-     * @param checked 是否启用
-     */
-    void onRadioSwitchChanged(bool checked);
-
-    /**
-     * @brief 通信对抗开关状态变更
-     * @param checked 是否启用
-     */
-    void onCommJamSwitchChanged(bool checked);
-
-    /**
-     * @brief 雷达对抗开关状态变更
-     * @param checked 是否启用
-     */
-    void onRadarJamSwitchChanged(bool checked);
-
-    /**
-     * @brief 防控火力显示开关状态变更
-     * @param checked 是否启用
-     */
-    void onDefenseFireDisplaySwitchChanged(bool checked);
+    template <typename T>
+    int findIndexByType(const QVector<T> &container, const QString &type)
+    {
+        for (int i = 0; i < container.size(); ++i)
+        {
+            if (container.at(i).type == type)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
 };
 
 #endif // SITUATIONCONTROL_H

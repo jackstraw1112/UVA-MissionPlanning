@@ -14,8 +14,11 @@
 namespace
 {
     /**
+     *Qt 表格 / 列表控件的自定义委托（Delegate），专门用来统一控制单元格的显示样式。
+     *QStyledItemDelegate：Qt 里专门管 “控件项怎么显示” 的基类。
      * @brief 表格显示委托
      * @details 统一设置单元格文本“居中 + 大写显示”。
+     * Qt 表格 / 列表控件的自定义委托（Delegate），专门用来统一控制单元格的显示样式。
      */
     class UpperCenterTextDelegate final : public QStyledItemDelegate
     {
@@ -553,6 +556,7 @@ void RZSourceRadiation::updateDataImpl(const RadarSource &data)
  * @brief 更新电台辐射源数据
  * @param data 电台辐射源对象（按 name 匹配）
  * @details 若未找到同名记录则转为新增。
+* 这是一个更新表格数据的核心方法：根据名字，找到就更新，没找到就新增
  */
 void RZSourceRadiation::updateDataImpl(const RadioSource &data)
 {
