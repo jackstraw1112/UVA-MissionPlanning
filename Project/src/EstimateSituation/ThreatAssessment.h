@@ -28,69 +28,8 @@ class ThreatAssessment : public QWidget
     Q_OBJECT
 
 public:
-    /**
-     * @brief 构造函数
-     * @param parent 父窗口指针
-     */
     explicit ThreatAssessment(QWidget *parent = nullptr);
-
-    /**
-     * @brief 析构函数
-     */
     ~ThreatAssessment() override;
-
-private:
-    /**
-     * @brief 初始化参数
-     * @details 预留扩展
-     */
-    void initParams();
-
-    /**
-     * @brief 初始化对象
-     * @details 数据、视图、模型
-     */
-    void initObject();
-
-    /**
-     * @brief 关联信号与槽函数
-     */
-    void initConnect();
-
-    /**
-     * @brief 生成测试数据
-     * @details 生成威胁评估测试数据
-     */
-    void generateTestData();
-
-    /**
-     * @brief 初始化表格属性
-     * @details 设置表格的交互行为、字体、颜色等属性
-     */
-    void initTableViewAttr();
-
-    /**
-     * @brief 初始化数据模型
-     * @details 创建并配置数据模型
-     */
-    void initDataModel();
-
-    /**
-     * @brief 显示数据
-     * @details 将威胁数据显示到表格中
-     */
-    void displayData();
-
-    /**
-     * @brief 排序数据
-     * @details 根据威胁等级排序所有数据
-     */
-    void sortData();
-
-    /**
-     * @brief 写入模型行
-     */
-    void writeModelRow(QStandardItemModel *model, const QStringList &columns, int row = -1);
 
 public:
     /**
@@ -130,42 +69,80 @@ public:
     }
 
 private:
-    Ui::ThreatAssessment *ui;
+    // 初始化参数（预留扩展）
+    void initParams();
+    // 初始化对象（数据、视图、模型）
+    void initObject();
+    // 关联信号与槽函数
+    void initConnect();
 
-    QVector<RadarSource> m_radarSources; ///< 雷达辐射源数据
-    QVector<RadioSource> m_radioSources; ///< 通信电台数据
-    QVector<RadarJammerSource> m_radarJammerSources; ///< 雷达对抗设备数据
-    QVector<RadioJammerSource> m_radioJammerSources; ///< 通信对抗设备数据
-    QMap<QString, QStandardItemModel *> m_mapModel; ///< 数据模型映射：key 为类别名（雷达/电台/雷达干扰/通信干扰）
+    /**
+     * @brief 生成测试数据
+     * @details 生成威胁评估测试数据
+     */
+    void generateTestData();
+
+    /**
+     * @brief 初始化表格属性
+     * @details 设置表格的交互行为、字体、颜色等属性
+     */
+    void initTableViewAttr();
+
+    /**
+     * @brief 初始化数据模型
+     * @details 创建并配置数据模型
+     */
+    void initDataModel();
+
+    /**
+     * @brief 显示数据
+     * @details 将威胁数据显示到表格中
+     */
+    void displayData();
+
+    /**
+     * @brief 排序数据
+     * @details 根据威胁等级排序所有数据
+     */
+    void sortData();
+
+    /**
+     * @brief 写入模型行
+     */
+    void writeModelRow(QStandardItemModel *model, const QStringList &columns, int row = -1);
 
 private:
+    Ui::ThreatAssessment *ui;
+
+    // 雷达辐射源数据
+    QVector<RadarSource> m_radarSource;
+    // 通信电台数据
+    QVector<RadioSource> m_radioSource;
+    // 雷达对抗设备数据
+    QVector<RadarJammerSource> m_radarJammerSource;
+    // 通信对抗设备数据
+    QVector<RadioJammerSource> m_radioJammerSource;
+    // 数据模型映射：key 为类别名（雷达/电台/雷达干扰/通信干扰）
+    QMap<QString, QStandardItemModel *> m_mapModel;
+
     /**
      * @brief 统一威胁数据项结构体
      * @details 用于统一排序所有类型的威胁数据
      */
-    struct UnifiedThreatItem {
+    struct UnifiedThreatItem
+    {
         QString name;       // 目标名称
         QString threatLevel; // 威胁等级
         QString type;       // 数据类型（雷达/电台/雷达对抗/通信对抗）
         int priority;       // 威胁等级优先级（高=3, 中=2, 低=1）
 
-        /**
-         * @brief 默认构造函数
-         */
         UnifiedThreatItem() = default;
 
-        /**
-         * @brief 构造函数
-         * @param n 目标名称
-         * @param t 威胁等级
-         * @param type 数据类型
-         * @param p 威胁等级优先级
-         */
         UnifiedThreatItem(const QString &n, const QString &t, const QString &type, int p)
             : name(n), threatLevel(t), type(type), priority(p) {}
     };
 
-    QVector<UnifiedThreatItem> m_unifiedThreatData; ///< 统一威胁数据列表
+    QVector<UnifiedThreatItem> m_unifiedThreatData;
 
 private:
     // 类型化增删改实现：由模板公共接口分发调用
@@ -218,7 +195,25 @@ private:
         }
     }
 
-
+    /**
+     * @brief 根据名称查找索引
+     * @tparam T 数据类型
+     * @param container 数据容器
+     * @param name 目标名称
+     * @return 找到的索引，未找到返回 -1
+     */
+    template <typename T>
+    int findIndexByName(const QVector<T> &container, const QString &name)
+    {
+        for (int i = 0; i < container.size(); ++i)
+        {
+            if (container.at(i).name == name)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
 };
 
 #endif // THREATASSESSMENT_H

@@ -94,3 +94,39 @@ struct RadarSourceGenericData
     QString name;       // 名称
     QStringList values; // 数据值列表
 };
+
+/**
+ * @brief 防空火力设备结构体
+ * @details 存储防空火力设备的基本信息和状态
+ */
+struct FirepowerItem
+{
+    QString name;       // 设备名称
+    QString status;     // 状态（active/standby/disabled）
+    QString type;       // 类型
+    QString range;      // 射程
+    QString ammo;       // 弹药/模式
+    QString response;   // 响应时间
+    QString intercept;  // 拦截概率
+
+    FirepowerItem() = default;
+
+    FirepowerItem(const QString &n, const QString &s, const QString &t, const QString &r, const QString &a, const QString &resp, const QString &inter)
+        : name(n), status(s), type(t), range(r), ammo(a), response(resp), intercept(inter) {}
+};
+
+/**
+ * @brief 态势控制数据结构体
+ * @details 存储态势控制相关的配置数据
+ */
+struct SituationControlData
+{
+    QString type;       // 控制类型（radar/radio/commJam/radarJam/defenseFire）
+    bool enabled;       // 是否启用
+    QString description; // 描述信息
+
+    SituationControlData() = default;
+
+    SituationControlData(const QString &t, bool e, const QString &desc)
+        : type(t), enabled(e), description(desc) {}
+};

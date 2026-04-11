@@ -56,7 +56,6 @@ void FirepowerControl::initObject()
  */
 void FirepowerControl::initConnect()
 {
-    // 无需按钮连接，仅添加数据
 }
 
 /**
@@ -76,57 +75,60 @@ void FirepowerControl::generateTestData()
     // 清空数据列表
     m_firepowerData.clear();
 
-    // 添加防空火力数据
-    FirepowerItem Firepower;
-    Firepower.name = QString::fromUtf8("红旗-16 防空系统");
-    Firepower.status = QString::fromUtf8("active");
-    Firepower.type = QString::fromUtf8("中程防空");
-    Firepower.range = QString::fromUtf8("40km");
-    Firepower.ammo = QString::fromUtf8("16枚");
-    Firepower.response = QString::fromUtf8("8s");
-    Firepower.intercept = QString::fromUtf8("95%");
-    m_firepowerData.append(Firepower);
+    // ---------- 1. 红旗-16 防空系统 ----------
+    FirepowerItem firepower1;
+    firepower1.name = QString::fromUtf8("红旗-16 防空系统");
+    firepower1.status = QString::fromUtf8("active");
+    firepower1.type = QString::fromUtf8("中程防空");
+    firepower1.range = QString::fromUtf8("40km");
+    firepower1.ammo = QString::fromUtf8("16枚");
+    firepower1.response = QString::fromUtf8("8s");
+    firepower1.intercept = QString::fromUtf8("95%");
+    m_firepowerData.append(firepower1);
 
-    FirepowerItem Firepower1;
-    Firepower.name = QString::fromUtf8("PGZ-07 自行高炮");
-    Firepower.status = QString::fromUtf8("standby");
-    Firepower.type = QString::fromUtf8("末端防御");
-    Firepower.range = QString::fromUtf8("3km");
-    Firepower.ammo = QString::fromUtf8("400发");
-    Firepower.response = QString::fromUtf8("3s");
-    Firepower.intercept = QString::fromUtf8("85%");
-    m_firepowerData.append(Firepower1);
+    // ---------- 2. PGZ-07 自行高炮 ----------
+    FirepowerItem firepower2;
+    firepower2.name = QString::fromUtf8("PGZ-07 自行高炮");
+    firepower2.status = QString::fromUtf8("standby");
+    firepower2.type = QString::fromUtf8("末端防御");
+    firepower2.range = QString::fromUtf8("3km");
+    firepower2.ammo = QString::fromUtf8("400发");
+    firepower2.response = QString::fromUtf8("3s");
+    firepower2.intercept = QString::fromUtf8("85%");
+    m_firepowerData.append(firepower2);
 
-    FirepowerItem Firepower2;
-    Firepower.name = QString::fromUtf8("道尔-M1 防空车");
-    Firepower.status = QString::fromUtf8("active");
-    Firepower.type = QString::fromUtf8("低空防御");
-    Firepower.range = QString::fromUtf8("15km");
-    Firepower.ammo = QString::fromUtf8("8枚");
-    Firepower.response = QString::fromUtf8("5s");
-    Firepower.intercept = QString::fromUtf8("90%");
-    m_firepowerData.append(Firepower2);
+    // ---------- 3. 道尔-M1 防空车 ----------
+    FirepowerItem firepower3;
+    firepower3.name = QString::fromUtf8("道尔-M1 防空车");
+    firepower3.status = QString::fromUtf8("active");
+    firepower3.type = QString::fromUtf8("低空防御");
+    firepower3.range = QString::fromUtf8("15km");
+    firepower3.ammo = QString::fromUtf8("8枚");
+    firepower3.response = QString::fromUtf8("5s");
+    firepower3.intercept = QString::fromUtf8("90%");
+    m_firepowerData.append(firepower3);
 
-    FirepowerItem Firepower3;
-    Firepower.name = QString::fromUtf8("便携式防空导弹");
-    Firepower.status = QString::fromUtf8("standby");
-    Firepower.type = QString::fromUtf8("单兵武器");
-    Firepower.range = QString::fromUtf8("5km");
-    Firepower.ammo = QString::fromUtf8("2枚");
-    Firepower.response = QString::fromUtf8("10s");
-    Firepower.intercept = QString::fromUtf8("80%");
-    m_firepowerData.append(Firepower3);
+    // ---------- 4. 便携式防空导弹 ----------
+    FirepowerItem firepower4;
+    firepower4.name = QString::fromUtf8("便携式防空导弹");
+    firepower4.status = QString::fromUtf8("standby");
+    firepower4.type = QString::fromUtf8("单兵武器");
+    firepower4.range = QString::fromUtf8("5km");
+    firepower4.ammo = QString::fromUtf8("2枚");
+    firepower4.response = QString::fromUtf8("10s");
+    firepower4.intercept = QString::fromUtf8("80%");
+    m_firepowerData.append(firepower4);
 
-    FirepowerItem Firepower4;
-    Firepower.name = QString::fromUtf8("电子对抗系统");
-    Firepower.status = QString::fromUtf8("disabled");
-    Firepower.type = QString::fromUtf8("软杀伤");
-    Firepower.range = QString::fromUtf8("20km");
-    Firepower.ammo = QString::fromUtf8("压制/欺骗");
-    Firepower.response = QString::fromUtf8("-");
-    Firepower.intercept = QString::fromUtf8("-");
-    m_firepowerData.append(Firepower4);
-
+    // ---------- 5. 电子对抗系统 ----------
+    FirepowerItem firepower5;
+    firepower5.name = QString::fromUtf8("电子对抗系统");
+    firepower5.status = QString::fromUtf8("disabled");
+    firepower5.type = QString::fromUtf8("软杀伤");
+    firepower5.range = QString::fromUtf8("20km");
+    firepower5.ammo = QString::fromUtf8("压制/欺骗");
+    firepower5.response = QString::fromUtf8("-");
+    firepower5.intercept = QString::fromUtf8("-");
+    m_firepowerData.append(firepower5);
 }
 
 /**
@@ -137,14 +139,22 @@ void FirepowerControl::displayData()
 {
     // 清空布局
     QLayoutItem *item;
-    while ((item = ui->verticalLayout_3->takeAt(0)) != nullptr) {
+    while ((item = ui->verticalLayout_3->takeAt(0)) != nullptr)
+    {
         delete item->widget();
         delete item;
     }
 
     // 添加所有设备项
-    for (const auto &firepower : m_firepowerData) {
+    for (const auto &firepower : m_firepowerData)
+    {
         addFirepowerItem(firepower);
+    }
+
+    // 更新单位数量标签
+    if (ui->unitCountLabel)
+    {
+        ui->unitCountLabel->setText(QString::fromUtf8("%1个单位").arg(m_firepowerData.size()));
     }
 }
 
@@ -157,6 +167,7 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
 {
     // 创建设备项框架
     QFrame *firepowerItem = new QFrame;
+    firepowerItem->setObjectName("firepowerItem");
     QVBoxLayout *itemLayout = new QVBoxLayout(firepowerItem);
     itemLayout->setContentsMargins(0, 0, 0, 0);
     itemLayout->setSpacing(8);
@@ -169,16 +180,23 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
 
     // 设备名称
     QLabel *nameLabel = new QLabel(item.name);
+    nameLabel->setProperty("name", "nameLabel");
 
     // 设备状态
     QLabel *statusLabel = new QLabel;
-    
-    if (item.status == "active") {
-        statusLabel->setText("在线");
-    } else if (item.status == "standby") {
-        statusLabel->setText("待机");
-    } else {
-        statusLabel->setText("离线");
+    statusLabel->setProperty("name", "statusLabel");
+
+    if (item.status == QString::fromUtf8("active"))
+    {
+        statusLabel->setText(QString::fromUtf8("在线"));
+    }
+    else if (item.status == QString::fromUtf8("standby"))
+    {
+        statusLabel->setText(QString::fromUtf8("待机"));
+    }
+    else
+    {
+        statusLabel->setText(QString::fromUtf8("离线"));
     }
 
     headerLayout->addWidget(nameLabel);
@@ -196,8 +214,9 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     QVBoxLayout *typeBoxLayout = new QVBoxLayout(typeBox);
     typeBoxLayout->setContentsMargins(0, 0, 0, 0);
     typeBoxLayout->setSpacing(2);
-    QLabel *typeLabel = new QLabel("类型");
+    QLabel *typeLabel = new QLabel(QString::fromUtf8("类型"));
     QLabel *typeValue = new QLabel(item.type);
+    typeValue->setProperty("name", "typeValue");
     typeBoxLayout->addWidget(typeLabel);
     typeBoxLayout->addWidget(typeValue);
 
@@ -206,8 +225,9 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     QVBoxLayout *rangeBoxLayout = new QVBoxLayout(rangeBox);
     rangeBoxLayout->setContentsMargins(0, 0, 0, 0);
     rangeBoxLayout->setSpacing(2);
-    QLabel *rangeLabel = new QLabel("射程");
+    QLabel *rangeLabel = new QLabel(QString::fromUtf8("射程"));
     QLabel *rangeValue = new QLabel(item.range);
+    rangeValue->setProperty("name", "rangeValue");
     rangeBoxLayout->addWidget(rangeLabel);
     rangeBoxLayout->addWidget(rangeValue);
 
@@ -216,8 +236,9 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     QVBoxLayout *ammoBoxLayout = new QVBoxLayout(ammoBox);
     ammoBoxLayout->setContentsMargins(0, 0, 0, 0);
     ammoBoxLayout->setSpacing(2);
-    QLabel *ammoLabel = new QLabel(item.ammo.contains("枚") ? "弹药" : "模式");
+    QLabel *ammoLabel = new QLabel(item.ammo.contains(QString::fromUtf8("枚")) ? QString::fromUtf8("弹药") : QString::fromUtf8("模式"));
     QLabel *ammoValue = new QLabel(item.ammo);
+    ammoValue->setProperty("name", "ammoValue");
     ammoBoxLayout->addWidget(ammoLabel);
     ammoBoxLayout->addWidget(ammoValue);
 
@@ -226,8 +247,9 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     QVBoxLayout *responseBoxLayout = new QVBoxLayout(responseBox);
     responseBoxLayout->setContentsMargins(0, 0, 0, 0);
     responseBoxLayout->setSpacing(2);
-    QLabel *responseLabel = new QLabel("响应");
+    QLabel *responseLabel = new QLabel(QString::fromUtf8("响应"));
     QLabel *responseValue = new QLabel(item.response);
+    responseValue->setProperty("name", "responseValue");
     responseBoxLayout->addWidget(responseLabel);
     responseBoxLayout->addWidget(responseValue);
 
@@ -244,17 +266,20 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     rangeFrameLayout->setContentsMargins(0, 0, 0, 0);
     rangeFrameLayout->setSpacing(4);
 
-    QLabel *rangeTitle = new QLabel("拦截概率");
+    QLabel *rangeTitle = new QLabel(QString::fromUtf8("拦截概率"));
+    rangeTitle->setProperty("name", "rangeTitle");
 
     QFrame *rangeBar = new QFrame;
+    rangeBar->setProperty("name", "rangeBar");
     QHBoxLayout *rangeBarLayout = new QHBoxLayout(rangeBar);
     rangeBarLayout->setContentsMargins(0, 0, 0, 0);
 
     QFrame *rangeFill = new QFrame;
-    
-    // 设置填充宽度
-    if (item.intercept != "-") {
-        int percent = QString(item.intercept).replace("%", "").toInt();
+    rangeFill->setProperty("name", "rangeFill");
+
+    if (item.intercept != QString::fromUtf8("-"))
+    {
+        int percent = QString(item.intercept).replace(QString::fromUtf8("%"), QString()).toInt();
         rangeFill->setFixedWidth(percent * rangeBar->width() / 100);
     }
 
@@ -267,24 +292,6 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
 
     // 添加到布局
     ui->verticalLayout_3->addWidget(firepowerItem);
-}
-
-/**
- * @brief 根据名称查找索引
- * @param container 数据容器
- * @param name 目标名称
- * @return 找到的索引，未找到返回 -1
- */
-int FirepowerControl::findIndexByName(const QVector<FirepowerItem> &container, const QString &name)
-{
-    for (int i = 0; i < container.size(); ++i)
-    {
-        if (container.at(i).name == name)
-        {
-            return i;
-        }
-    }
-    return -1;
 }
 
 /**
@@ -327,6 +334,6 @@ void FirepowerControl::deleteFirepowerDataByName(const QString &name)
     {
         return;
     }
-    m_firepowerData.remove(row);
+    m_firepowerData.removeAt(row);
     displayData();
 }

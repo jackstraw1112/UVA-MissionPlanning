@@ -8,6 +8,7 @@
 #include <QWidget>
 #include <QMap>
 #include <QStandardItemModel>
+#include <QVector>
 #include <type_traits>
 #include "EstimateSituationStruct.h"
 
@@ -20,7 +21,7 @@ QT_END_NAMESPACE
 
 /**
  * @brief 辐射源列表窗口
- * @details 管理雷达、电台、雷达干扰、通信干扰四类数据的模型初始化、显示与切换。
+ * @details 管理雷达、电台、雷达干扰、通信干扰四类数据的模型初始化、显示与切换，以及态势控制功能。
  */
 class RZSourceRadiation : public QWidget
 {
@@ -106,40 +107,71 @@ private:
 
 public:
     /**
-     * @brief 添加辐射源数据（模板接口）
-     * @tparam T 辐射源类型：RadarSource / RadioSource / RadarJammerSource / RadioJammerSource
+     * @brief 添加数据（模板接口）
+     * @tparam T 数据类型：RadarSource / RadioSource / RadarJammerSource / RadioJammerSource / SituationControlData
      * @param data 待添加的数据对象
      * @details 调用后会同步更新对应缓存与界面模型。
      */
     template <typename T>
     void addData(const T &data)
     {
-        addDataImpl(data);
+        if constexpr (std::is_same_v<T, SituationControlData>)
+        {
+            addControlDataImpl(data);
+        }
+        else
+        {
+            addDataImpl(data);
+        }
     }
 
     /**
-     * @brief 更新辐射源数据（模板接口）
-     * @tparam T 辐射源类型：RadarSource / RadioSource / RadarJammerSource / RadioJammerSource
-     * @param data 待更新的数据对象（按 name 匹配）
-     * @details 若未找到同名数据，则按新增处理。
+     * @brief 更新数据（模板接口）
+     * @tparam T 数据类型：RadarSource / RadioSource / RadarJammerSource / RadioJammerSource / SituationControlData
+     * @param data 待更新的数据对象（按 name 或 type 匹配）
+     * @details 若未找到同名或同类型数据，则按新增处理。
      */
     template <typename T>
     void updateData(const T &data)
     {
-        updateDataImpl(data);
+        if constexpr (std::is_same_v<T, SituationControlData>)
+        {
+            updateControlDataImpl(data);
+        }
+        else
+        {
+            updateDataImpl(data);
+        }
     }
 
     /**
-     * @brief 删除辐射源数据（模板接口）
-     * @tparam T 辐射源类型：RadarSource / RadioSource / RadarJammerSource / RadioJammerSource
-     * @param name 待删除目标名称（按 name 匹配）
+     * @brief 删除数据（模板接口）
+     * @tparam T 数据类型：RadarSource / RadioSource / RadarJammerSource / RadioJammerSource / SituationControlData
+     * @param nameOrType 待删除目标名称或类型（按 name 或 type 匹配）
      * @details 调用后会同步删除对应缓存和界面模型中的行。
      */
     template <typename T>
-    void deleteData(const QString &name)
+    void deleteData(const QString &nameOrType)
     {
-        deleteDataImpl<T>(name);
+        if constexpr (std::is_same_v<T, SituationControlData>)
+        {
+            deleteControlDataImpl<T>(nameOrType);
+        }
+        else
+        {
+            deleteDataImpl<T>(nameOrType);
+        }
     }
+
+
+
+signals:
+    /**
+     * @brief 控制状态变更信号
+     * @param type 控制类型
+     * @param enabled 是否启用
+     */
+    void controlStateChanged(const QString &type, bool enabled);
 
 private:
     Ui::RZSourceRadiation *ui;
@@ -156,6 +188,17 @@ private:
     // 数据模型映射：key 为类别名（雷达/电台/雷达干扰/通信干扰）
     QMap<QString, QStandardItemModel *> m_mapModel;
 
+    // 态势控制数据
+    QVector<SituationControlData> m_controlData;
+
+private:
+    // 态势控制开关槽函数
+    void onRadarSwitchChanged(bool checked);
+    void onRadioSwitchChanged(bool checked);
+    void onCommJamSwitchChanged(bool checked);
+    void onRadarJamSwitchChanged(bool checked);
+    void onDefenseFireDisplaySwitchChanged(bool checked);
+
 private:
     // 类型化增删改实现：由模板公共接口分发调用
     // --- Add ---
@@ -163,18 +206,21 @@ private:
     void addDataImpl(const RadioSource &data);
     void addDataImpl(const RadarJammerSource &data);
     void addDataImpl(const RadioJammerSource &data);
+    void addControlDataImpl(const SituationControlData &data);
 
     // --- Update ---
     void updateDataImpl(const RadarSource &data);
     void updateDataImpl(const RadioSource &data);
     void updateDataImpl(const RadarJammerSource &data);
     void updateDataImpl(const RadioJammerSource &data);
+    void updateControlDataImpl(const SituationControlData &data);
 
-    // --- Delete by name ---
+    // --- Delete by name / type ---
     void deleteRadarDataByName(const QString &name);
     void deleteRadioDataByName(const QString &name);
     void deleteRadarJammerDataByName(const QString &name);
     void deleteRadioJammerDataByName(const QString &name);
+    void deleteControlDataByType(const QString &type);
 
     /**
      * @brief 删除实现分发（模板内部函数）
@@ -205,6 +251,45 @@ private:
         {
             static_assert(std::is_same_v<T, void>, "Unsupported type for deleteData<T>()");
         }
+    }
+
+    /**
+     * @brief 删除态势控制实现分发（模板内部函数）
+     * @tparam T 目标数据类型
+     * @param type 待删除目标类型
+     * @details 通过 if constexpr 在编译期分发到对应删除函数。
+     */
+    template <typename T>
+    void deleteControlDataImpl(const QString &type)
+    {
+        if constexpr (std::is_same_v<T, SituationControlData>)
+        {
+            deleteControlDataByType(type);
+        }
+        else
+        {
+            static_assert(std::is_same_v<T, void>, "Unsupported type for deleteControlData<T>()");
+        }
+    }
+
+    /**
+     * @brief 根据类型查找索引
+     * @tparam T 数据类型
+     * @param container 数据容器
+     * @param type 目标类型
+     * @return 找到的索引，未找到返回 -1
+     */
+    template <typename T>
+    int findIndexByType(const QVector<T> &container, const QString &type)
+    {
+        for (int i = 0; i < container.size(); ++i)
+        {
+            if (container.at(i).type == type)
+            {
+                return i;
+            }
+        }
+        return -1;
     }
 };
 

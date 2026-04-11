@@ -8,6 +8,7 @@
 #include <QWidget>
 #include <QVector>
 #include <type_traits>
+#include "EstimateSituationStruct.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -15,38 +16,6 @@ namespace Ui
     class FirepowerControl;
 }
 QT_END_NAMESPACE
-
-/**
- * @brief 防空火力设备结构体
- * @details 存储防空火力设备的基本信息和状态
- */
-struct FirepowerItem {
-    QString name;       // 设备名称
-    QString status;     // 状态（active/standby/disabled）
-    QString type;       // 类型
-    QString range ;      // 射程
-    QString ammo;       // 弹药/模式
-    QString response;   // 响应时间
-    QString intercept;  // 拦截概率
-
-    /**
-     * @brief 默认构造函数
-     */
-    FirepowerItem() = default;
-
-    /**
-     * @brief 构造函数
-     * @param n 设备名称
-     * @param s 状态
-     * @param t 类型
-     * @param r 射程
-     * @param a 弹药/模式
-     * @param resp 响应时间
-     * @param inter 拦截概率
-     */
-    FirepowerItem(const QString &n, const QString &s, const QString &t, const QString &r, const QString &a, const QString &resp, const QString &inter)
-        : name(n), status(s), type(t), range(r), ammo(a), response(resp), intercept(inter) {}
-};
 
 /**
  * @brief 防空火力控制窗口
@@ -59,33 +28,6 @@ class FirepowerControl : public QWidget
 public:
     explicit FirepowerControl(QWidget *parent = nullptr);
     ~FirepowerControl() override;
-
-private:
-    // 初始化参数（预留扩展）
-    void initParams();
-    // 初始化对象（数据、视图）
-    void initObject();
-    // 关联信号与槽函数
-    void initConnect();
-
-    /**
-     * @brief 生成测试数据
-     * @details 生成防空火力测试数据
-     */
-    void generateTestData();
-
-    /**
-     * @brief 显示数据
-     * @details 将防空火力数据显示到界面中
-     */
-    void displayData();
-
-    /**
-     * @brief 添加设备项
-     * @details 根据设备数据创建并添加设备项到界面
-     * @param item 设备数据
-     */
-    void addFirepowerItem(const FirepowerItem &item);
 
 public:
     /**
@@ -125,8 +67,35 @@ public:
     }
 
 private:
+    // 初始化参数（预留扩展）
+    void initParams();
+    // 初始化对象（数据、视图）
+    void initObject();
+    // 关联信号与槽函数
+    void initConnect();
+
+    /**
+     * @brief 生成测试数据
+     * @details 生成防空火力测试数据
+     */
+    void generateTestData();
+
+    /**
+     * @brief 显示数据
+     * @details 将防空火力数据显示到界面中
+     */
+    void displayData();
+
+    /**
+     * @brief 添加设备项
+     * @details 根据设备数据创建并添加设备项到界面
+     * @param item 设备数据
+     */
+    void addFirepowerItem(const FirepowerItem &item);
+
+private:
     Ui::FirepowerControl *ui;
-    QVector<FirepowerItem> m_firepowerData;   // 防空火力数据列表
+    QVector<FirepowerItem> m_firepowerData;
 
 private:
     // 类型化增删改实现：由模板公共接口分发调用
@@ -160,11 +129,23 @@ private:
 
     /**
      * @brief 根据名称查找索引
+     * @tparam T 数据类型
      * @param container 数据容器
      * @param name 目标名称
      * @return 找到的索引，未找到返回 -1
      */
-    int findIndexByName(const QVector<FirepowerItem> &container, const QString &name);
+    template <typename T>
+    int findIndexByName(const QVector<T> &container, const QString &name)
+    {
+        for (int i = 0; i < container.size(); ++i)
+        {
+            if (container.at(i).name == name)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
 };
 
 #endif // FIREPOWERCONTROL_H
