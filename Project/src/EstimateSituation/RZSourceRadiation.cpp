@@ -11,17 +11,14 @@
 #include <QPushButton>
 #include <QStyledItemDelegate>
 
+
 namespace
 {
     /**
      *Qt 表格 / 列表控件的自定义委托（Delegate），专门用来统一控制单元格的显示样式。
      *QStyledItemDelegate：Qt 里专门管 “控件项怎么显示” 的基类。
      * @brief 表格显示委托
-<<<<<<< HEAD
      * @details 统一设置单元格文本"居中 + 大写显示"。
-=======
-     * @details 统一设置单元格文本“居中 + 大写显示”。
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
      * Qt 表格 / 列表控件的自定义委托（Delegate），专门用来统一控制单元格的显示样式。
      */
     class UpperCenterTextDelegate final : public QStyledItemDelegate

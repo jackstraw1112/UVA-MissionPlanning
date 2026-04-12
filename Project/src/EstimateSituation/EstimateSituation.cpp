@@ -8,10 +8,6 @@
 #include "SpectrumAnalysis.h"
 #include "ThreatAssessment.h"
 #include "FirepowerControl.h"
-<<<<<<< HEAD
-=======
-#include "SituationControl.h"
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 #include <QVBoxLayout>
 #include <QSplitter>
 #include <QScrollArea>
@@ -22,10 +18,6 @@ EstimateSituation::EstimateSituation(QWidget *parent)
     , m_spectrumAnalysis(nullptr)
     , m_threatAssessment(nullptr)
     , m_firepowerControl(nullptr)
-<<<<<<< HEAD
-=======
-    , m_situationControl(nullptr)
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 {
     ui->setupUi(this);
 
@@ -52,7 +44,6 @@ void EstimateSituation::initObject()
     m_spectrumAnalysis = new SpectrumAnalysis(this);
     m_threatAssessment = new ThreatAssessment(this);
     m_firepowerControl = new FirepowerControl(this);
-<<<<<<< HEAD
 
     // 设置每个模块的最小大小
     m_rzSourceRadiation->setMinimumHeight(400);
@@ -92,58 +83,15 @@ void EstimateSituation::initObject()
     mainSizes << 600 << 600;
     mainSplitter->setSizes(mainSizes);
     mainSplitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-=======
-    m_situationControl = new SituationControl(this);
-
-    // 设置每个模块的最小高度
-    m_rzSourceRadiation->setMinimumHeight(400);
-    m_spectrumAnalysis->setMinimumHeight(500);
-    m_threatAssessment->setMinimumHeight(400);
-    m_firepowerControl->setMinimumHeight(400);
-    m_situationControl->setMinimumHeight(300);
-
-    // 创建垂直分割器
-    QSplitter *verticalSplitter = new QSplitter(Qt::Vertical);
-    verticalSplitter->addWidget(m_rzSourceRadiation);
-    verticalSplitter->addWidget(m_spectrumAnalysis);
-    verticalSplitter->addWidget(m_firepowerControl);
-    verticalSplitter->addWidget(m_situationControl);
-    verticalSplitter->addWidget(m_threatAssessment);
-    verticalSplitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-    // 设置初始分割器大小
-    QList<int> sizes;
-    sizes << 400 << 500 << 400 << 400 << 300;
-    verticalSplitter->setSizes(sizes);
-
-    // 创建滚动区域
-    QScrollArea *scrollArea = new QScrollArea;
-    scrollArea->setWidgetResizable(true);
-    scrollArea->setWidget(verticalSplitter);
-    scrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 
     // 设置主布局
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
-<<<<<<< HEAD
     mainLayout->addWidget(mainSplitter);
-=======
-    mainLayout->addWidget(scrollArea);
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 }
 
 void EstimateSituation::initConnect()
 {
-<<<<<<< HEAD
-=======
-    connect(m_situationControl, &SituationControl::controlStateChanged,
-            this, [this](const QString &type, bool enabled)
-            {
-                Q_UNUSED(type)
-                Q_UNUSED(enabled)
-            });
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 }
 
 // ==============================================================================
@@ -185,11 +133,7 @@ void EstimateSituation::addDataImpl(const FirepowerItem &data)
 
 void EstimateSituation::addDataImpl(const SituationControlData &data)
 {
-<<<<<<< HEAD
     if (m_rzSourceRadiation) m_rzSourceRadiation->addData(data);
-=======
-    if (m_situationControl) m_situationControl->addData(data);
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 }
 
 // ==============================================================================
@@ -231,11 +175,7 @@ void EstimateSituation::updateDataImpl(const FirepowerItem &data)
 
 void EstimateSituation::updateDataImpl(const SituationControlData &data)
 {
-<<<<<<< HEAD
     if (m_rzSourceRadiation) m_rzSourceRadiation->updateData(data);
-=======
-    if (m_situationControl) m_situationControl->updateData(data);
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 }
 
 // ==============================================================================
@@ -277,9 +217,5 @@ void EstimateSituation::deleteFirepowerDataByName(const QString &name)
 
 void EstimateSituation::deleteControlDataByType(const QString &type)
 {
-<<<<<<< HEAD
     if (m_rzSourceRadiation) m_rzSourceRadiation->deleteData<SituationControlData>(type);
-=======
-    if (m_situationControl) m_situationControl->deleteData<SituationControlData>(type);
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 }

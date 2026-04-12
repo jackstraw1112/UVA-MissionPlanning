@@ -13,11 +13,7 @@
   <property name="windowTitle">
    <string>RZSourceRadiation</string>
   </property>
-<<<<<<< HEAD
   <layout class="QGridLayout" name="gridLayout_2">
-=======
-  <layout class="QGridLayout" name="gridLayout">
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
    <item row="0" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <property name="leftMargin">
@@ -55,7 +51,6 @@
     </layout>
    </item>
    <item row="1" column="0">
-<<<<<<< HEAD
     <widget class="QWidget" name="radiationWidget" native="true">
      <layout class="QGridLayout" name="gridLayout">
       <item row="1" column="0">
@@ -236,63 +231,6 @@
        </layout>
       </item>
      </layout>
-=======
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QPushButton" name="btnRadar">
-       <property name="text">
-        <string>雷达</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnRadio">
-       <property name="text">
-        <string>电台</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnRadioJam">
-       <property name="text">
-        <string>通信对抗</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnRadarJam">
-       <property name="text">
-        <string>雷达对抗</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>37</width>
-         <height>17</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item row="2" column="0">
-    <widget class="QTableView" name="tableView">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="alternatingRowColors">
-      <bool>true</bool>
-     </property>
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
     </widget>
    </item>
   </layout>

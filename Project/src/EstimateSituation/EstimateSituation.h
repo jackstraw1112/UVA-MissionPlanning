@@ -20,10 +20,6 @@ class RZSourceRadiation;
 class SpectrumAnalysis;
 class ThreatAssessment;
 class FirepowerControl;
-<<<<<<< HEAD
-=======
-class SituationControl;
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 
 /**
  * @brief 态势估计主窗口
@@ -90,11 +86,7 @@ private:
     SpectrumAnalysis *m_spectrumAnalysis;
     ThreatAssessment *m_threatAssessment;
     FirepowerControl *m_firepowerControl;
-<<<<<<< HEAD
 
-=======
-    SituationControl *m_situationControl;
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 
 private:
     // 类型化增删改实现：由模板公共接口分发调用
@@ -150,13 +142,10 @@ private:
         {
             deleteFirepowerDataByName(name);
         }
-<<<<<<< HEAD
         else if constexpr (std::is_same_v<T, SituationControlData>)
         {
             deleteControlDataByType(name);
         }
-=======
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
         else
         {
             static_assert(std::is_same_v<T, void>, "Unsupported type for deleteData<T>()");

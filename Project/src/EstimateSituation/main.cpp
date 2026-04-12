@@ -5,7 +5,7 @@
 #include <QApplication>
 #include <QStyleFactory>
 #include <QTextCodec>
-
+#include "SpectrumAnalysis.h"
 #include "EstimateSituation.h"
 
 int main(int argc, char *argv[])
@@ -18,6 +18,9 @@ int main(int argc, char *argv[])
     // 创建并显示主窗口
     EstimateSituation w;
     w.show();
+    // SpectrumAnalysis s;
+    // s.show();
+
 
     return app.exec();
 }

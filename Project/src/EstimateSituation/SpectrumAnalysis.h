@@ -10,14 +10,8 @@
 #include <QGraphicsScene>
 #include <QGraphicsRectItem>
 #include <QGraphicsTextItem>
-<<<<<<< HEAD
-=======
-#include <QLabel>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QGroupBox>
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
 #include <QVector>
+#include <QObject>
 #include <type_traits>
 #include "EstimateSituationStruct.h"
 
@@ -30,7 +24,9 @@ QT_END_NAMESPACE
 
 /**
  * @brief 频谱分析图表
- * @details 绘制频谱分析图表，显示不同频段的能量分布
+ * @details 基于 QGraphicsView 绘制频谱分析柱状图，显示不同频段的频率范围和信号数量。
+ *          支持鼠标悬停显示频段详细信息（频段名称、频率范围、信号数量）。
+ *          频谱范围覆盖 HF/VHF/UHF/L/S/C/X/Ku/K/Ka 等频段。
  */
 class SpectrumChart : public QGraphicsView
 {
@@ -38,91 +34,124 @@ class SpectrumChart : public QGraphicsView
 
 public:
     explicit SpectrumChart(QWidget *parent = nullptr);
-    void updateSpectrumData();
-    void generateTestData();
-<<<<<<< HEAD
-    
-    // 设置辐射源数据
-    void setRadiationData(const QVector<RadarSource> &radarSource, 
-                         const QVector<RadioSource> &radioSource, 
-                         const QVector<RadarJammerSource> &radarJammerSource, 
-                         const QVector<RadioJammerSource> &radioJammerSource);
-=======
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
+    ~SpectrumChart() override;
 
-protected:
-    void resizeEvent(QResizeEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void leaveEvent(QEvent *event) override;
+    /**
+     * @brief 设置辐射源数据并重绘柱状图
+     * @param radarSource 雷达辐射源数据
+     * @param radioSource 电台辐射源数据
+     * @param radarJammerSource 雷达干扰辐射源数据
+     * @param radioJammerSource 通信干扰辐射源数据
+     */
+    void setData(const QVector<RadarSource> &radarSource,
+                 const QVector<RadioSource> &radioSource,
+                 const QVector<RadarJammerSource> &radarJammerSource,
+                 const QVector<RadioJammerSource> &radioJammerSource);
+
+    /**
+     * @brief 绘制柱状图
+     * @details 收集所有辐射源的频率范围，按频率比例绘制红色半透明柱状图，
+     *          柱状图宽度由频率带宽决定，支持重叠显示。
+     */
+    void drawBarChart();
+
+    /**
+     * @brief 计算频率范围的起始和结束值（MHz）
+     * @param frequencyStr 频率字符串，如 "5.2~6.1GHz"、"150~170MHz" 或 "Ku波段"
+     * @return 频率范围的起始和结束值（MHz），解析失败返回 (0, 100)
+     */
+    QPair<double, double> calculateFrequencyRange(const QString &frequencyStr);
+
+    /**
+     * @brief 计算频率带宽（MHz）
+     * @param frequencyStr 频率字符串
+     * @return 带宽值（MHz）
+     */
+    double calculateBandwidth(const QString &frequencyStr);
 
 private:
-    /**
-     * @brief 频谱频段结构
-     */
-    struct SpectrumBand
-    {
-        QString name;       // 频段名称
-        QString range;      // 频率范围
-        QColor color;       // 显示颜色
-        int height;         // 高度（能量占比）
-        int signalCount;    // 信号数量
-        QRectF rect;        // 矩形区域
-        QGraphicsRectItem *rectItem;  // 矩形项
-        QGraphicsTextItem *labelItem; // 标签项
-    };
+    // 图形场景
+    QGraphicsScene *m_scene;                // 图形场景
+    int m_hoveredIndex;                     // 当前悬停的频段索引，-1 表示无悬停
+    QGraphicsTextItem *m_tooltipItem;       // 工具提示文本
+    QGraphicsRectItem *m_tooltipBg;         // 工具提示背景
 
-    QGraphicsScene* m_scene;                // 场景
-<<<<<<< HEAD
-    QVector<SpectrumBand> m_spectrumData;   // 频谱数据
-    int m_hoveredIndex;                     // 悬停索引
-    QGraphicsTextItem* m_tooltipItem;       // 工具提示文本
-    QGraphicsRectItem* m_tooltipBg;         // 工具提示背景
-    
-    // 辐射源数据
+    // 辐射源数据缓存
     QVector<RadarSource> m_radarSource;              // 雷达辐射源数据
     QVector<RadioSource> m_radioSource;              // 电台辐射源数据
     QVector<RadarJammerSource> m_radarJammerSource;  // 雷达干扰辐射源数据
     QVector<RadioJammerSource> m_radioJammerSource;  // 通信干扰辐射源数据
-    
-    double m_totalRange;                    // 总频率范围
-=======
-    QList<SpectrumBand> m_spectrumData;     // 频谱数据
-    int m_hoveredIndex;                     // 悬停索引
-    QGraphicsTextItem* m_tooltipItem;       // 工具提示文本
-    QGraphicsRectItem* m_tooltipBg;         // 工具提示背景
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
+
+    // 频率范围信息，用于鼠标悬浮检测
+    QVector<FrequencyRangeInfo> m_rangeInfos;
+
+    double m_totalRange;                    // 总频率范围（MHz），用于按比例分配频段宽度
 
     /**
-     * @brief 创建频谱条
+     * @brief 初始化场景
+     * @details 清空场景并设置浅灰色背景。
      */
-    void createSpectrumBars();
+    void initScene();
+
     /**
-     * @brief 更新工具提示
+     * @brief 清理场景
+     * @details 清空频谱数据、移除所有图形项并重置悬停状态。
      */
-    void updateTooltip();
-<<<<<<< HEAD
-    
+    void clearScene();
+
     /**
-     * @brief 生成频谱数据
+     * @brief 计算重叠数量
+     * @param targetRange 目标频率范围
+     * @return 与目标范围存在重叠的频率范围数量
      */
-    void generateSpectrumData();
-    
+    int calculateOverlapCount(const QPair<double, double> &targetRange);
+
     /**
-     * @brief 统计各频段的信号数量
+     * @brief 计算频率范围的最小值和最大值
+     * @return 频率范围的最小值和最大值（MHz），无数据时返回 (0, 1000)
      */
-    void countSignalsInBands(QVector<SpectrumBand> &bands);
-    
+    QPair<double, double> getFrequencyRangeMinMax();
+
     /**
-     * @brief 更新频段的信号数量
+     * @brief 根据频率获取频段名称
+     * @param freq 频率值（MHz）
+     * @return 频段名称，如 "HF频段"、"VHF频段"、"Ku频段" 等
+     * @details 频段划分标准：
+     *          HF  < 30MHz,  VHF < 300MHz, UHF < 1000MHz,
+     *          L   < 2000MHz, S   < 4000MHz, C   < 8000MHz,
+     *          X   < 12000MHz, Ku  < 18000MHz, K  < 26500MHz,
+     *          Ka  < 40000MHz, 其余为毫米波频段
      */
-    void updateBandSignalCount(QVector<SpectrumBand> &bands, const QString &frequencyStr);
-=======
->>>>>>> dee2626fa64e35753e5129f075f393e933af6871
+    QString getBandName(double freq);
+
+    /**
+     * @brief 构建频率范围显示文本
+     * @param frequencyStr 频率字符串，如 "5.2~6.1GHz" 或 "Ku波段"
+     * @return 用于悬浮提示的频率范围文本
+     * @details 波段名称自动转换为具体频率范围，数值型频率范围直接返回原字符串。
+     */
+    QString buildFrequencyDisplay(const QString &frequencyStr);
+
+    /**
+     * @brief 鼠标移动事件
+     * @param event 鼠标事件
+     * @details 根据鼠标位置换算对应频率，查找包含该频率的所有频率范围，
+     *          选取最窄（最具体）的范围作为目标，显示悬浮提示。
+     */
+    void mouseMoveEvent(QMouseEvent *event) override;
+
+    /**
+     * @brief 鼠标离开事件
+     * @param event 事件对象
+     * @details 鼠标离开图表区域时隐藏悬浮提示。
+     */
+    void leaveEvent(QEvent *event) override;
 };
 
 /**
  * @brief 频谱分析窗口
- * @details 显示频谱分析图表，支持实时频谱数据展示
+ * @details 封装频谱分析图表，提供辐射源数据的增删改接口，
+ *          数据变更后自动同步更新频谱图表显示。
  */
 class SpectrumAnalysis : public QWidget
 {
@@ -132,122 +161,133 @@ public:
     explicit SpectrumAnalysis(QWidget *parent = nullptr);
     ~SpectrumAnalysis() override;
 
-public:
     /**
-     * @brief 添加辐射源数据（模板接口）
-     * @tparam T 辐射源类型：RadarSource / RadioSource / RadarJammerSource / RadioJammerSource
-     * @param data 待添加的数据对象
-     * @details 调用后会同步更新对应缓存。
+     * @brief 添加雷达辐射源数据
+     * @param data 雷达辐射源对象
+     * @details 追加到雷达缓存并刷新频谱图表。
      */
-    template <typename T>
-    void addData(const T &data)
-    {
-        addDataImpl(data);
-    }
+    void addData(const RadarSource &data);
 
     /**
-     * @brief 更新辐射源数据（模板接口）
-     * @tparam T 辐射源类型：RadarSource / RadioSource / RadarJammerSource / RadioJammerSource
-     * @param data 待更新的数据对象（按 name 匹配）
-     * @details 若未找到同名数据，则按新增处理。
+     * @brief 添加电台辐射源数据
+     * @param data 电台辐射源对象
+     * @details 追加到电台缓存并刷新频谱图表。
      */
-    template <typename T>
-    void updateData(const T &data)
-    {
-        updateDataImpl(data);
-    }
+    void addData(const RadioSource &data);
 
     /**
-     * @brief 删除辐射源数据（模板接口）
-     * @tparam T 辐射源类型：RadarSource / RadioSource / RadarJammerSource / RadioJammerSource
-     * @param name 待删除目标名称（按 name 匹配）
-     * @details 调用后会同步删除对应缓存中的记录。
+     * @brief 添加雷达干扰辐射源数据
+     * @param data 雷达干扰辐射源对象
+     * @details 追加到雷达干扰缓存并刷新频谱图表。
+     */
+    void addData(const RadarJammerSource &data);
+
+    /**
+     * @brief 添加通信干扰辐射源数据
+     * @param data 通信干扰辐射源对象
+     * @details 追加到通信干扰缓存并刷新频谱图表。
+     */
+    void addData(const RadioJammerSource &data);
+
+    /**
+     * @brief 更新雷达辐射源数据
+     * @param data 雷达辐射源对象（按 name 匹配）
+     * @details 若未找到同名记录则不操作。
+     */
+    void updateData(const RadarSource &data);
+
+    /**
+     * @brief 更新电台辐射源数据
+     * @param data 电台辐射源对象（按 name 匹配）
+     * @details 若未找到同名记录则不操作。
+     */
+    void updateData(const RadioSource &data);
+
+    /**
+     * @brief 更新雷达干扰辐射源数据
+     * @param data 雷达干扰辐射源对象（按 name 匹配）
+     * @details 若未找到同名记录则不操作。
+     */
+    void updateData(const RadarJammerSource &data);
+
+    /**
+     * @brief 更新通信干扰辐射源数据
+     * @param data 通信干扰辐射源对象（按 name 匹配）
+     * @details 若未找到同名记录则不操作。
+     */
+    void updateData(const RadioJammerSource &data);
+
+    /**
+     * @brief 删除指定类型和名称的辐射源数据
+     * @tparam T 数据类型（RadarSource / RadioSource / RadarJammerSource / RadioJammerSource）
+     * @param name 目标名称
+     * @details 根据类型在对应容器中查找并删除，删除后刷新频谱图表。
      */
     template <typename T>
-    void deleteData(const QString &name)
-    {
-        deleteDataImpl<T>(name);
-    }
+    void deleteData(const QString &name);
+
+protected:
+    /**
+     * @brief 窗口大小改变事件
+     * @param event 大小改变事件
+     * @details 调整频谱图表尺寸并重绘。
+     */
+    void resizeEvent(QResizeEvent *event) override;
+
+    /**
+     * @brief 鼠标移动事件
+     * @param event 鼠标事件
+     */
+    void mouseMoveEvent(QMouseEvent *event) override;
+
+    /**
+     * @brief 鼠标离开事件
+     * @param event 事件对象
+     */
+    void leaveEvent(QEvent *event) override;
 
 private:
     // 初始化参数（预留扩展）
     void initParams();
     // 初始化对象（数据、视图、模型）
     void initObject();
-    // 初始化样式表
-    void initStyles();
     // 关联信号与槽函数
     void initConnect();
 
     /**
      * @brief 生成测试数据
-     * @details 用户生成临时数据
+     * @details 生成雷达、电台、雷达对抗、通信对抗四类辐射源测试数据，
+     *          生成前先清空容器，避免重复追加。
      */
     void generateTestData();
 
-private:
-    Ui::SpectrumAnalysis *ui;               // UI对象
-    SpectrumChart* m_spectrumChart;         // 频谱图表
-
-    // 雷达辐射源数据
-    QVector<RadarSource> m_radarSource;
-    // 电台辐射源数据
-    QVector<RadioSource> m_radioSource;
-    // 雷达干扰辐射源数据
-    QVector<RadarJammerSource> m_radarJammerSource;
-    // 通信干扰辐射源数据
-    QVector<RadioJammerSource> m_radioJammerSource;
-
-private:
-    // 类型化增删改实现：由模板公共接口分发调用
-    // --- Add ---
-    void addDataImpl(const RadarSource &data);
-    void addDataImpl(const RadioSource &data);
-    void addDataImpl(const RadarJammerSource &data);
-    void addDataImpl(const RadioJammerSource &data);
-
-    // --- Update ---
-    void updateDataImpl(const RadarSource &data);
-    void updateDataImpl(const RadioSource &data);
-    void updateDataImpl(const RadarJammerSource &data);
-    void updateDataImpl(const RadioJammerSource &data);
-
-    // --- Delete by name ---
-    void deleteRadarDataByName(const QString &name);
-    void deleteRadioDataByName(const QString &name);
-    void deleteRadarJammerDataByName(const QString &name);
-    void deleteRadioJammerDataByName(const QString &name);
+    /**
+     * @brief 初始化表格属性
+     * @details 设置表格属性，如列数、列宽、行高、表头、数据样式等
+     */
+    void initTableViewAttr();
 
     /**
-     * @brief 删除实现分发（模板内部函数）
-     * @tparam T 目标辐射源类型
-     * @param name 待删除目标名称
-     * @details 通过 if constexpr 在编译期分发到对应删除函数。
+     * @brief 初始化数据模型
+     * @details 预留扩展
      */
-    template <typename T>
-    void deleteDataImpl(const QString &name)
-    {
-        if constexpr (std::is_same_v<T, RadarSource>)
-        {
-            deleteRadarDataByName(name);
-        }
-        else if constexpr (std::is_same_v<T, RadioSource>)
-        {
-            deleteRadioDataByName(name);
-        }
-        else if constexpr (std::is_same_v<T, RadarJammerSource>)
-        {
-            deleteRadarJammerDataByName(name);
-        }
-        else if constexpr (std::is_same_v<T, RadioJammerSource>)
-        {
-            deleteRadioJammerDataByName(name);
-        }
-        else
-        {
-            static_assert(std::is_same_v<T, void>, "Unsupported type for deleteData<T>()");
-        }
-    }
+    void initDataModel();
+
+    /**
+     * @brief 显示数据
+     * @details 预留扩展
+     */
+    void displayData();
+
+private:
+    Ui::SpectrumAnalysis *ui;               // UI对象
+    SpectrumChart *m_spectrumChart;          // 频谱图表
+
+    // 辐射源数据缓存
+    QVector<RadarSource> m_radarSource;             // 雷达辐射源数据
+    QVector<RadioSource> m_radioSource;             // 电台辐射源数据
+    QVector<RadarJammerSource> m_radarJammerSource; // 雷达干扰辐射源数据
+    QVector<RadioJammerSource> m_RadioJammerSource; // 通信干扰辐射源数据
 
     /**
      * @brief 根据名称查找索引

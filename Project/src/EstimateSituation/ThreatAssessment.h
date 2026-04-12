@@ -124,25 +124,10 @@ private:
     QVector<RadioJammerSource> m_radioJammerSource;
     // 数据模型映射：key 为类别名（雷达/电台/雷达干扰/通信干扰）
     QMap<QString, QStandardItemModel *> m_mapModel;
-
-    /**
-     * @brief 统一威胁数据项结构体
-     * @details 用于统一排序所有类型的威胁数据
-     */
-    struct UnifiedThreatItem
-    {
-        QString name;       // 目标名称
-        QString threatLevel; // 威胁等级
-        QString type;       // 数据类型（雷达/电台/雷达对抗/通信对抗）
-        int priority;       // 威胁等级优先级（高=3, 中=2, 低=1）
-
-        UnifiedThreatItem() = default;
-
-        UnifiedThreatItem(const QString &n, const QString &t, const QString &type, int p)
-            : name(n), threatLevel(t), type(type), priority(p) {}
-    };
-
+    
+    // 统一威胁数据列表（用于排序和显示）
     QVector<UnifiedThreatItem> m_unifiedThreatData;
+
 
 private:
     // 类型化增删改实现：由模板公共接口分发调用

@@ -53,6 +53,7 @@ find_package(Qt5 REQUIRED COMPONENTS
         Gui
         Widgets
         Sql
+        Charts
 )
 
 # 设置输出目录
