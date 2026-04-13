@@ -8,7 +8,6 @@
 #include "SpectrumAnalysis.h"
 #include "ThreatAssessment.h"
 #include "FirepowerControl.h"
-#include "SituationControl.h"
 #include <QVBoxLayout>
 #include <QSplitter>
 #include <QScrollArea>
@@ -19,7 +18,6 @@ EstimateSituation::EstimateSituation(QWidget *parent)
     , m_spectrumAnalysis(nullptr)
     , m_threatAssessment(nullptr)
     , m_firepowerControl(nullptr)
-    , m_situationControl(nullptr)
 {
     ui->setupUi(this);
 
@@ -46,49 +44,54 @@ void EstimateSituation::initObject()
     m_spectrumAnalysis = new SpectrumAnalysis(this);
     m_threatAssessment = new ThreatAssessment(this);
     m_firepowerControl = new FirepowerControl(this);
-    m_situationControl = new SituationControl(this);
 
-    // 设置每个模块的最小高度
+    // 设置每个模块的最小大小
     m_rzSourceRadiation->setMinimumHeight(400);
-    m_spectrumAnalysis->setMinimumHeight(500);
+    m_rzSourceRadiation->setMinimumWidth(400);
+    m_spectrumAnalysis->setMinimumHeight(400);
+    m_spectrumAnalysis->setMinimumWidth(400);
     m_threatAssessment->setMinimumHeight(400);
     m_firepowerControl->setMinimumHeight(400);
-    m_situationControl->setMinimumHeight(300);
 
-    // 创建垂直分割器
-    QSplitter *verticalSplitter = new QSplitter(Qt::Vertical);
-    verticalSplitter->addWidget(m_rzSourceRadiation);
-    verticalSplitter->addWidget(m_spectrumAnalysis);
-    verticalSplitter->addWidget(m_firepowerControl);
-    verticalSplitter->addWidget(m_situationControl);
-    verticalSplitter->addWidget(m_threatAssessment);
-    verticalSplitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    // 左侧：辐射源列表与频谱分析竖直布局
+    QSplitter *leftSplitter = new QSplitter(Qt::Vertical);
+    leftSplitter->addWidget(m_rzSourceRadiation);
+    leftSplitter->addWidget(m_spectrumAnalysis);
+    leftSplitter->setStretchFactor(0, 1);
+    leftSplitter->setStretchFactor(1, 1);
+    QList<int> leftSizes;
+    leftSizes << 400 << 400;
+    leftSplitter->setSizes(leftSizes);
 
-    // 设置初始分割器大小
-    QList<int> sizes;
-    sizes << 400 << 500 << 400 << 400 << 300;
-    verticalSplitter->setSizes(sizes);
+    // 右侧：防空火力与威胁评估竖直布局
+    QSplitter *rightSplitter = new QSplitter(Qt::Vertical);
+    rightSplitter->addWidget(m_firepowerControl);
+    rightSplitter->addWidget(m_threatAssessment);
+    rightSplitter->setStretchFactor(0, 1);
+    rightSplitter->setStretchFactor(1, 1);
+    QList<int> rightSizes;
+    rightSizes << 400 << 400;
+    rightSplitter->setSizes(rightSizes);
 
-    // 创建滚动区域
-    QScrollArea *scrollArea = new QScrollArea;
-    scrollArea->setWidgetResizable(true);
-    scrollArea->setWidget(verticalSplitter);
-    scrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    // 整体水平布局：左侧与右侧水平排列
+    QSplitter *mainSplitter = new QSplitter(Qt::Horizontal);
+    mainSplitter->addWidget(leftSplitter);
+    mainSplitter->addWidget(rightSplitter);
+    mainSplitter->setStretchFactor(0, 1);
+    mainSplitter->setStretchFactor(1, 1);
+    QList<int> mainSizes;
+    mainSizes << 600 << 600;
+    mainSplitter->setSizes(mainSizes);
+    mainSplitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     // 设置主布局
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
-    mainLayout->addWidget(scrollArea);
+    mainLayout->addWidget(mainSplitter);
 }
 
 void EstimateSituation::initConnect()
 {
-    connect(m_situationControl, &SituationControl::controlStateChanged,
-            this, [this](const QString &type, bool enabled)
-            {
-                Q_UNUSED(type)
-                Q_UNUSED(enabled)
-            });
 }
 
 // ==============================================================================
@@ -130,7 +133,7 @@ void EstimateSituation::addDataImpl(const FirepowerItem &data)
 
 void EstimateSituation::addDataImpl(const SituationControlData &data)
 {
-    if (m_situationControl) m_situationControl->addData(data);
+    if (m_rzSourceRadiation) m_rzSourceRadiation->addData(data);
 }
 
 // ==============================================================================
@@ -172,7 +175,7 @@ void EstimateSituation::updateDataImpl(const FirepowerItem &data)
 
 void EstimateSituation::updateDataImpl(const SituationControlData &data)
 {
-    if (m_situationControl) m_situationControl->updateData(data);
+    if (m_rzSourceRadiation) m_rzSourceRadiation->updateData(data);
 }
 
 // ==============================================================================
@@ -214,5 +217,5 @@ void EstimateSituation::deleteFirepowerDataByName(const QString &name)
 
 void EstimateSituation::deleteControlDataByType(const QString &type)
 {
-    if (m_situationControl) m_situationControl->deleteData<SituationControlData>(type);
+    if (m_rzSourceRadiation) m_rzSourceRadiation->deleteData<SituationControlData>(type);
 }

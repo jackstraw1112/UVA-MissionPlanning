@@ -5,6 +5,8 @@
 #pragma once
 
 #include <QString>
+#include <QPair>
+#include <QRectF>
 
 /**
  * @brief 雷达辐射源结构体
@@ -129,4 +131,32 @@ struct SituationControlData
 
     SituationControlData(const QString &t, bool e, const QString &desc)
         : type(t), enabled(e), description(desc) {}
+};
+
+/**
+ * @brief 统一威胁项结构体
+ * @details 用于存储不同类型威胁的统一格式数据
+ */
+struct UnifiedThreatItem
+{
+    QString name;        // 威胁名称
+    QString threatLevel; // 威胁等级
+    QString type;        // 威胁类型
+    int priority;        // 优先级（用于排序）
+
+    UnifiedThreatItem() : priority(0) {}
+
+    UnifiedThreatItem(const QString &n, const QString &tl, const QString &t, int p)
+        : name(n), threatLevel(tl), type(t), priority(p) {}
+};
+
+/**
+ * @brief 频率范围信息结构体
+ * @details 存储频率范围字符串、数值范围和柱状图矩形区域，用于频谱分析图表绘制和鼠标悬浮检测。
+ */
+struct FrequencyRangeInfo
+{
+    QString frequencyStr;           // 频率范围字符串
+    QPair<double, double> range;    // 频率范围数值（MHz）
+    QRectF rect;                    // 柱状图矩形区域
 };

@@ -11,13 +11,14 @@
 #include <QPushButton>
 #include <QStyledItemDelegate>
 
+
 namespace
 {
     /**
      *Qt 表格 / 列表控件的自定义委托（Delegate），专门用来统一控制单元格的显示样式。
      *QStyledItemDelegate：Qt 里专门管 “控件项怎么显示” 的基类。
      * @brief 表格显示委托
-     * @details 统一设置单元格文本“居中 + 大写显示”。
+     * @details 统一设置单元格文本"居中 + 大写显示"。
      * Qt 表格 / 列表控件的自定义委托（Delegate），专门用来统一控制单元格的显示样式。
      */
     class UpperCenterTextDelegate final : public QStyledItemDelegate
@@ -95,6 +96,14 @@ void RZSourceRadiation::initObject()
     // 调整表格列宽
     ui->tableView->resizeColumnsToContents();
     ui->tableView->resizeRowsToContents();
+
+    // 生成态势控制测试数据
+    m_controlData.clear();
+    m_controlData.append(SituationControlData("radar", ui->radarSwitch->isChecked(), QString::fromUtf8("雷达")));
+    m_controlData.append(SituationControlData("radio", ui->radioSwitch->isChecked(), QString::fromUtf8("电台")));
+    m_controlData.append(SituationControlData("commJam", ui->commJamSwitch->isChecked(), QString::fromUtf8("通信对抗")));
+    m_controlData.append(SituationControlData("radarJam", ui->radarJamSwitch->isChecked(), QString::fromUtf8("雷达对抗")));
+    m_controlData.append(SituationControlData("defenseFire", ui->defenseFireDisplaySwitch->isChecked(), QString::fromUtf8("防控火力")));
 }
 
 void RZSourceRadiation::initConnect()
@@ -104,6 +113,17 @@ void RZSourceRadiation::initConnect()
     connect(ui->btnRadio, &QPushButton::clicked, this, &RZSourceRadiation::onShowTableData);
     connect(ui->btnRadioJam, &QPushButton::clicked, this, &RZSourceRadiation::onShowTableData);
     connect(ui->btnRadarJam, &QPushButton::clicked, this, &RZSourceRadiation::onShowTableData);
+
+    // 雷达开关
+    connect(ui->radarSwitch, &QCheckBox::toggled, this, &RZSourceRadiation::onRadarSwitchChanged);
+    // 电台开关
+    connect(ui->radioSwitch, &QCheckBox::toggled, this, &RZSourceRadiation::onRadioSwitchChanged);
+    // 通信对抗开关
+    connect(ui->commJamSwitch, &QCheckBox::toggled, this, &RZSourceRadiation::onCommJamSwitchChanged);
+    // 雷达对抗开关
+    connect(ui->radarJamSwitch, &QCheckBox::toggled, this, &RZSourceRadiation::onRadarJamSwitchChanged);
+    // 防控火力显示开关
+    connect(ui->defenseFireDisplaySwitch, &QCheckBox::toggled, this, &RZSourceRadiation::onDefenseFireDisplaySwitchChanged);
 }
 
 void RZSourceRadiation::generateTestData()
@@ -326,7 +346,7 @@ void RZSourceRadiation::initDataModel()
     });
     m_mapModel.insert(QString::fromUtf8("通信干扰"), radioJamModel);
 
-    // 默认显示“雷达”模型（此时仅有表头）
+    // 默认显示"雷达"模型（此时仅有表头）
     ui->tableView->setModel(radarModel);
 }
 
@@ -684,4 +704,61 @@ void RZSourceRadiation::deleteRadioJammerDataByName(const QString &name)
     {
         model->removeRow(row);
     }
+}
+
+// 态势控制相关实现
+void RZSourceRadiation::addControlDataImpl(const SituationControlData &data)
+{
+    m_controlData.append(data);
+}
+
+void RZSourceRadiation::updateControlDataImpl(const SituationControlData &data)
+{
+    const int row = findIndexByType(m_controlData, data.type);
+    if (row < 0)
+    {
+        addControlDataImpl(data);
+        return;
+    }
+    m_controlData[row] = data;
+}
+
+void RZSourceRadiation::deleteControlDataByType(const QString &type)
+{
+    const int row = findIndexByType(m_controlData, type);
+    if (row < 0)
+    {
+        return;
+    }
+    m_controlData.removeAt(row);
+}
+
+void RZSourceRadiation::onRadarSwitchChanged(bool checked)
+{
+    emit controlStateChanged("radar", checked);
+    updateControlDataImpl(SituationControlData("radar", checked, QString::fromUtf8("雷达")));
+}
+
+void RZSourceRadiation::onRadioSwitchChanged(bool checked)
+{
+    emit controlStateChanged("radio", checked);
+    updateControlDataImpl(SituationControlData("radio", checked, QString::fromUtf8("电台")));
+}
+
+void RZSourceRadiation::onCommJamSwitchChanged(bool checked)
+{
+    emit controlStateChanged("commJam", checked);
+    updateControlDataImpl(SituationControlData("commJam", checked, QString::fromUtf8("通信对抗")));
+}
+
+void RZSourceRadiation::onRadarJamSwitchChanged(bool checked)
+{
+    emit controlStateChanged("radarJam", checked);
+    updateControlDataImpl(SituationControlData("radarJam", checked, QString::fromUtf8("雷达对抗")));
+}
+
+void RZSourceRadiation::onDefenseFireDisplaySwitchChanged(bool checked)
+{
+    emit controlStateChanged("defenseFire", checked);
+    updateControlDataImpl(SituationControlData("defenseFire", checked, QString::fromUtf8("防控火力")));
 }

@@ -7,23 +7,8 @@
 #include <QHeaderView>
 #include <QAbstractItemView>
 #include <QStyledItemDelegate>
-#include <QBrush>
-#include <QColor>
 #include <QFont>
-#include <Qt>
-#include <algorithm>//C++ 标准库的算法头文件，专门提供各种常用的通用工具函数，不用自己手写循环，代码更简洁、更安全、更快。
-/*
-*它提供了一大堆现成的工具函数，比如：
-查找元素 std::find
-排序 std::sort
-遍历 std::for_each
-去重 std::unique
-反转 std::reverse
-计数 std::count
-最大值 / 最小值 std::max / std::min
- *
- *
- */
+#include <algorithm>
 namespace
 {
     class UpperCenterTextDelegate final : public QStyledItemDelegate

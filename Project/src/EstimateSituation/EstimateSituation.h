@@ -20,7 +20,6 @@ class RZSourceRadiation;
 class SpectrumAnalysis;
 class ThreatAssessment;
 class FirepowerControl;
-class SituationControl;
 
 /**
  * @brief 态势估计主窗口
@@ -87,7 +86,7 @@ private:
     SpectrumAnalysis *m_spectrumAnalysis;
     ThreatAssessment *m_threatAssessment;
     FirepowerControl *m_firepowerControl;
-    SituationControl *m_situationControl;
+
 
 private:
     // 类型化增删改实现：由模板公共接口分发调用
@@ -142,6 +141,10 @@ private:
         else if constexpr (std::is_same_v<T, FirepowerItem>)
         {
             deleteFirepowerDataByName(name);
+        }
+        else if constexpr (std::is_same_v<T, SituationControlData>)
+        {
+            deleteControlDataByType(name);
         }
         else
         {

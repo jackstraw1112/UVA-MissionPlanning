@@ -150,6 +150,12 @@ void FirepowerControl::displayData()
     {
         addFirepowerItem(firepower);
     }
+
+    // 更新单位数量标签
+    if (ui->unitCountLabel)
+    {
+        ui->unitCountLabel->setText(QString::fromUtf8("%1个单位").arg(m_firepowerData.size()));
+    }
 }
 
 /**
@@ -161,6 +167,7 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
 {
     // 创建设备项框架
     QFrame *firepowerItem = new QFrame;
+    firepowerItem->setObjectName("firepowerItem");
     QVBoxLayout *itemLayout = new QVBoxLayout(firepowerItem);
     itemLayout->setContentsMargins(0, 0, 0, 0);
     itemLayout->setSpacing(8);
@@ -173,9 +180,11 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
 
     // 设备名称
     QLabel *nameLabel = new QLabel(item.name);
+    nameLabel->setProperty("name", "nameLabel");
 
     // 设备状态
     QLabel *statusLabel = new QLabel;
+    statusLabel->setProperty("name", "statusLabel");
 
     if (item.status == QString::fromUtf8("active"))
     {
@@ -207,6 +216,7 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     typeBoxLayout->setSpacing(2);
     QLabel *typeLabel = new QLabel(QString::fromUtf8("类型"));
     QLabel *typeValue = new QLabel(item.type);
+    typeValue->setProperty("name", "typeValue");
     typeBoxLayout->addWidget(typeLabel);
     typeBoxLayout->addWidget(typeValue);
 
@@ -217,6 +227,7 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     rangeBoxLayout->setSpacing(2);
     QLabel *rangeLabel = new QLabel(QString::fromUtf8("射程"));
     QLabel *rangeValue = new QLabel(item.range);
+    rangeValue->setProperty("name", "rangeValue");
     rangeBoxLayout->addWidget(rangeLabel);
     rangeBoxLayout->addWidget(rangeValue);
 
@@ -227,6 +238,7 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     ammoBoxLayout->setSpacing(2);
     QLabel *ammoLabel = new QLabel(item.ammo.contains(QString::fromUtf8("枚")) ? QString::fromUtf8("弹药") : QString::fromUtf8("模式"));
     QLabel *ammoValue = new QLabel(item.ammo);
+    ammoValue->setProperty("name", "ammoValue");
     ammoBoxLayout->addWidget(ammoLabel);
     ammoBoxLayout->addWidget(ammoValue);
 
@@ -237,6 +249,7 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     responseBoxLayout->setSpacing(2);
     QLabel *responseLabel = new QLabel(QString::fromUtf8("响应"));
     QLabel *responseValue = new QLabel(item.response);
+    responseValue->setProperty("name", "responseValue");
     responseBoxLayout->addWidget(responseLabel);
     responseBoxLayout->addWidget(responseValue);
 
@@ -254,12 +267,15 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     rangeFrameLayout->setSpacing(4);
 
     QLabel *rangeTitle = new QLabel(QString::fromUtf8("拦截概率"));
+    rangeTitle->setProperty("name", "rangeTitle");
 
     QFrame *rangeBar = new QFrame;
+    rangeBar->setProperty("name", "rangeBar");
     QHBoxLayout *rangeBarLayout = new QHBoxLayout(rangeBar);
     rangeBarLayout->setContentsMargins(0, 0, 0, 0);
 
     QFrame *rangeFill = new QFrame;
+    rangeFill->setProperty("name", "rangeFill");
 
     if (item.intercept != QString::fromUtf8("-"))
     {
