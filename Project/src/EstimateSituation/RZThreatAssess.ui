@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>RZThreatAssessment</class>
- <widget class="QWidget" name="RZThreatAssessment">
+ <class>RZThreatAssess</class>
+ <widget class="QWidget" name="RZThreatAssess">
   <property name="geometry">
    <rect>
     <x>0</x>

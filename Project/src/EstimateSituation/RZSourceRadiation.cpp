@@ -85,10 +85,10 @@ void RZSourceRadiation::initObject()
     generateTestData();
 
     // 初始化表格属性
-    initTableViewAttr();
+    initTableAttr();
 
     // 初始化数据模型
-    initDataModel();
+    initTableModel();
 
     // 显示辐射源数据
     displayData();
@@ -253,7 +253,7 @@ void RZSourceRadiation::generateTestData()
     m_RadioJammerSource.append(radioJammer3);
 }
 
-void RZSourceRadiation::initTableViewAttr()
+void RZSourceRadiation::initTableAttr()
 {
     // 交互行为
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);               // 不可编辑
@@ -286,12 +286,13 @@ void RZSourceRadiation::initTableViewAttr()
     ui->tableView->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 }
 
-void RZSourceRadiation::initDataModel()
+void RZSourceRadiation::initTableModel()
 {
     // 清理旧模型并重新创建，防止重复初始化造成内存泄漏
     qDeleteAll(m_mapModel);
     m_mapModel.clear();
 
+    // 初始模型
     auto createModel = [this](const QStringList &headers) -> QStandardItemModel *
     {
         auto *model = new QStandardItemModel(this);
@@ -346,7 +347,7 @@ void RZSourceRadiation::initDataModel()
     });
     m_mapModel.insert(QString::fromUtf8("通信干扰"), radioJamModel);
 
-    // 默认显示"雷达"模型（此时仅有表头）
+    // 默认显示"雷达"模型
     ui->tableView->setModel(radarModel);
 }
 

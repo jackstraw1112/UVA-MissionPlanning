@@ -32,11 +32,11 @@ public:
     ~RZSourceRadiation() override;
 
 private:
-    // 初始化参数（预留扩展）
+    // 初始化参数
     void initParams();
-    // 初始化对象（数据、视图、模型）
+    // 初始化对象
     void initObject();
-    // 关联信号与槽函数（按钮点击 -> 模型切换）
+    // 关联信号与槽函数
     void initConnect();
 
     /**
@@ -49,13 +49,13 @@ private:
      * @brief 初始化表格属性
      * @details 设置表格属性，如列数、列宽、行高、表头、数据样式等
      */
-    void initTableViewAttr();
+    void initTableAttr();
 
     /**
      * @brief 初始化数据模型
      * @details 仅创建四类数据模型并初始化表头；不在此函数中写入行数据
      */
-    void initDataModel();
+    void initTableModel();
 
     /**
      * @brief 显示表格数据

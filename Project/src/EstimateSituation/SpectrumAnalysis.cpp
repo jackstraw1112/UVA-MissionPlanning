@@ -386,6 +386,8 @@ QString SpectrumChart::getBandName(double freq)
     // {
     //     return QString::fromUtf8("毫米波频段");
     // }
+
+    return QString::fromUtf8("HF频段");
 }
 
 /**
