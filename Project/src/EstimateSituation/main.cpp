@@ -7,6 +7,7 @@
 #include <QTextCodec>
 
 #include "EstimateSituation.h"
+#include "RZThreatAssessment.h"
 
 int main(int argc, char *argv[])
 {
@@ -16,7 +17,7 @@ int main(int argc, char *argv[])
     app.setStyle(QStyleFactory::create("Fusion"));
 
     // 创建并显示主窗口
-    EstimateSituation w;
+    RZThreatAssessment w;
     w.show();
 
     return app.exec();
