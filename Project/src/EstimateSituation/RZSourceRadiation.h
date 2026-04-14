@@ -163,8 +163,6 @@ public:
         }
     }
 
-
-
 signals:
     /**
      * @brief 控制状态变更信号
