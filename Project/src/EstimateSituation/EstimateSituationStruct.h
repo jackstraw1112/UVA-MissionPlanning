@@ -166,7 +166,6 @@ struct FrequencyRangeInfo
     QRectF rect;                    // 柱状图矩形区域
 };
 
-
 // 威胁评估
 #pragma region
 

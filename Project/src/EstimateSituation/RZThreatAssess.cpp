@@ -195,11 +195,6 @@ RZThreatAssess::RZThreatAssess(QWidget *parent)
 {
     ui->setupUi(this);
 
-    m_setThreatPanel = new SetRadarThreatAssess(this);
-    m_setThreatPanel->setWindowTitle(QStringLiteral("辐射源信息与威胁评估"));
-    m_setThreatPanel->setWindowFlag(Qt::Dialog, true);
-    m_setThreatPanel->resize(980, 620);
-
     // 初始化参数
     initPara();
 
@@ -576,6 +571,8 @@ void RZThreatAssess::onClearTable()
 
     // 清空表格
     ui->tableThreatList->setRowCount(0);
+
+    // 清空数据库-待处理
 
     // 清空子窗口
     m_setThreatPanel->close();

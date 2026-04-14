@@ -59,6 +59,7 @@ private:
 
     // 评估雷达威胁
     void assessRadarThreat();
+
     // 双击表格进行评估
     void onTableDoubleClicked(int row, int column);
     // 接收评估结果
