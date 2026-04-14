@@ -42,6 +42,26 @@ public:
      * @param radioSource 电台辐射源数据
      * @param radarJammerSource 雷达干扰辐射源数据
      * @param radioJammerSource 通信干扰辐射源数据
+     * @param radarColor 雷达辐射源颜色
+     * @param radioColor 电台辐射源颜色
+     * @param radarJammerColor 雷达干扰辐射源颜色
+     * @param radioJammerColor 通信干扰辐射源颜色
+     */
+    void setData(const QVector<RadarSource> &radarSource,
+                 const QVector<RadioSource> &radioSource,
+                 const QVector<RadarJammerSource> &radarJammerSource,
+                 const QVector<RadioJammerSource> &radioJammerSource,
+                 const QColor &radarColor = QColor(Qt::red),
+                 const QColor &radioColor = QColor(Qt::red),
+                 const QColor &radarJammerColor = QColor(Qt::red),
+                 const QColor &radioJammerColor = QColor(Qt::red));
+
+    /**
+     * @brief 设置辐射源数据并重绘柱状图（默认颜色版本）
+     * @param radarSource 雷达辐射源数据
+     * @param radioSource 电台辐射源数据
+     * @param radarJammerSource 雷达干扰辐射源数据
+     * @param radioJammerSource 通信干扰辐射源数据
      */
     void setData(const QVector<RadarSource> &radarSource,
                  const QVector<RadioSource> &radioSource,
@@ -86,6 +106,12 @@ private:
     QVector<FrequencyRangeInfo> m_rangeInfos;
 
     double m_totalRange;                    // 总频率范围（MHz），用于按比例分配频段宽度
+
+    // 颜色配置
+    QColor m_radarColor;            // 雷达辐射源颜色
+    QColor m_radioColor;                   // 电台辐射源颜色
+    QColor m_radarJammerColor;             // 雷达干扰辐射源颜色
+    QColor m_radioJammerColor;             // 通信干扰辐射源颜色
 
     /**
      * @brief 初始化场景
@@ -169,11 +195,27 @@ public:
     void addData(const RadarSource &data);
 
     /**
+     * @brief 添加雷达辐射源数据
+     * @param data 雷达辐射源对象
+     * @param color 雷达辐射源颜色
+     * @details 追加到雷达缓存并刷新频谱图表。
+     */
+    void addData(const RadarSource &data, const QColor &color);
+
+    /**
      * @brief 添加电台辐射源数据
      * @param data 电台辐射源对象
      * @details 追加到电台缓存并刷新频谱图表。
      */
     void addData(const RadioSource &data);
+
+    /**
+     * @brief 添加电台辐射源数据
+     * @param data 电台辐射源对象
+     * @param color 电台辐射源颜色
+     * @details 追加到电台缓存并刷新频谱图表。
+     */
+    void addData(const RadioSource &data, const QColor &color);
 
     /**
      * @brief 添加雷达干扰辐射源数据
@@ -183,11 +225,27 @@ public:
     void addData(const RadarJammerSource &data);
 
     /**
+     * @brief 添加雷达干扰辐射源数据
+     * @param data 雷达干扰辐射源对象
+     * @param color 雷达干扰辐射源颜色
+     * @details 追加到雷达干扰缓存并刷新频谱图表。
+     */
+    void addData(const RadarJammerSource &data, const QColor &color);
+
+    /**
      * @brief 添加通信干扰辐射源数据
      * @param data 通信干扰辐射源对象
      * @details 追加到通信干扰缓存并刷新频谱图表。
      */
     void addData(const RadioJammerSource &data);
+
+    /**
+     * @brief 添加通信干扰辐射源数据
+     * @param data 通信干扰辐射源对象
+     * @param color 通信干扰辐射源颜色
+     * @details 追加到通信干扰缓存并刷新频谱图表。
+     */
+    void addData(const RadioJammerSource &data, const QColor &color);
 
     /**
      * @brief 更新雷达辐射源数据
@@ -197,11 +255,27 @@ public:
     void updateData(const RadarSource &data);
 
     /**
+     * @brief 更新雷达辐射源数据
+     * @param data 雷达辐射源对象（按 name 匹配）
+     * @param color 雷达辐射源颜色
+     * @details 若未找到同名记录则不操作。
+     */
+    void updateData(const RadarSource &data, const QColor &color);
+
+    /**
      * @brief 更新电台辐射源数据
      * @param data 电台辐射源对象（按 name 匹配）
      * @details 若未找到同名记录则不操作。
      */
     void updateData(const RadioSource &data);
+
+    /**
+     * @brief 更新电台辐射源数据
+     * @param data 电台辐射源对象（按 name 匹配）
+     * @param color 电台辐射源颜色
+     * @details 若未找到同名记录则不操作。
+     */
+    void updateData(const RadioSource &data, const QColor &color);
 
     /**
      * @brief 更新雷达干扰辐射源数据
@@ -211,11 +285,27 @@ public:
     void updateData(const RadarJammerSource &data);
 
     /**
+     * @brief 更新雷达干扰辐射源数据
+     * @param data 雷达干扰辐射源对象（按 name 匹配）
+     * @param color 雷达干扰辐射源颜色
+     * @details 若未找到同名记录则不操作。
+     */
+    void updateData(const RadarJammerSource &data, const QColor &color);
+
+    /**
      * @brief 更新通信干扰辐射源数据
      * @param data 通信干扰辐射源对象（按 name 匹配）
      * @details 若未找到同名记录则不操作。
      */
     void updateData(const RadioJammerSource &data);
+
+    /**
+     * @brief 更新通信干扰辐射源数据
+     * @param data 通信干扰辐射源对象（按 name 匹配）
+     * @param color 通信干扰辐射源颜色
+     * @details 若未找到同名记录则不操作。
+     */
+    void updateData(const RadioJammerSource &data, const QColor &color);
 
     /**
      * @brief 删除指定类型和名称的辐射源数据
@@ -288,6 +378,12 @@ private:
     QVector<RadioSource> m_radioSource;             // 电台辐射源数据
     QVector<RadarJammerSource> m_radarJammerSource; // 雷达干扰辐射源数据
     QVector<RadioJammerSource> m_RadioJammerSource; // 通信干扰辐射源数据
+
+    // 颜色配置
+    QColor m_radarColor;                   // 雷达辐射源颜色
+    QColor m_radioColor;                   // 电台辐射源颜色
+    QColor m_radarJammerColor;             // 雷达干扰辐射源颜色
+    QColor m_radioJammerColor;             // 通信干扰辐射源颜色
 
     /**
      * @brief 根据名称查找索引

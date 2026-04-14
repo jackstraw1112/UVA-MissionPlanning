@@ -157,13 +157,14 @@ struct UnifiedThreatItem
 
 /**
  * @brief 频率范围信息结构体
- * @details 存储频率范围字符串、数值范围和柱状图矩形区域，用于频谱分析图表绘制和鼠标悬浮检测。
+ * @details 存储频率范围字符串、数值范围、柱状图矩形区域和颜色，用于频谱分析图表绘制和鼠标悬浮检测。
  */
 struct FrequencyRangeInfo
 {
     QString frequencyStr;           // 频率范围字符串
     QPair<double, double> range;    // 频率范围数值（MHz）
     QRectF rect;                    // 柱状图矩形区域
+    QColor color;                   // 柱状图颜色
 };
 
 // 威胁评估

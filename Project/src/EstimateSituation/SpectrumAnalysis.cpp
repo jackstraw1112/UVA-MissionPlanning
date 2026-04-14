@@ -86,13 +86,30 @@ void SpectrumChart::clearScene()
 void SpectrumChart::setData(const QVector<RadarSource> &radarSource,
                             const QVector<RadioSource> &radioSource,
                             const QVector<RadarJammerSource> &radarJammerSource,
-                            const QVector<RadioJammerSource> &radioJammerSource)
+                            const QVector<RadioJammerSource> &radioJammerSource,
+                            const QColor &radarColor,
+                            const QColor &radioColor,
+                            const QColor &radarJammerColor,
+                            const QColor &radioJammerColor)
 {
     m_radarSource = radarSource;
     m_radioSource = radioSource;
     m_radarJammerSource = radarJammerSource;
     m_radioJammerSource = radioJammerSource;
+    m_radarColor = radarColor;
+    m_radioColor = radioColor;
+    m_radarJammerColor = radarJammerColor;
+    m_radioJammerColor = radioJammerColor;
     drawBarChart();
+}
+
+void SpectrumChart::setData(const QVector<RadarSource> &radarSource,
+                            const QVector<RadioSource> &radioSource,
+                            const QVector<RadarJammerSource> &radarJammerSource,
+                            const QVector<RadioJammerSource> &radioJammerSource)
+{
+    setData(radarSource, radioSource, radarJammerSource, radioJammerSource,
+            QColor(Qt::red), QColor(Qt::blue), QColor(Qt::green), QColor(Qt::darkYellow));
 }
 
 /**
@@ -176,10 +193,6 @@ void SpectrumChart::drawBarChart()
         return;
     }
 
-    // 定义统一的红色及边框画笔
-    QColor barColor(255, 0, 0);
-    QPen barPen(barColor, 2);
-
     // 收集所有频率范围和对应的频率字符串
     QVector<FrequencyRangeInfo> allRangeInfos;
 
@@ -189,6 +202,7 @@ void SpectrumChart::drawBarChart()
         FrequencyRangeInfo info;
         info.frequencyStr = radar.frequency;
         info.range = calculateFrequencyRange(radar.frequency);
+        info.color = m_radarColor;
         allRangeInfos.append(info);
     }
 
@@ -198,6 +212,7 @@ void SpectrumChart::drawBarChart()
         FrequencyRangeInfo info;
         info.frequencyStr = radio.frequency;
         info.range = calculateFrequencyRange(radio.frequency);
+        info.color = m_radioColor;
         allRangeInfos.append(info);
     }
 
@@ -207,6 +222,7 @@ void SpectrumChart::drawBarChart()
         FrequencyRangeInfo info;
         info.frequencyStr = radarJammer.workingBand;
         info.range = calculateFrequencyRange(radarJammer.workingBand);
+        info.color = m_radarJammerColor;
         allRangeInfos.append(info);
     }
 
@@ -216,6 +232,7 @@ void SpectrumChart::drawBarChart()
         FrequencyRangeInfo info;
         info.frequencyStr = radioJammer.coverageBand;
         info.range = calculateFrequencyRange(radioJammer.coverageBand);
+        info.color = m_radioJammerColor;
         allRangeInfos.append(info);
     }
 
@@ -253,7 +270,8 @@ void SpectrumChart::drawBarChart()
         qreal barWidth = (info.range.second - info.range.first) * scaleFactor;
 
         QRectF barRect(barStart, yOffset + (chartHeight - barHeight), barWidth, barHeight);
-        QGraphicsRectItem *barItem = m_scene->addRect(barRect, barPen, QBrush(barColor));
+        QPen barPen(info.color, 2);
+        QGraphicsRectItem *barItem = m_scene->addRect(barRect, barPen, QBrush(info.color));
         barItem->setOpacity(0.7);
 
         // 保存矩形区域，用于鼠标悬浮检测
@@ -277,13 +295,13 @@ void SpectrumChart::drawBarChart()
     QGraphicsPolygonItem *arrowItem = m_scene->addPolygon(arrow, axisPen, QBrush(Qt::black));
 
     // 添加X轴刻度线（5个刻度，不显示刻度标签）
-    qreal axisStep = chartWidth / 5;
-    for (int i = 0; i <= 5; ++i)
+    //qreal axisStep = chartWidth / 5;
+    /*for (int i = 0; i <= 5; ++i)
     {
         qreal tickX = xOffset + i * axisStep;
         m_scene->addLine(tickX, yOffset + chartHeight,
                          tickX, yOffset + chartHeight + 5, axisPen);
-    }
+    }*/
 }
 
 /**
@@ -342,52 +360,29 @@ QPair<double, double> SpectrumChart::getFrequencyRangeMinMax()
  */
 QString SpectrumChart::getBandName(double freq)
 {
-    if (freq < 30)
-    {
-        return QString::fromUtf8("HF频段");
-    }
-    else if (freq < 300)
-    {
-        return QString::fromUtf8("VHF频段");
-    }
-    else if (freq < 1000)
-    {
-        return QString::fromUtf8("UHF频段");
-    }
-    else if (freq < 2000)
-    {
-        return QString::fromUtf8("L频段");
-    }
-    else if (freq < 4000)
-    {
-        return QString::fromUtf8("S频段");
-    }
-    else if (freq < 8000)
-    {
-        return QString::fromUtf8("C频段");
-    }
-    else if (freq < 12000)
-    {
-        return QString::fromUtf8("X频段");
-    }
-    else if (freq < 18000)
-    {
-        return QString::fromUtf8("Ku频段");
-    }
-    else if (freq < 26500)
-    {
-        return QString::fromUtf8("K频段");
-    }
-    else if (freq < 40000)
-    {
-        return QString::fromUtf8("Ka频段");
-    }
-    // else
-    // {
-    //     return QString::fromUtf8("毫米波频段");
-    // }
+    // 频率阈值 + 频段名称（按从小到大排列）
+    static const QList<std::pair<double, QString>> bandMap = {
+        {30,    "HF频段"},
+        {300,   "VHF频段"},
+        {1000,  "UHF频段"},
+        {2000,  "L频段"},
+        {4000,  "S频段"},
+        {8000,  "C频段"},
+        {12000, "X频段"},
+        {18000, "Ku频段"},
+        {26500, "K频段"},
+        {40000, "Ka频段"}
+    };
 
-    return QString::fromUtf8("HF频段");
+    // 匹配频段
+    for (const auto& pair : bandMap) {
+        if (freq < pair.first) {
+            return pair.second;
+        }
+    }
+
+    // 超过40000 沿用原逻辑返回 HF频段
+    return "HF频段";
 }
 
 /**
@@ -551,11 +546,6 @@ void SpectrumAnalysis::initObject()
     // 初始化表格属性
     initTableViewAttr();
 
-    // 初始化频谱图表
-    m_spectrumChart = new SpectrumChart(this);
-    m_spectrumChart->setGeometry(10, 10, width() - 20, height() - 20);
-    m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource);
-
     // 初始化数据模型
     initDataModel();
 
@@ -569,6 +559,7 @@ void SpectrumAnalysis::initObject()
  */
 void SpectrumAnalysis::initConnect()
 {
+
 }
 
 /**
@@ -604,6 +595,7 @@ void SpectrumAnalysis::generateTestData()
 
     RadioSource radio2;
     radio2.frequency = QString::fromUtf8("30~88MHz");
+
     m_radioSource.append(radio2);
 
     RadioSource radio3;
@@ -645,6 +637,19 @@ void SpectrumAnalysis::initTableViewAttr()
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
+    
+    // 初始化默认颜色
+    m_radarColor = QColor(Qt::red);
+    m_radioColor = QColor(Qt::blue);
+    m_radarJammerColor = QColor(Qt::green);
+    m_radioJammerColor = QColor(Qt::darkYellow);
+    
+    // 初始化频谱图表
+    m_spectrumChart = new SpectrumChart(this);
+    m_spectrumChart->setGeometry(10, 10, width() - 20, height() - 20);
+    m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                            m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
+
 }
 
 /**
@@ -661,6 +666,7 @@ void SpectrumAnalysis::initDataModel()
  */
 void SpectrumAnalysis::displayData()
 {
+
 }
 
 /**
@@ -670,10 +676,17 @@ void SpectrumAnalysis::displayData()
  */
 void SpectrumAnalysis::addData(const RadarSource &data)
 {
+    addData(data, m_radarColor);
+}
+
+void SpectrumAnalysis::addData(const RadarSource &data, const QColor &color)
+{
     m_radarSource.append(data);
+    m_radarColor = color;
     if (m_spectrumChart)
     {
-        m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource);
+        m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                                m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
     }
 }
 
@@ -684,10 +697,17 @@ void SpectrumAnalysis::addData(const RadarSource &data)
  */
 void SpectrumAnalysis::addData(const RadioSource &data)
 {
+    addData(data, m_radioColor);
+}
+
+void SpectrumAnalysis::addData(const RadioSource &data, const QColor &color)
+{
     m_radioSource.append(data);
+    m_radioColor = color;
     if (m_spectrumChart)
     {
-        m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource);
+        m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                                m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
     }
 }
 
@@ -698,10 +718,17 @@ void SpectrumAnalysis::addData(const RadioSource &data)
  */
 void SpectrumAnalysis::addData(const RadarJammerSource &data)
 {
+    addData(data, m_radarJammerColor);
+}
+
+void SpectrumAnalysis::addData(const RadarJammerSource &data, const QColor &color)
+{
     m_radarJammerSource.append(data);
+    m_radarJammerColor = color;
     if (m_spectrumChart)
     {
-        m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource);
+        m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                                m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
     }
 }
 
@@ -712,10 +739,17 @@ void SpectrumAnalysis::addData(const RadarJammerSource &data)
  */
 void SpectrumAnalysis::addData(const RadioJammerSource &data)
 {
+    addData(data, m_radioJammerColor);
+}
+
+void SpectrumAnalysis::addData(const RadioJammerSource &data, const QColor &color)
+{
     m_RadioJammerSource.append(data);
+    m_radioJammerColor = color;
     if (m_spectrumChart)
     {
-        m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource);
+        m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                                m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
     }
 }
 
@@ -726,13 +760,20 @@ void SpectrumAnalysis::addData(const RadioJammerSource &data)
  */
 void SpectrumAnalysis::updateData(const RadarSource &data)
 {
+    updateData(data, m_radarColor);
+}
+
+void SpectrumAnalysis::updateData(const RadarSource &data, const QColor &color)
+{
     int index = findIndexByName(m_radarSource, data.name);
     if (index != -1)
     {
         m_radarSource[index] = data;
+        m_radarColor = color;
         if (m_spectrumChart)
         {
-            m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource);
+            m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                                    m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
         }
     }
 }
@@ -744,13 +785,20 @@ void SpectrumAnalysis::updateData(const RadarSource &data)
  */
 void SpectrumAnalysis::updateData(const RadioSource &data)
 {
+    updateData(data, m_radioColor);
+}
+
+void SpectrumAnalysis::updateData(const RadioSource &data, const QColor &color)
+{
     int index = findIndexByName(m_radioSource, data.name);
     if (index != -1)
     {
         m_radioSource[index] = data;
+        m_radioColor = color;
         if (m_spectrumChart)
         {
-            m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource);
+            m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                                    m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
         }
     }
 }
@@ -762,13 +810,20 @@ void SpectrumAnalysis::updateData(const RadioSource &data)
  */
 void SpectrumAnalysis::updateData(const RadarJammerSource &data)
 {
+    updateData(data, m_radarJammerColor);
+}
+
+void SpectrumAnalysis::updateData(const RadarJammerSource &data, const QColor &color)
+{
     int index = findIndexByName(m_radarJammerSource, data.name);
     if (index != -1)
     {
         m_radarJammerSource[index] = data;
+        m_radarJammerColor = color;
         if (m_spectrumChart)
         {
-            m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource);
+            m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                                    m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
         }
     }
 }
@@ -780,13 +835,20 @@ void SpectrumAnalysis::updateData(const RadarJammerSource &data)
  */
 void SpectrumAnalysis::updateData(const RadioJammerSource &data)
 {
+    updateData(data, m_radioJammerColor);
+}
+
+void SpectrumAnalysis::updateData(const RadioJammerSource &data, const QColor &color)
+{
     int index = findIndexByName(m_RadioJammerSource, data.name);
     if (index != -1)
     {
         m_RadioJammerSource[index] = data;
+        m_radioJammerColor = color;
         if (m_spectrumChart)
         {
-            m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource);
+            m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                                    m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
         }
     }
 }
@@ -808,7 +870,8 @@ void SpectrumAnalysis::deleteData(const QString &name)
             m_radarSource.removeAt(index);
             if (m_spectrumChart)
             {
-                m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource);
+                m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                                        m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
             }
         }
     }
@@ -820,7 +883,8 @@ void SpectrumAnalysis::deleteData(const QString &name)
             m_radioSource.removeAt(index);
             if (m_spectrumChart)
             {
-                m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource);
+                m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                                        m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
             }
         }
     }
@@ -832,7 +896,8 @@ void SpectrumAnalysis::deleteData(const QString &name)
             m_radarJammerSource.removeAt(index);
             if (m_spectrumChart)
             {
-                m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource);
+                m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                                        m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
             }
         }
     }
@@ -844,7 +909,8 @@ void SpectrumAnalysis::deleteData(const QString &name)
             m_RadioJammerSource.removeAt(index);
             if (m_spectrumChart)
             {
-                m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource);
+                m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                                        m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
             }
         }
     }
