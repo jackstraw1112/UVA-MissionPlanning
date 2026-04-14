@@ -192,13 +192,22 @@ struct RadarThreatAssessResult
     double prf = 0.0;       // PRF 代表值 / 几何中心（Hz）
 };
 
+// 雷达实时参数
+struct RadarRealWrokPara
+{
+    int situationDefenseIndex = -1;     // 阵地火力 combo 索引；-1 未设则用批量默认
+    int situationRadModeIndex = -1;     // 辐射模式 combo 索引；-1 未设则用批量默认
+    double workPower;                   // 辐射功率
+    double defaultPower;                // 额定功率
+};
+
 // 雷达典型参数
 struct RadarTypicalPara
 {
+    bool valid = false;     // 三个代表值是否已有效填充
     double freq = 0.0;      // 频率代表值（GHz）
     double pw = 0.0;        // 脉宽代表值（μs）
     double prf = 0.0;       // PRF 代表值（Hz）
-    bool valid = false;     // 三个代表值是否已有效填充
 };
 
 // 子因子与合成
@@ -218,17 +227,13 @@ struct RadarThreatFactors
  */
 struct RadarThreatAssessRecord
 {
-    QString id;                         // 装备ID（装备名称）
-    QString name;                       // 雷达名称
-    QString type;                       // 雷达型号
-    RadarPerformancePara performance;   // 雷达性能参数区间
-    RadarTypicalPara typicalPara;       // 频率/脉宽/PRF 代表值
-    RadarThreatAssessResult evaluation; // 最近一次威胁评估数值结果
-    int situationDefenseIndex = -1;     // 阵地火力 combo 索引；-1 未设则用批量默认
-    int situationRadModeIndex = -1;     // 辐射模式 combo 索引；-1 未设则用批量默认
+    QString entityName;                 // 装备名称
+    QString typeName;                   // 雷达型号
 
-    // 「装备实体」列：名称（id），缺一则只显示另一侧
-    QString entityCellText() const;
+    RadarPerformancePara perfPara;        // 雷达性能参数
+    RadarRealWrokPara workPara;           // 雷达实时参数
+    RadarTypicalPara typicalPara;         // 雷达典型参数
+    RadarThreatAssessResult result; // 雷达威胁评估结果
 
     // [0,1] 威胁度→五档文案；供 threatLevelText 与外部展示复用
     static QString threatLevelFromF1(double adjustedF1);

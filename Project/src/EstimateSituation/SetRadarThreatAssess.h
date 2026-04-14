@@ -19,68 +19,76 @@ QT_END_NAMESPACE
 
 namespace ThreatAssessUi
 {
-    constexpr int kDefaultPositionDefenseComboIndex = 1;
-    constexpr int kDefaultRadiationModeComboIndex = 1;
+    constexpr int kDefaultPositionDefense = 1;
+    constexpr int kDefaultRadiationMode = 1;
     double radiationModeMultiplier(int comboIndex);
     double clamp01(double value);
 }
+
+class RZThreatAssess;
 
 class SetRadarThreatAssess : public QWidget
 {
     Q_OBJECT
 
+    friend RZThreatAssess;
+
 public:
     explicit SetRadarThreatAssess(QWidget *parent = nullptr);
     ~SetRadarThreatAssess() override;
 
-    RadarPerformancePara readInputFromUi() const;
-    RadarTypicalPara readRepresentativeCentersFromUi() const;
-    RadarThreatFactors readSubfactorSynthesisFromUi() const;
+private:
+    // 初始化参数
+    void initPara();
+    // 初始化对象
+    void initClass();
+    // 初始化连接
+    void signalAndSlot();
 
-    void displaySubfactor(const RadarThreatFactors &factors);
-    void syncRepresentativeCentersToUi(const RadarTypicalPara &representative, const RadarPerformancePara &performance,
-                                       const RadarThreatAssessResult &fallbackResult);
+public:
+    // 显示评估数据
+    void setDisplay(const RadarThreatAssessRecord &record);
+    // 显示评估数据 1-基本信息 2-典型参数
+    void displayData(const RadarThreatAssessRecord &record, int flag);
+    // 显示评估数据 实时参数
+    void displayData(const RadarRealWrokPara &realPara);
+    // 显示评估数据 评估因子
+    void displayData(const RadarThreatFactors &factors);
+    // 显示评估结果 评估结果
+    void displayData(const RadarThreatAssessResult &assessment);
 
-    void displayResult(const RadarThreatAssessResult &assessment);
-    void refreshSituationSummaryEffectiveProgress(RadarThreatAssessResult *lastResult);
+    // 清空显示
+    void undisplayData();
 
-    void clearTargetEdits();
-    void clearEquipmentEntityEdit();
+private:
+    // 计算评估结果
+    void onCalculate();
+    // 确定
+    void onConfirm();
+    // 退出
+    void onCancel();
 
-    void setEditRadarModel(const QString &text);
-    void setEditEquipmentEntity(const QString &text);
-
-    void setFreqMin(double v);
-    void setFreqMax(double v);
-    void setPwMin(double v);
-    void setPwMax(double v);
-    void setPrfMin(double v);
-    void setPrfMax(double v);
-    void setRangeKm(double v);
-
-    void setDefenseComboIndex(int index);
-    void setRadiationComboIndex(int index);
-
-    int defenseComboCurrentIndex() const;
-    int radiationComboCurrentIndex() const;
-
-    double currentResultF1SpinValue() const;
-
-    bool isBlockingResultSpinSignals() const { return m_blockResultSpinSignals; }
+    // 读取典型值
+    RadarTypicalPara readTypicalFromUi() const;
+    // 读取子因子
+    RadarThreatFactors readSubfactorFromUi() const;
 
 signals:
     void sigEvaluteResult();
 
-public slots:
-    void onCalculate();
-    void onConfirm();
-    void onCancel();
-
 private:
-    void connectPanelWidgetRelays();
-
     Ui::SetRadarThreatAssess *ui;
-    bool m_blockResultSpinSignals = false;
+
+    // 雷达性能参数
+    RadarPerformancePara m_perfPara;
+    // 雷达实时参数
+    RadarRealWrokPara m_workPara;
+    // 雷达典型参数
+    RadarTypicalPara m_typicalPara;
+    // 评估因子
+    RadarThreatFactors m_radarfactor;
+    // 雷达威胁评估结果
+    RadarThreatAssessResult m_result;
 };
 
 #endif // SETTHREATASSESS_H

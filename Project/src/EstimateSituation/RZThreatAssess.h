@@ -59,45 +59,40 @@ private:
 
     // 评估雷达威胁
     void assessRadarThreat();
+    // 双击表格进行评估
+    void onTableDoubleClicked(int row, int column);
+    // 接收评估结果
+    void onRecvAssessResult();
 
-public:
-    void loadFormFromTableRow(int row);
-    bool parseInputFromTableRow(int row, RadarPerformancePara *outInput, QString *outId, QString *outName,
-                                QString *errorMessage) const;
-    void ensureSituationDefaultsOnRecord(int row);
-    void applyEvaluationToRow(int row, const RadarPerformancePara &in, const QString &id, const QString &name,
-                              const RadarThreatAssessResult *precomputed = nullptr);
-
-    void applySubfactorSynthesisToAllRows();
-
-    const QVector<RadarThreatAssessRecord> &threatRecords() const { return m_radarSources; }
-
-    void onSituationConfirm();
-
-
-
-private slots:
-    void onTableCurrentCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
-    void onThreatTableCellDoubleClicked(int row, int column);
-    void refreshSituationDisplay(); // 由 onSituationConfirmed 调用；将面板态势写回当前行
-    void onRepresentativeCentersEdited();
-    void onSubfactorSynthesisEdited();
+    // 删除选中行
     void onRemoveSelectedRows();
+    // 清空表格
     void onClearTable();
-    void onCalcAllRadarThreats();
+    // 批量评估
+    void onCalculateAllRadarThreats();
+    // 保护实时参数
+    void protectRealWorkPara(int row);
 
 private:
     Ui::RZThreatAssess *ui;
 
-    RadarThreatAssessResult m_lastResult;
+    // 雷达评估记录
     QVector<RadarThreatAssessRecord> m_radarSources;
-    bool m_syncingEntityPick = false;
-
-    // 雷达威胁评估参数
-    RadarThreatFactors m_subfactor;
 
     // 雷达威胁评弹窗
     SetRadarThreatAssess *m_setThreatPanel = nullptr;
+
+    // 雷达威胁评估因子
+    RadarThreatFactors m_radarfactor;
+
+    // 选择行数
+    int m_selectRow;
+    // 雷达实时参数
+    RadarRealWrokPara m_workPara;
+    // 雷达典型参数
+    RadarTypicalPara m_typicalPara;
+    // 雷达评估结果
+    RadarThreatAssessResult m_result;
 };
 
 #endif // RZTHREATASSESSMENT_H
