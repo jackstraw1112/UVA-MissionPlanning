@@ -353,7 +353,6 @@ public:
     virtual ~ProjectPublicInterface() = default;
 
     // ── 通用工具函数 ──
-
     static QString f1TableCellText(double f1)
     {
         if (!std::isfinite(f1))
