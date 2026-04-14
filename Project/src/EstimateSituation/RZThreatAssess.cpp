@@ -20,81 +20,26 @@
 #include <algorithm>
 #include <cmath>
 
-// --- RadarThreatAssessmentRecord（表格列文案 → F1 分档 → 行威胁等级）---
-QString RadarThreatAssessRecord::threatLevelFromF1(double adjustedF1)
-{
-    double f = adjustedF1;
-    if (f < 0.0)
-    {
-        f = 0.0;
-    }
-    if (f > 1.0)
-    {
-        f = 1.0;
-    }
-    if (f >= 0.8)
-    {
-        return QStringLiteral("极高");
-    }
-    if (f >= 0.6)
-    {
-        return QStringLiteral("高");
-    }
-    if (f >= 0.4)
-    {
-        return QStringLiteral("中");
-    }
-    if (f >= 0.2)
-    {
-        return QStringLiteral("低");
-    }
-    return QStringLiteral("极低");
-}
-
-QString RadarThreatAssessRecord::threatLevelText(double f1) const
-{
-    // 无有效评估或非有限 F1：表格「威胁等级」列统一显示一字线「—」
-    if (!result.valid)
-    {
-        return QStringLiteral("—");
-    }
-    if (!std::isfinite(f1))
-    {
-        return QStringLiteral("—");
-    }
-
-    // situationRadModeIndex == -1：未写入行态势时与批量默认一致，使用界面「正常」辐射项对应索引
-    int radiationModeIndex = workPara.situationRadModeIndex;
-    if (radiationModeIndex < 0)
-    {
-        radiationModeIndex = ThreatAssessUi::kDefaultRadiationMode;
-    }
-
-    // 与底部「有效威胁度」相同：F1 × 辐射模式乘子
-    const double radiationMultiplier = ProjectPublicInterface::radiationModeMultiplier(radiationModeIndex);
-    const double adjustedF1 = qBound(0.0, f1 * radiationMultiplier, 1.0);
-    return threatLevelFromF1(adjustedF1);
-}
-
 // 表格相关属性封装函数
 namespace
 {
     // 威胁列表列序
     enum EThreatTableCol
     {
-        eColRadarModel = 0,   // 雷达型号
-        eColEquipmentEntity,  // 装备实体
-        eColFreqMin,          // 频率下限(GHz)
-        eColFreqMax,          // 频率上限(GHz)
-        eColPwMin,            // 脉宽下限(μs)
-        eColPwMax,            // 脉宽上限(μs)
-        eColPrfMin,           // PRF 下限(Hz)
-        eColPrfMax,           // PRF 上限(Hz)
-        eColRangeKm,          // 探测距离(千米)
-        eColF1,               // 体制威胁指数 F1
-        eColLevel,            // 威胁等级
-        eColNote,             // 说明
-        eColCount             // 列数（哨兵，非数据列）
+        eColEquipID = 0,    // 设备ID
+        eColEquipType,      // 雷达型号
+        eColEquipEntity,    // 装备实体
+        // eColFreqMin,          // 频率下限(GHz)
+        // eColFreqMax,          // 频率上限(GHz)
+        // eColPwMin,            // 脉宽下限(μs)
+        // eColPwMax,            // 脉宽上限(μs)
+        // eColPrfMin,           // PRF 下限(Hz)
+        // eColPrfMax,           // PRF 上限(Hz)
+        // eColRangeKm,          // 探测距离(千米)
+        eColF1,             // 体制威胁指数 F1
+        eColLevel,          // 威胁等级
+        eColNote,           // 说明
+        eColCount           // 列数（哨兵，非数据列）
     };
 
     // 创建居中表格项
@@ -105,7 +50,18 @@ namespace
         return cellItem;
     }
 
-    // 设置威胁等级背景颜色
+    /**
+     * @brief 根据威胁等级文案设置单元格的背景色、前景色、字体与 tooltip
+     *
+     * 五档等级与 RadarThreatAssessRecord::threatLevelFromF1 一一对应：
+     *   极高 (F1 ≥ 0.8) → 深红底白字，加粗     | 高危火控/精确制导雷达
+     *   高   (F1 ≥ 0.6) → 橙色底白字，加粗      | 中远程跟踪/火控雷达
+     *   中   (F1 ≥ 0.4) → 琥珀底深字            | 中程搜索/引导雷达
+     *   低   (F1 ≥ 0.2) → 浅绿底深字            | 远程预警/监视雷达
+     *   极低 (F1 <  0.2) → 浅灰底深灰字          | 气象/导航等民用类雷达
+     *
+     * 占位符 "—" 或空文本恢复默认配色（无色无 tooltip）。
+     */
     static void setItemBackground(QTableWidgetItem *item)
     {
         if (!item)
@@ -113,54 +69,64 @@ namespace
             return;
         }
 
-        // 威胁等级
         const QString level = item->text();
 
-        // 占位或无等级：恢复默认配色
+        // 占位或无等级：恢复默认配色并清除 tooltip
         if (level == QStringLiteral("—") || level.isEmpty())
         {
             item->setBackground(QBrush());
             item->setForeground(QBrush());
+            item->setToolTip(QString());
+            QFont font = item->font();
+            font.setBold(false);
+            item->setFont(font);
             return;
         }
 
-        // 背景/前景色
-        QColor background;
-        QColor foreground;
-        if (level == QStringLiteral("极高"))
+        // 五档配色/tooltip 查找表（等级名、背景色、前景色、是否加粗、tooltip）
+        struct LevelStyle
         {
-            background = QColor(0xc6, 0x28, 0x28);
-            foreground = Qt::white;
-        }
-        else if (level == QStringLiteral("高"))
+            const char16_t *name;
+            QColor background;
+            QColor foreground;
+            bool bold;
+            const char16_t *tooltip;
+        };
+
+        static const LevelStyle kStyles[] = {
+            { u"极高", QColor(0xc6, 0x28, 0x28), QColor(Qt::white), true,
+              u"极高威胁（F1 ≥ 0.8）：高危火控/精确制导雷达，需立即规避或实施电子攻击" },
+            { u"高",   QColor(0xef, 0x6c, 0x00), QColor(Qt::white), true,
+              u"高威胁（F1 ≥ 0.6）：中远程跟踪/火控雷达，建议优先压制" },
+            { u"中",   QColor(0xf9, 0xa8, 0x25), QColor(0x1a, 0x1a, 0x1a), false,
+              u"中等威胁（F1 ≥ 0.4）：中程搜索/引导雷达，需持续监视" },
+            { u"低",   QColor(0x7c, 0xb3, 0x42), QColor(0x1a, 0x1a, 0x1a), false,
+              u"低威胁（F1 ≥ 0.2）：远程预警/监视雷达，常规关注" },
+            { u"极低", QColor(0xec, 0xef, 0xf1), QColor(0x37, 0x47, 0x4f), false,
+              u"极低威胁（F1 < 0.2）：气象/导航等民用类雷达，可忽略" },
+        };
+
+        // 匹配等级并应用样式
+        for (const auto &style : kStyles)
         {
-            background = QColor(0xef, 0x6c, 0x00);
-            foreground = Qt::white;
-        }
-        else if (level == QStringLiteral("中"))
-        {
-            background = QColor(0xf9, 0xa8, 0x25);
-            foreground = QColor(0x1a, 0x1a, 0x1a);
-        }
-        else if (level == QStringLiteral("低"))
-        {
-            background = QColor(0x7c, 0xb3, 0x42);
-            foreground = QColor(0x1a, 0x1a, 0x1a);
-        }
-        else if (level == QStringLiteral("极低"))
-        {
-            background = QColor(0xec, 0xef, 0xf1);
-            foreground = QColor(0x37, 0x47, 0x4f);
-        }
-        else
-        {
-            item->setBackground(QBrush());
-            item->setForeground(QBrush());
-            return;
+            if (level == QString::fromUtf16(style.name))
+            {
+                item->setBackground(style.background);
+                item->setForeground(style.foreground);
+                item->setToolTip(QString::fromUtf16(style.tooltip));
+                item->setTextAlignment(Qt::AlignCenter);
+
+                QFont font = item->font();
+                font.setBold(style.bold);
+                item->setFont(font);
+                return;
+            }
         }
 
-        item->setBackground(background);
-        item->setForeground(foreground);
+        // 未知等级文案：恢复默认配色
+        item->setBackground(QBrush());
+        item->setForeground(QBrush());
+        item->setToolTip(QString());
     }
 
     // 创建威胁等级表格项
@@ -168,8 +134,10 @@ namespace
     {
         // 显示等级
         QTableWidgetItem *item = createCenterItem(text);
+
         // 设置背景色
         setItemBackground(item);
+
         return item;
     }
 
@@ -182,12 +150,27 @@ namespace
                 ProjectPublicInterface::geometricMean(performance.pwMin, performance.pwMax));
         factors.prfFactor = ProjectPublicInterface::prfThreatFactor(
                 ProjectPublicInterface::geometricMean(performance.prfMin, performance.prfMax));
-        factors.f1RawFactor = 0.40 * factors.freqFactor + 0.30 * factors.prfFactor + 0.30 * factors.pwFactor;
-        factors.rangeModFactor = ProjectPublicInterface::rangeModifier(performance.detectRange, factors.f1RawFactor);
-        factors.f1Factor = ProjectPublicInterface::clamp01(factors.f1RawFactor * factors.rangeModFactor);
+        factors.f1Raw = 0.40 * factors.freqFactor + 0.30 * factors.prfFactor + 0.30 * factors.pwFactor;
+        factors.rangeMod = ProjectPublicInterface::rangeModifier(performance.detectRange, factors.f1Raw);
+        factors.F1 = ProjectPublicInterface::clamp01(factors.f1Raw * factors.rangeMod);
         return factors;
     }
 
+    // 居中显示
+    static void setTableItemCenter(QTableWidget *pTable)
+    {
+        for (int row = 0; row < pTable->rowCount(); ++row)
+        {
+            for (int col = 0; col < pTable->columnCount(); ++col)
+            {
+                auto item = pTable->item(row, col);
+                if (item)
+                {
+                    item->setTextAlignment(Qt::AlignCenter);
+                }
+            }
+        }
+    }
 } // namespace
 
 RZThreatAssess::RZThreatAssess(QWidget *parent)
@@ -224,14 +207,15 @@ void RZThreatAssess::initClass()
     initTableAttr();
     // 初始化表头
     initTableHeader();
+    // 控件管理
+    widgetManage();
 
     // 生成测试数据
     generateTestData();
-    // 显示数据到表格
-    displayDataToTable();
-
     // 评估雷达威胁
     assessRadarThreat();
+    // 显示数据到表格
+    displayDataToTable();
 }
 
 void RZThreatAssess::signalAndSlot()
@@ -287,20 +271,31 @@ void RZThreatAssess::initTableHeader()
 
     // 设置表头
     const QStringList headers = {
+            QString::fromUtf8("设备ID"),
             QString::fromUtf8("雷达型号"),
             QString::fromUtf8("装备实体"),
-            QString::fromUtf8("频率下限(GHz)"),
-            QString::fromUtf8("频率上限(GHz)"),
-            QString::fromUtf8("脉宽下限(μs)"),
-            QString::fromUtf8("脉宽上限(μs)"),
-            QString::fromUtf8("PRF下限(Hz)"),
-            QString::fromUtf8("PRF上限(Hz)"),
-            QString::fromUtf8("探测距离(千米)"),
+            // QString::fromUtf8("频率下限(GHz)"),
+            // QString::fromUtf8("频率上限(GHz)"),
+            // QString::fromUtf8("脉宽下限(μs)"),
+            // QString::fromUtf8("脉宽上限(μs)"),
+            // QString::fromUtf8("PRF下限(Hz)"),
+            // QString::fromUtf8("PRF上限(Hz)"),
+            // QString::fromUtf8("探测距离(千米)"),
             QString::fromUtf8("体制威胁指数F1"),
             QString::fromUtf8("威胁等级"),
             QString::fromUtf8("说明"),
     };
     ui->tableThreatList->setHorizontalHeaderLabels(headers);
+
+    // 隐藏第一列
+    ui->tableThreatList->setColumnHidden(0, true);
+}
+
+void RZThreatAssess::widgetManage()
+{
+    // 隐藏删除与清空按钮
+    ui->btnRemoveRows->hide();
+    ui->btnClearTable->hide();
 }
 
 void RZThreatAssess::generateTestData()
@@ -335,6 +330,34 @@ void RZThreatAssess::generateTestData()
     addRadar(QStringLiteral("RAD-005"), QStringLiteral("远程预警 FPS-117"), QStringLiteral("FPS-117"), 6);
 }
 
+void RZThreatAssess::assessRadarThreat()
+{
+    if (!m_radarSources.isEmpty())
+    {
+        // 计算 评估结果
+        for (int rowIndex = 0; rowIndex < m_radarSources.size(); ++rowIndex)
+        {
+            // 计算评估结果
+            auto result = ProjectPublicInterface::calculateThreatResult(m_radarSources[rowIndex]);
+            // 缓存评估结果
+            if (result.valid)
+            {
+                m_radarSources[rowIndex].result = result;
+            }
+        }
+    }
+}
+
+void RZThreatAssess::assessRadarThreatSort()
+{
+    // 对威胁等级进行排序
+    std::sort(m_radarSources.begin(), m_radarSources.end(),
+              [](const RadarThreatAssessRecord &a, const RadarThreatAssessRecord &b)
+              {
+                  return a.result.threatLevel < b.result.threatLevel;
+              });
+}
+
 void RZThreatAssess::displayDataToTable()
 {
     // 表格数据清空
@@ -348,7 +371,7 @@ void RZThreatAssess::displayDataToTable()
     }
 }
 
-void RZThreatAssess::displayDataToTable(const RadarThreatAssessRecord &data, int row)
+void RZThreatAssess::displayDataToTable(const RadarThreatAssessRecord &record, int row)
 {
     // 获取表格对象
     auto const pTable = ui->tableThreatList;
@@ -361,29 +384,30 @@ void RZThreatAssess::displayDataToTable(const RadarThreatAssessRecord &data, int
         pTable->insertRow(row);
 
         // 显示数据
-        const RadarPerformancePara &perf = data.perfPara;
-        pTable->setItem(row, eColRadarModel, new QTableWidgetItem(data.typeName));
-        pTable->setItem(row, eColEquipmentEntity, new QTableWidgetItem(data.entityName));
-        pTable->setItem(row, eColFreqMin, new QTableWidgetItem(QString::number(perf.freqMin, 'f', 4)));
-        pTable->setItem(row, eColFreqMax, new QTableWidgetItem(QString::number(perf.freqMax, 'f', 4)));
-        pTable->setItem(row, eColPwMin, new QTableWidgetItem(QString::number(perf.pwMin, 'f', 4)));
-        pTable->setItem(row, eColPwMax, new QTableWidgetItem(QString::number(perf.pwMax, 'f', 4)));
-        pTable->setItem(row, eColPrfMin, new QTableWidgetItem(QString::number(perf.prfMin, 'f', 2)));
-        pTable->setItem(row, eColPrfMax, new QTableWidgetItem(QString::number(perf.prfMax, 'f', 2)));
-        pTable->setItem(row, eColRangeKm, new QTableWidgetItem(QString::number(perf.detectRange, 'f', 2)));
+        const RadarPerformancePara &perf = record.perfPara;
+        pTable->setItem(row, eColEquipID, new QTableWidgetItem(record.equipID));
+        pTable->setItem(row, eColEquipType, new QTableWidgetItem(record.typeName));
+        pTable->setItem(row, eColEquipEntity, new QTableWidgetItem(record.entityName));
+        // pTable->setItem(row, eColFreqMin, new QTableWidgetItem(QString::number(perf.freqMin, 'f', 4)));
+        // pTable->setItem(row, eColFreqMax, new QTableWidgetItem(QString::number(perf.freqMax, 'f', 4)));
+        // pTable->setItem(row, eColPwMin, new QTableWidgetItem(QString::number(perf.pwMin, 'f', 4)));
+        // pTable->setItem(row, eColPwMax, new QTableWidgetItem(QString::number(perf.pwMax, 'f', 4)));
+        // pTable->setItem(row, eColPrfMin, new QTableWidgetItem(QString::number(perf.prfMin, 'f', 2)));
+        // pTable->setItem(row, eColPrfMax, new QTableWidgetItem(QString::number(perf.prfMax, 'f', 2)));
+        // pTable->setItem(row, eColRangeKm, new QTableWidgetItem(QString::number(perf.detectRange, 'f', 2)));
 
         // 评估结果
-        if (data.result.valid)
+        if (record.result.valid)
         {
-            pTable->setItem(row, eColF1, new QTableWidgetItem(ProjectPublicInterface::f1TableCellText(m_radarfactor.f1Factor)));
-            pTable->setItem(row, eColLevel, new QTableWidgetItem(data.threatLevelText(m_radarfactor.f1Factor)));
-            pTable->setItem(row, eColNote, new QTableWidgetItem(QStringLiteral("有效")));
+            pTable->setItem(row, eColF1, createCenterItem(ProjectPublicInterface::f1TableCellText(record.factors.F1)));
+            pTable->setItem(row, eColLevel, createThreatLevelItem(record.threatLevelText(record.factors.F1)));
+            pTable->setItem(row, eColNote, createCenterItem(QStringLiteral("有效")));
         }
         else
         {
-            pTable->setItem(row, eColF1, new QTableWidgetItem(QStringLiteral("—")));
-            pTable->setItem(row, eColLevel, new QTableWidgetItem(QStringLiteral("—")));
-            pTable->setItem(row, eColNote, new QTableWidgetItem(data.result.errorMessage.isEmpty() ? QStringLiteral("无效") : data.result.errorMessage));
+            pTable->setItem(row, eColF1, createCenterItem(QStringLiteral("—")));
+            pTable->setItem(row, eColLevel, createThreatLevelItem(QStringLiteral("—")));
+            pTable->setItem(row, eColNote, createCenterItem(record.result.errorMsg.isEmpty() ? QStringLiteral("无效") : record.result.errorMsg));
         }
     }
     else
@@ -394,31 +418,37 @@ void RZThreatAssess::displayDataToTable(const RadarThreatAssessRecord &data, int
         }
 
         // 更新数据
-        const RadarPerformancePara &perf = data.perfPara;
-        pTable->item(row, eColRadarModel)->setText(data.typeName);
-        pTable->item(row, eColEquipmentEntity)->setText(data.entityName);
-        pTable->item(row, eColFreqMin)->setText(QString::number(perf.freqMin, 'f', 4));
-        pTable->item(row, eColFreqMax)->setText(QString::number(perf.freqMax, 'f', 4));
-        pTable->item(row, eColPwMin)->setText(QString::number(perf.pwMin, 'f', 4));
-        pTable->item(row, eColPwMax)->setText(QString::number(perf.pwMax, 'f', 4));
-        pTable->item(row, eColPrfMin)->setText(QString::number(perf.prfMin, 'f', 2));
-        pTable->item(row, eColPrfMax)->setText(QString::number(perf.prfMax, 'f', 2));
-        pTable->item(row, eColRangeKm)->setText(QString::number(perf.detectRange, 'f', 2));
+        const RadarPerformancePara &perf = record.perfPara;
+        pTable->item(row, eColEquipID)->setText(record.equipID);
+        pTable->item(row, eColEquipType)->setText(record.typeName);
+        pTable->item(row, eColEquipEntity)->setText(record.entityName);
+        // pTable->item(row, eColFreqMin)->setText(QString::number(perf.freqMin, 'f', 4));
+        // pTable->item(row, eColFreqMax)->setText(QString::number(perf.freqMax, 'f', 4));
+        // pTable->item(row, eColPwMin)->setText(QString::number(perf.pwMin, 'f', 4));
+        // pTable->item(row, eColPwMax)->setText(QString::number(perf.pwMax, 'f', 4));
+        // pTable->item(row, eColPrfMin)->setText(QString::number(perf.prfMin, 'f', 2));
+        // pTable->item(row, eColPrfMax)->setText(QString::number(perf.prfMax, 'f', 2));
+        // pTable->item(row, eColRangeKm)->setText(QString::number(perf.detectRange, 'f', 2));
 
         // 评估结果
-        if (data.result.valid)
+        if (record.result.valid)
         {
-            pTable->item(row, eColF1)->setText(ProjectPublicInterface::f1TableCellText(m_radarfactor.f1Factor));
-            pTable->item(row, eColLevel)->setText(data.threatLevelText(m_radarfactor.f1Factor));
+            pTable->item(row, eColF1)->setText(ProjectPublicInterface::f1TableCellText(record.factors.F1));
+            pTable->item(row, eColLevel)->setText(record.threatLevelText(record.factors.F1));
+            setItemBackground(pTable->item(row, eColLevel));
             pTable->item(row, eColNote)->setText(QStringLiteral("有效"));
         }
         else
         {
             pTable->item(row, eColF1)->setText(QStringLiteral("—"));
             pTable->item(row, eColLevel)->setText(QStringLiteral("—"));
-            pTable->item(row, eColNote)->setText(data.result.errorMessage.isEmpty() ? QStringLiteral("无效") : data.result.errorMessage);
+            setItemBackground(pTable->item(row, eColLevel));
+            pTable->item(row, eColNote)->setText(record.result.errorMsg.isEmpty() ? QStringLiteral("无效") : record.result.errorMsg);
         }
     }
+
+    // 居中显示
+    setTableItemCenter(pTable);
 }
 
 void RZThreatAssess::displayDataToTable(int row)
@@ -432,59 +462,24 @@ void RZThreatAssess::displayDataToTable(int row)
     auto *const pTable = ui->tableThreatList;
     const auto &refRecord = m_radarSources.at(row);
 
-    // 相识评估结果
+    // 显示评估结果
     if (refRecord.result.valid)
     {
-        pTable->item(row, eColF1)->setText(ProjectPublicInterface::f1TableCellText(m_radarfactor.f1Factor));
-        pTable->item(row, eColLevel)->setText(refRecord.threatLevelText(m_radarfactor.f1Factor));
+        pTable->item(row, eColF1)->setText(ProjectPublicInterface::f1TableCellText(refRecord.factors.F1));
+        pTable->item(row, eColLevel)->setText(refRecord.threatLevelText(refRecord.factors.F1));
+        setItemBackground(pTable->item(row, eColLevel));
         pTable->item(row, eColNote)->setText(QStringLiteral("有效"));
     }
     else
     {
         pTable->item(row, eColF1)->setText(QString("—"));
         pTable->item(row, eColLevel)->setText(QString("—"));
-        pTable->item(row, eColNote)->setText(refRecord.result.errorMessage.isEmpty() ? QString("无效") : refRecord.result.errorMessage);
+        setItemBackground(pTable->item(row, eColLevel));
+        pTable->item(row, eColNote)->setText(refRecord.result.errorMsg.isEmpty() ? QString("无效") : refRecord.result.errorMsg);
     }
-}
 
-void RZThreatAssess::assessRadarThreat()
-{
-    if (!m_radarSources.isEmpty())
-    {
-        // 用首行性能参数初始化全局「子因子与合成」
-        m_radarfactor = factorsFromPerformance(m_radarSources[0].perfPara);
-
-        // 显示 子因子与合成
-        m_setThreatPanel->displayData(m_radarfactor);
-
-        // 计算 评估结果
-        for (int rowIndex = 0; rowIndex < m_radarSources.size(); ++rowIndex)
-        {
-            // 计算评估结果
-            auto result = ProjectPublicInterface::calculateThreatResult(m_radarSources[rowIndex].perfPara,
-                                                                      m_radarSources[rowIndex].typicalPara,
-                                                                      m_radarfactor);
-            // 缓存评估结果
-            if (result.valid)
-            {
-                m_radarSources[rowIndex].result = result;
-            }
-
-            // 显示评估结果
-            displayDataToTable(rowIndex);
-        }
-    }
-    else
-    {
-        // 清空
-        m_setThreatPanel->undisplayData();
-
-        // 清空评估结果
-        m_result = RadarThreatAssessResult();
-
-        // 显示评估结果
-        m_setThreatPanel->displayData(m_result);
-    }
+    // 居中显示
+    setTableItemCenter(pTable);
 }
 
 void RZThreatAssess::onTableDoubleClicked(int row, int column)
@@ -499,7 +494,7 @@ void RZThreatAssess::onTableDoubleClicked(int row, int column)
     m_selectRow = row;
 
     // 右侧子因子与合成为全局快照，须先写入 spin，底部 F1/有效威胁度与记录一致
-    m_setThreatPanel->displayData(m_radarfactor);
+    m_setThreatPanel->displayData(m_radarSources.at(row).factors);
     m_setThreatPanel->setDisplay(m_radarSources.at(row));
     m_result = m_radarSources.at(row).result;
 
@@ -512,15 +507,15 @@ void RZThreatAssess::onTableDoubleClicked(int row, int column)
 void RZThreatAssess::onRecvAssessResult()
 {
     // 缓存数据
-    m_radarfactor = m_setThreatPanel->m_radarfactor;
-    m_radarSources[m_selectRow].workPara = m_setThreatPanel->m_workPara;
-    m_radarSources[m_selectRow].typicalPara = m_setThreatPanel->m_typicalPara;
-    m_radarSources[m_selectRow].result = m_setThreatPanel->m_result;
-
-    // 更新界面数据
-    displayDataToTable(m_radarSources[m_selectRow], m_selectRow);
+    m_radarSources[m_selectRow] = m_setThreatPanel->m_record;
 
     // 保存到数据库-待处理
+
+    // 评估雷达威胁排序
+    assessRadarThreatSort();
+
+    // 重新显示
+    displayDataToTable();
 
     // 重置标志位
     m_selectRow = -1;
@@ -604,10 +599,10 @@ void RZThreatAssess::onCalculateAllRadarThreats()
             continue;
         }
 
-        const auto rowResult = ProjectPublicInterface::calculateThreatResult(record.perfPara, record.typicalPara, m_radarfactor);
+        const auto rowResult = ProjectPublicInterface::calculateThreatResult(record);
         if (!rowResult.valid)
         {
-            QMessageBox::warning(this, QStringLiteral("参数错误"),  QStringLiteral("第 %1 行：%2").arg(row + 1).arg(rowResult.errorMessage));
+            QMessageBox::warning(this, QStringLiteral("参数错误"),  QStringLiteral("第 %1 行：%2").arg(row + 1).arg(rowResult.errorMsg));
             continue;
         }
 

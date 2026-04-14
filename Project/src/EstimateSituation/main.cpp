@@ -8,6 +8,7 @@
 #include "SpectrumAnalysis.h"
 #include "EstimateSituation.h"
 #include "RZThreatAssess.h"
+#include "RZSourceRadiation.h"
 
 int main(int argc, char *argv[])
 {

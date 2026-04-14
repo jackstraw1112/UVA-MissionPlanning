@@ -79,16 +79,8 @@ signals:
 private:
     Ui::SetRadarThreatAssess *ui;
 
-    // 雷达性能参数
-    RadarPerformancePara m_perfPara;
-    // 雷达实时参数
-    RadarRealWrokPara m_workPara;
-    // 雷达典型参数
-    RadarTypicalPara m_typicalPara;
-    // 评估因子
-    RadarThreatFactors m_radarfactor;
-    // 雷达威胁评估结果
-    RadarThreatAssessResult m_result;
+    // 评估记录
+    RadarThreatAssessRecord m_record;
 };
 
 #endif // SETTHREATASSESS_H
