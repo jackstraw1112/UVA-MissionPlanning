@@ -50,14 +50,8 @@ void SetRadarThreatAssess::signalAndSlot()
 
 void SetRadarThreatAssess::setDisplay(const RadarThreatAssessRecord &record)
 {
-    // 雷达性能参数
-    m_perfPara = record.perfPara;
-    // 记录实时参数
-    m_workPara = record.workPara;
-    // 记录典型参数
-    m_typicalPara = record.typicalPara;
-    // 记录当前评估结果
-    m_result = record.result;
+    // 记录基本信息
+    m_record = record;
 
     // 显示基本信息
     displayData(record, 1);
@@ -152,9 +146,9 @@ void SetRadarThreatAssess::displayData(const RadarThreatFactors &factors)
     ui->spinResultFFreq->setValue(factors.freqFactor);
     ui->spinResultFPrf->setValue(factors.prfFactor);
     ui->spinResultFPw->setValue(factors.pwFactor);
-    ui->spinResultF1Raw->setValue(factors.f1RawFactor);
-    ui->spinResultRangeMod->setValue(factors.rangeModFactor);
-    ui->spinResultF1->setValue(factors.f1Factor);
+    ui->spinResultF1Raw->setValue(factors.f1Raw);
+    ui->spinResultRangeMod->setValue(factors.rangeMod);
+    ui->spinResultF1->setValue(factors.F1);
 }
 
 void SetRadarThreatAssess::displayData(const RadarThreatAssessResult &assessment)
@@ -213,10 +207,10 @@ void SetRadarThreatAssess::onCalculate()
 {
     // 判断参数是否有效
     QString validationError;
-    if (!ProjectPublicInterface::validateRadarInput(m_perfPara, &validationError))
+    if (!ProjectPublicInterface::validateRadarInput(m_record.perfPara, &validationError))
     {
         RadarThreatAssessResult invalidResult;
-        invalidResult.errorMessage = validationError;
+        invalidResult.errorMsg = validationError;
         QMessageBox::warning(this, QStringLiteral("参数错误"), validationError);
         displayData(invalidResult);
         return;
@@ -228,28 +222,32 @@ void SetRadarThreatAssess::onCalculate()
     const auto typicalPara = readTypicalFromUi();
 
     // 计算评估结果
-    const auto result =  ProjectPublicInterface::calculateThreatResult(m_perfPara, m_typicalPara, m_radarfactor);
-    if (!m_result.valid)
+    const auto result =  ProjectPublicInterface::calculateThreatResult(m_record);
+    if (!m_record.result.valid)
     {
         RadarThreatAssessResult invalidResult;
-        invalidResult.errorMessage = m_result.errorMessage;
-        QMessageBox::warning(this, QStringLiteral("参数错误"), m_result.errorMessage);
+        invalidResult.errorMsg = m_record.result.errorMsg;
+        QMessageBox::warning(this, QStringLiteral("参数错误"), m_record.result.errorMsg);
         displayData(invalidResult);
         return;
     }
 
     // 缓存评估结果
-    m_typicalPara = typicalPara;
-    m_radarfactor = factor;
-    m_result = result;
+    m_record.typicalPara = typicalPara;
+    m_record.factors = factor;
+    m_record.result = result;
 
     // 显示评估结果
-    displayData(m_result);
+    displayData(m_record.result);
 }
 
 void SetRadarThreatAssess::onConfirm()
 {
+    // 发送评估结果
     emit sigEvaluteResult();
+
+    // 隐藏窗口
+    this->hide();
 }
 
 void SetRadarThreatAssess::onCancel()
@@ -273,8 +271,8 @@ RadarThreatFactors SetRadarThreatAssess::readSubfactorFromUi() const
     factors.freqFactor = ui->spinResultFFreq->value();
     factors.prfFactor = ui->spinResultFPrf->value();
     factors.pwFactor = ui->spinResultFPw->value();
-    factors.f1RawFactor = ui->spinResultF1Raw->value();
-    factors.rangeModFactor = ui->spinResultRangeMod->value();
-    factors.f1Factor = ui->spinResultF1->value();
+    factors.f1Raw = ui->spinResultF1Raw->value();
+    factors.rangeMod = ui->spinResultRangeMod->value();
+    factors.F1 = ui->spinResultF1->value();
     return factors;
 }

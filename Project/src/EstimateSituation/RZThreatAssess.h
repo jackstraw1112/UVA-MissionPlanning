@@ -47,18 +47,22 @@ private:
     void initTableAttr();
     // 初始化表格表头
     void initTableHeader();
+    // 控件管理
+    void widgetManage();
+
     // 生成测试数据
     void generateTestData();
+    // 评估雷达威胁
+    void assessRadarThreat();
+    // 评估雷达威胁排序
+    void assessRadarThreatSort();
 
     // 显示数据到表格
     void displayDataToTable();
     // 显示数据到表格
-    void displayDataToTable(const RadarThreatAssessRecord &data, int row = -1);
+    void displayDataToTable(const RadarThreatAssessRecord &record, int row = -1);
     // 显示评估结果
     void displayDataToTable(int row);
-
-    // 评估雷达威胁
-    void assessRadarThreat();
 
     // 双击表格进行评估
     void onTableDoubleClicked(int row, int column);
@@ -82,9 +86,6 @@ private:
 
     // 雷达威胁评弹窗
     SetRadarThreatAssess *m_setThreatPanel = nullptr;
-
-    // 雷达威胁评估因子
-    RadarThreatFactors m_radarfactor;
 
     // 选择行数
     int m_selectRow;

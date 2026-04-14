@@ -8,7 +8,12 @@
 #include "SpectrumAnalysis.h"
 #include "EstimateSituation.h"
 #include "RZThreatAssess.h"
+<<<<<<< HEAD
 #include "SpectrumAnalysis.h"
+=======
+#include "RZSourceRadiation.h"
+
+>>>>>>> 001a7a4f894d93f84b86c15e1fa745bb1795ecf4
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
