@@ -74,7 +74,7 @@ private:
      * @param data 雷达辐射源数据
      * @param row  表格行数，如果为-1，则添加新的行
      */
-    void displayData(const RadarSource &data, int row = -1);
+    void displayData(const RadarThreatAssessRecord &data, int row = -1);
 
     /**
      * @brief 显示电台辐射源数据
@@ -119,6 +119,10 @@ public:
         {
             addControlDataImpl(data);
         }
+        else if constexpr (std::is_same_v<T, RadarSource>)
+        {
+            addDataImpl(ProjectPublicInterface::radarSourceToRecord(data));
+        }
         else
         {
             addDataImpl(data);
@@ -127,7 +131,7 @@ public:
 
     /**
      * @brief 更新数据（模板接口）
-     * @tparam T 数据类型：RadarSource / RadioSource / RadarJammerSource / RadioJammerSource / SituationControlData
+     * @tparam T 数据类型：RadarThreatAssessRecord / RadarSource / RadioSource / RadarJammerSource / RadioJammerSource / SituationControlData
      * @param data 待更新的数据对象（按 name 或 type 匹配）
      * @details 若未找到同名或同类型数据，则按新增处理。
      */
@@ -138,6 +142,10 @@ public:
         {
             updateControlDataImpl(data);
         }
+        else if constexpr (std::is_same_v<T, RadarSource>)
+        {
+            updateDataImpl(ProjectPublicInterface::radarSourceToRecord(data));
+        }
         else
         {
             updateDataImpl(data);
@@ -146,7 +154,7 @@ public:
 
     /**
      * @brief 删除数据（模板接口）
-     * @tparam T 数据类型：RadarSource / RadioSource / RadarJammerSource / RadioJammerSource / SituationControlData
+     * @tparam T 数据类型：RadarThreatAssessRecord / RadarSource / RadioSource / RadarJammerSource / RadioJammerSource / SituationControlData
      * @param nameOrType 待删除目标名称或类型（按 name 或 type 匹配）
      * @details 调用后会同步删除对应缓存和界面模型中的行。
      */
@@ -156,6 +164,10 @@ public:
         if constexpr (std::is_same_v<T, SituationControlData>)
         {
             deleteControlDataImpl<T>(nameOrType);
+        }
+        else if constexpr (std::is_same_v<T, RadarSource>)
+        {
+            deleteDataImpl<RadarThreatAssessRecord>(nameOrType);
         }
         else
         {
@@ -171,11 +183,30 @@ signals:
      */
     void controlStateChanged(const QString &type, bool enabled);
 
+    /**
+     * @brief 雷达辐射源数据变更信号
+     * @details 当雷达数据增删改时发出，通知 RZThreatAssess 同步
+     */
+    void radarDataChanged();
+
+public:
+    /**
+     * @brief 获取雷达辐射源数据
+     * @return 雷达辐射源数据容器的常引用
+     */
+    const QVector<RadarThreatAssessRecord> &radarSources() const;
+
+    /**
+     * @brief 同步雷达辐射源数据（从 RZThreatAssess 接收评估结果）
+     * @param sources 更新后的雷达辐射源数据
+     */
+    void syncRadarSources(const QVector<RadarThreatAssessRecord> &sources);
+
 private:
     Ui::RZSourceRadiation *ui;
 
     // 雷达辐射源数据
-    QVector<RadarSource> m_radarSource;
+    QVector<RadarThreatAssessRecord> m_radarSources;
     // 电台辐射源数据
     QVector<RadioSource> m_radioSource;
     // 雷达干扰辐射源数据
@@ -200,14 +231,14 @@ private:
 private:
     // 类型化增删改实现：由模板公共接口分发调用
     // --- Add ---
-    void addDataImpl(const RadarSource &data);
+    void addDataImpl(const RadarThreatAssessRecord &data);
     void addDataImpl(const RadioSource &data);
     void addDataImpl(const RadarJammerSource &data);
     void addDataImpl(const RadioJammerSource &data);
     void addControlDataImpl(const SituationControlData &data);
 
     // --- Update ---
-    void updateDataImpl(const RadarSource &data);
+    void updateDataImpl(const RadarThreatAssessRecord &data);
     void updateDataImpl(const RadioSource &data);
     void updateDataImpl(const RadarJammerSource &data);
     void updateDataImpl(const RadioJammerSource &data);
@@ -229,7 +260,7 @@ private:
     template <typename T>
     void deleteDataImpl(const QString &name)
     {
-        if constexpr (std::is_same_v<T, RadarSource>)
+        if constexpr (std::is_same_v<T, RadarThreatAssessRecord>)
         {
             deleteRadarDataByName(name);
         }

@@ -19,8 +19,8 @@ int main(int argc, char *argv[])
     app.setStyle(QStyleFactory::create("Fusion"));
 
     // 创建并显示主窗口
-    RZThreatAssess w;
-    w.show();
+   // RZThreatAssess w;
+   // w.show();
     // SpectrumAnalysis s;
     //  s.show();
     EstimateSituation e;

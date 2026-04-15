@@ -26,12 +26,14 @@ namespace ThreatAssessUi
 }
 
 class RZThreatAssess;
+class ThreatAssessment;
 
 class SetRadarThreatAssess : public QWidget
 {
     Q_OBJECT
 
     friend RZThreatAssess;
+    friend ThreatAssessment;
 
 public:
     explicit SetRadarThreatAssess(QWidget *parent = nullptr);

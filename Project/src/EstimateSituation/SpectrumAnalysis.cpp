@@ -2,31 +2,40 @@
 // Created by admin on "2026.04.10 T 19:19:20".
 //
 
-// You may need to build the project (run Qt uic code generator) to get "ui_SpectrumAnalysis.h" resolved
-
 #include "SpectrumAnalysis.h"
 #include "ui_SpectrumAnalysis.h"
-#include <QPainter>
-#include <QMouseEvent>
-#include <QStandardItemModel>
+
 #include <QFrame>
 #include <QFont>
-#include <vector>
-#include <utility>
-#include <QToolTip>
+#include <QMouseEvent>
+#include <QPainter>
 #include <QRegularExpression>
 #include <QRegularExpressionMatch>
+#include <QStandardItemModel>
+#include <QToolTip>
+
 #include <limits>
+#include <utility>
+#include <vector>
 
 // ==============================================================================
 // SpectrumChart 类实现
 // ==============================================================================
 
-/**
- * @brief 构造函数
- * @param parent 父窗口指针
- * @details 初始化图形场景、渲染参数、鼠标追踪及成员变量。
- */
+namespace
+{
+    constexpr qreal kXOffset = 20.0;
+    constexpr qreal kYOffset = 20.0;
+    constexpr qreal kWidthMargin = 40.0;
+    constexpr qreal kHeightMargin = 110.0;
+    constexpr qreal kBarHeightRatio = 0.7;
+    constexpr qreal kArrowSize = 8.0;
+    constexpr qreal kBandLabelOffset = 25.0;
+    constexpr qreal kFreqLabelOffset = 25.0;
+    constexpr int kBandLabelFontSize = 10;
+    constexpr int kFreqLabelFontSize = 9;
+}
+
 SpectrumChart::SpectrumChart(QWidget *parent)
     : QGraphicsView(parent)
 {
@@ -39,35 +48,23 @@ SpectrumChart::SpectrumChart(QWidget *parent)
     m_hoveredIndex = -1;
     m_tooltipItem = nullptr;
     m_tooltipBg = nullptr;
-    m_totalRange = 0;
+
 
     initScene();
 }
 
-/**
- * @brief 析构函数
- * @details 清理场景并释放图形场景资源。
- */
 SpectrumChart::~SpectrumChart()
 {
     clearScene();
     delete m_scene;
 }
 
-/**
- * @brief 初始化场景
- * @details 清空场景并设置浅灰色背景。
- */
 void SpectrumChart::initScene()
 {
     clearScene();
     m_scene->setBackgroundBrush(QColor(240, 240, 240));
 }
 
-/**
- * @brief 清理场景
- * @details 清空频谱数据、移除所有图形项并重置悬停状态。
- */
 void SpectrumChart::clearScene()
 {
     m_scene->clear();
@@ -76,13 +73,6 @@ void SpectrumChart::clearScene()
     m_tooltipBg = nullptr;
 }
 
-/**
- * @brief 设置辐射源数据并重绘柱状图
- * @param radarSource 雷达辐射源数据
- * @param radioSource 电台辐射源数据
- * @param radarJammerSource 雷达干扰辐射源数据
- * @param radioJammerSource 通信干扰辐射源数据
- */
 void SpectrumChart::setData(const QVector<RadarSource> &radarSource,
                             const QVector<RadioSource> &radioSource,
                             const QVector<RadarJammerSource> &radarJammerSource,
@@ -104,47 +94,40 @@ void SpectrumChart::setData(const QVector<RadarSource> &radarSource,
 }
 
 void SpectrumChart::setData(const QVector<RadarSource> &radarSource,
-                            const QVector<RadioSource> &radioSource,
-                            const QVector<RadarJammerSource> &radarJammerSource,
-                            const QVector<RadioJammerSource> &radioJammerSource)
+                             const QVector<RadioSource> &radioSource,
+                             const QVector<RadarJammerSource> &radarJammerSource,
+                             const QVector<RadioJammerSource> &radioJammerSource)
 {
     setData(radarSource, radioSource, radarJammerSource, radioJammerSource,
-            QColor(Qt::red), QColor(Qt::blue), QColor(Qt::green), QColor(Qt::darkYellow));
+            QColor(Qt::green), QColor(Qt::green), QColor(Qt::green), QColor(Qt::green));
 }
 
-/**
- * @brief 计算频率范围的起始和结束值（MHz）
- * @param frequencyStr 频率字符串，如 "5.2~6.1GHz"、"150~170MHz" 或 "Ku波段"
- * @return 频率范围的起始和结束值（MHz），解析失败返回 (0, 100)
- * @details 优先匹配常见波段名称（Ku/S/C/X波段），再通过正则解析数值范围，
- *          GHz 自动转换为 MHz。
- */
 QPair<double, double> SpectrumChart::calculateFrequencyRange(const QString &frequencyStr)
 {
     // 处理常见波段名称
-    if (frequencyStr.contains("Ku波段"))
+    if (frequencyStr.contains(QStringLiteral("Ku波段")))
     {
         return qMakePair(12000.0, 18000.0);
     }
-    else if (frequencyStr.contains("S/C波段"))
+    else if (frequencyStr.contains(QStringLiteral("S/C波段")))
     {
         return qMakePair(2000.0, 4000.0);
     }
-    else if (frequencyStr.contains("S波段"))
+    else if (frequencyStr.contains(QStringLiteral("S波段")))
     {
         return qMakePair(2000.0, 3500.0);
     }
-    else if (frequencyStr.contains("C波段"))
+    else if (frequencyStr.contains(QStringLiteral("C波段")))
     {
         return qMakePair(3500.0, 6500.0);
     }
-    else if (frequencyStr.contains("X波段"))
+    else if (frequencyStr.contains(QStringLiteral("X波段")))
     {
         return qMakePair(8000.0, 12000.0);
     }
 
     // 处理频率范围格式，如 "5.2~6.1GHz", "150~170MHz"
-    QRegularExpression regex("([0-9.]+)\\s*~\\s*([0-9.]+)\\s*(GHz|MHz)");
+    QRegularExpression regex(QStringLiteral("([0-9.]+)\\s*~\\s*([0-9.]+)\\s*(GHz|MHz)"));
     QRegularExpressionMatch match = regex.match(frequencyStr);
     if (match.hasMatch())
     {
@@ -152,7 +135,7 @@ QPair<double, double> SpectrumChart::calculateFrequencyRange(const QString &freq
         double end = match.captured(2).toDouble();
         QString unit = match.captured(3);
 
-        if (unit == "GHz")
+        if (unit == QStringLiteral("GHz"))
         {
             start *= 1000;
             end *= 1000;
@@ -164,23 +147,6 @@ QPair<double, double> SpectrumChart::calculateFrequencyRange(const QString &freq
     return qMakePair(0.0, 100.0);
 }
 
-/**
- * @brief 计算频率带宽（MHz）
- * @param frequencyStr 频率字符串
- * @return 带宽值（MHz）
- */
-double SpectrumChart::calculateBandwidth(const QString &frequencyStr)
-{
-    QPair<double, double> range = calculateFrequencyRange(frequencyStr);
-    return range.second - range.first;
-}
-
-/**
- * @brief 绘制柱状图
- * @details 收集所有辐射源的频率范围，按频率比例绘制红色半透明柱状图，
- *          柱状图宽度由频率带宽决定，支持重叠显示。底部保留X轴及刻度线，
- *          不显示Y轴、顶部标签和X轴频率文字。
- */
 void SpectrumChart::drawBarChart()
 {
     clearScene();
@@ -193,7 +159,7 @@ void SpectrumChart::drawBarChart()
         return;
     }
 
-    // 收集所有频率范围和对应的频率字符串
+    // 收集所有频率范围（暂不合并）
     QVector<FrequencyRangeInfo> allRangeInfos;
 
     // ---------- 1. 雷达数据 (Radar) ----------
@@ -203,6 +169,7 @@ void SpectrumChart::drawBarChart()
         info.frequencyStr = radar.frequency;
         info.range = calculateFrequencyRange(radar.frequency);
         info.color = m_radarColor;
+        info.signalCount = 1;
         allRangeInfos.append(info);
     }
 
@@ -213,6 +180,7 @@ void SpectrumChart::drawBarChart()
         info.frequencyStr = radio.frequency;
         info.range = calculateFrequencyRange(radio.frequency);
         info.color = m_radioColor;
+        info.signalCount = 1;
         allRangeInfos.append(info);
     }
 
@@ -223,6 +191,7 @@ void SpectrumChart::drawBarChart()
         info.frequencyStr = radarJammer.workingBand;
         info.range = calculateFrequencyRange(radarJammer.workingBand);
         info.color = m_radarJammerColor;
+        info.signalCount = 1;
         allRangeInfos.append(info);
     }
 
@@ -233,13 +202,40 @@ void SpectrumChart::drawBarChart()
         info.frequencyStr = radioJammer.coverageBand;
         info.range = calculateFrequencyRange(radioJammer.coverageBand);
         info.color = m_radioJammerColor;
+        info.signalCount = 1;
         allRangeInfos.append(info);
     }
 
-    // 计算频率范围的最小值和最大值
+    // ---------- 5. 频率范围合并：重叠时保留较大范围，累加信号数量 ----------
+    QVector<FrequencyRangeInfo> mergedInfos;
+    for (const auto &info : allRangeInfos)
+    {
+        bool merged = false;
+        for (auto &existing : mergedInfos)
+        {
+            // 检查是否重叠或包含
+            const bool overlaps = !(info.range.second < existing.range.first || info.range.first > existing.range.second);
+            if (overlaps)
+            {
+                // 合并为更大的范围
+                existing.range.first = qMin(existing.range.first, info.range.first);
+                existing.range.second = qMax(existing.range.second, info.range.second);
+                // 累加信号数量
+                existing.signalCount += info.signalCount;
+                merged = true;
+                break;
+            }
+        }
+        if (!merged)
+        {
+            mergedInfos.append(info);
+        }
+    }
+
+    // 计算频率范围的最小值和最大值（使用合并后的数据）
     double minFreq = std::numeric_limits<double>::max();
     double maxFreq = std::numeric_limits<double>::min();
-    for (const auto &info : allRangeInfos)
+    for (const auto &info : mergedInfos)
     {
         minFreq = qMin(minFreq, info.range.first);
         maxFreq = qMax(maxFreq, info.range.second);
@@ -252,19 +248,19 @@ void SpectrumChart::drawBarChart()
         maxFreq = 1000.0;
     }
 
-    // 图表布局参数
-    qreal chartWidth = width() - 40;
-    qreal chartHeight = height() - 40;
-    qreal barHeight = chartHeight * 0.8;
-    qreal xOffset = 20;
-    qreal yOffset = 20;
+    // 图表布局参数（底部增加更多空间以显示频段标签和频率标签）
+    qreal chartWidth = width() - kWidthMargin;
+    qreal chartHeight = height() - kHeightMargin;
+    qreal barHeight = chartHeight * kBarHeightRatio;
+    qreal xOffset = kXOffset;
+    qreal yOffset = kYOffset;
 
     // 计算频率到像素的缩放比例
     double freqRange = maxFreq - minFreq;
     double scaleFactor = chartWidth / freqRange;
 
-    // 绘制所有柱状图
-    for (auto &info : allRangeInfos)
+    // 绘制所有柱状图（使用合并后的数据）
+    for (auto &info : mergedInfos)
     {
         qreal barStart = xOffset + (info.range.first - minFreq) * scaleFactor;
         qreal barWidth = (info.range.second - info.range.first) * scaleFactor;
@@ -278,8 +274,8 @@ void SpectrumChart::drawBarChart()
         info.rect = barRect;
     }
 
-    // 存储所有频率范围信息，用于鼠标悬浮检测
-    m_rangeInfos = allRangeInfos;
+    // 存储合并后的频率范围信息，用于鼠标悬浮检测
+    m_rangeInfos = mergedInfos;
 
     // 绘制X轴
     QPen axisPen(Qt::black, 1);
@@ -287,132 +283,86 @@ void SpectrumChart::drawBarChart()
                      xOffset + chartWidth, yOffset + chartHeight, axisPen);
 
     // 绘制X轴末尾向右的三角形箭头
-    qreal arrowSize = 8;
+    qreal arrowSize = kArrowSize;
     QPolygonF arrow;
-    arrow << QPointF(xOffset + chartWidth, yOffset + chartHeight) // 箭头尾部（X轴终点）
-          << QPointF(xOffset + chartWidth - arrowSize, yOffset + chartHeight - arrowSize / 2) // 左上点
-          << QPointF(xOffset + chartWidth - arrowSize, yOffset + chartHeight + arrowSize / 2); // 左下点
-    QGraphicsPolygonItem *arrowItem = m_scene->addPolygon(arrow, axisPen, QBrush(Qt::black));
+    arrow << QPointF(xOffset + chartWidth, yOffset + chartHeight)
+          << QPointF(xOffset + chartWidth - arrowSize, yOffset + chartHeight - arrowSize / 2)
+          << QPointF(xOffset + chartWidth - arrowSize, yOffset + chartHeight + arrowSize / 2);
+    m_scene->addPolygon(arrow, axisPen, QBrush(Qt::black));
 
-    // 添加X轴刻度线（5个刻度，不显示刻度标签）
-    //qreal axisStep = chartWidth / 5;
-    /*for (int i = 0; i <= 5; ++i)
-    {
-        qreal tickX = xOffset + i * axisStep;
-        m_scene->addLine(tickX, yOffset + chartHeight,
-                         tickX, yOffset + chartHeight + 5, axisPen);
-    }*/
-}
+    // 绘制频段标签（在X轴下方）
+    qreal bandLabelY = yOffset + chartHeight + 25;
+    QFont bandLabelFont;
+    bandLabelFont.setPointSize(10);
 
-/**
- * @brief 计算重叠数量
- * @param targetRange 目标频率范围
- * @return 与目标范围存在重叠的频率范围数量
- */
-int SpectrumChart::calculateOverlapCount(const QPair<double, double> &targetRange)
-{
-    int overlapCount = 0;
-    for (int i = 0; i < m_rangeInfos.size(); ++i)
+    // 绘制具体频率刻度标签（在频段标签下方）
+    qreal freqLabelY = bandLabelY + 25;
+    QFont freqLabelFont;
+    freqLabelFont.setPointSize(9);
+
+    // 频率刻度表（按从小到大排列）
+    static const QList<double> freqTicks = {0, 30, 300, 1000, 2000, 4000, 8000, 12000, 18000, 26500, 40000};
+
+    // 绘制每个频率刻度和标签
+    for (double freq : freqTicks)
     {
-        const auto &info = m_rangeInfos.at(i);
-        if (info.range.first < targetRange.second && info.range.second > targetRange.first)
+        // 检查频率是否在图表范围内
+        if (freq < minFreq || freq > maxFreq)
         {
-            overlapCount++;
+            continue;
         }
+
+        // 计算频率在图表中的位置
+        double tickX = xOffset + (freq - minFreq) * scaleFactor;
+
+        // 绘制频率标签
+        QString labelText;
+        if (freq >= 1000)
+        {
+            labelText = QStringLiteral("%1").arg(freq / 1000.0, 0, 'f', 0) + QStringLiteral("G");
+        }
+        else
+        {
+            labelText = QStringLiteral("%1").arg(freq, 0, 'f', 0) + QStringLiteral("M");
+        }
+
+        QGraphicsTextItem *textItem = m_scene->addText(labelText, freqLabelFont);
+        textItem->setDefaultTextColor(Qt::black);
+        qreal textWidth = textItem->boundingRect().width();
+        qreal textX = tickX - textWidth / 2;
+        textItem->setPos(textX, freqLabelY - textItem->boundingRect().height() / 2);
     }
-    return overlapCount;
 }
 
-/**
- * @brief 计算频率范围的最小值和最大值
- * @return 频率范围的最小值和最大值（MHz），无数据时返回 (0, 1000)
- */
-QPair<double, double> SpectrumChart::getFrequencyRangeMinMax()
-{
-    double minFreq = std::numeric_limits<double>::max();
-    double maxFreq = std::numeric_limits<double>::min();
-
-    for (int i = 0; i < m_rangeInfos.size(); ++i)
-    {
-        const auto &info = m_rangeInfos.at(i);
-        minFreq = qMin(minFreq, info.range.first);
-        maxFreq = qMax(maxFreq, info.range.second);
-    }
-
-    if (minFreq >= maxFreq)
-    {
-        minFreq = 0.0;
-        maxFreq = 1000.0;
-    }
-
-    return qMakePair(minFreq, maxFreq);
-}
-
-/**
- * @brief 根据频率获取频段名称
- * @param freq 频率值（MHz）
- * @return 频段名称，如 "HF频段"、"VHF频段"、"Ku频段" 等
- * @details 频段划分标准：
- *          HF  < 30MHz,  VHF < 300MHz, UHF < 1000MHz,
- *          L   < 2000MHz, S   < 4000MHz, C   < 8000MHz,
- *          X   < 12000MHz, Ku  < 18000MHz, K  < 26500MHz,
- *          Ka  < 40000MHz, 其余为毫米波频段
- */
 QString SpectrumChart::getBandName(double freq)
 {
     // 频率阈值 + 频段名称（按从小到大排列）
     static const QList<std::pair<double, QString>> bandMap = {
-        {30,    "HF频段"},
-        {300,   "VHF频段"},
-        {1000,  "UHF频段"},
-        {2000,  "L频段"},
-        {4000,  "S频段"},
-        {8000,  "C频段"},
-        {12000, "X频段"},
-        {18000, "Ku频段"},
-        {26500, "K频段"},
-        {40000, "Ka频段"}
+        {30,    QStringLiteral("HF频段")},
+        {300,   QStringLiteral("VHF频段")},
+        {1000,  QStringLiteral("UHF频段")},
+        {2000,  QStringLiteral("L频段")},
+        {4000,  QStringLiteral("S频段")},
+        {8000,  QStringLiteral("C频段")},
+        {12000, QStringLiteral("X频段")},
+        {18000, QStringLiteral("Ku频段")},
+        {26500, QStringLiteral("K频段")},
+        {40000, QStringLiteral("Ka频段")}
     };
 
     // 匹配频段
-    for (const auto& pair : bandMap) {
-        if (freq < pair.first) {
+    for (const auto &pair : bandMap)
+    {
+        if (freq < pair.first)
+        {
             return pair.second;
         }
     }
 
-    // 超过40000 沿用原逻辑返回 HF频段
-    return "HF频段";
+    // 超过40000 返回毫米波频段
+    return QStringLiteral("毫米波频段");
 }
 
-/**
- * @brief 构建频率范围显示文本
- * @param frequencyStr 频率字符串，如 "5.2~6.1GHz" 或 "Ku波段"
- * @return 用于悬浮提示的频率范围文本
- * @details 波段名称自动转换为具体频率范围（如 "Ku波段" → "12000~18000MHz"），
- *          数值型频率范围直接返回原字符串。
- */
-QString SpectrumChart::buildFrequencyDisplay(const QString &frequencyStr)
-{
-    QPair<double, double> range = calculateFrequencyRange(frequencyStr);
-    if (frequencyStr.contains("波段"))
-    {
-        return QString("%1~%2MHz").arg(range.first).arg(range.second);
-    }
-    else
-    {
-        return frequencyStr;
-    }
-}
-
-/**
- * @brief 鼠标移动事件
- * @param event 鼠标事件
- * @details 根据鼠标位置换算对应频率，查找包含该频率的所有频率范围，
- *          选取最窄（最具体）的范围作为目标，显示悬浮提示：
- *          频段名称、频率范围、信号数量。
- *          信号数量 = 包含当前鼠标频率的频率范围总数。
- */
 void SpectrumChart::mouseMoveEvent(QMouseEvent *event)
 {
     QGraphicsView::mouseMoveEvent(event);
@@ -420,14 +370,25 @@ void SpectrumChart::mouseMoveEvent(QMouseEvent *event)
     // 转换鼠标坐标到图表坐标系
     QPointF scenePos = mapToScene(event->pos());
 
-    // 计算频率范围的最小值和最大值
-    QPair<double, double> freqMinMax = getFrequencyRangeMinMax();
-    double minFreq = freqMinMax.first;
-    double maxFreq = freqMinMax.second;
-
     // 图表布局参数
     qreal chartWidth = width() - 40;
+    qreal chartHeight = height() - 110;
     qreal xOffset = 20;
+    qreal yOffset = 20;
+
+    // 计算频率范围的最小值和最大值
+    double minFreq = std::numeric_limits<double>::max();
+    double maxFreq = std::numeric_limits<double>::min();
+    for (const auto &info : m_rangeInfos)
+    {
+        minFreq = qMin(minFreq, info.range.first);
+        maxFreq = qMax(maxFreq, info.range.second);
+    }
+    if (minFreq >= maxFreq)
+    {
+        minFreq = 0.0;
+        maxFreq = 1000.0;
+    }
 
     // 计算频率到像素的缩放比例
     double freqRange = maxFreq - minFreq;
@@ -436,59 +397,30 @@ void SpectrumChart::mouseMoveEvent(QMouseEvent *event)
     // 计算鼠标位置对应的频率
     double mouseFreq = minFreq + (scenePos.x() - xOffset) / scaleFactor;
 
-    // 找到所有包含当前鼠标频率的频率范围
-    QVector<FrequencyRangeInfo> containingRanges;
-    for (int i = 0; i < m_rangeInfos.size(); ++i)
+    // 找到包含当前鼠标频率的频率范围（合并后的）
+    for (const auto &info : m_rangeInfos)
     {
-        const auto &info = m_rangeInfos.at(i);
         if (mouseFreq >= info.range.first && mouseFreq <= info.range.second)
         {
-            containingRanges.append(info);
+            // 构建频率范围显示文本
+            QString freqDisplay = QStringLiteral("%1~%2MHz").arg(info.range.first).arg(info.range.second);
+
+            // 确定频段名称
+            double centerFreq = (info.range.first + info.range.second) / 2;
+            QString bandName = getBandName(centerFreq);
+
+            // 显示悬浮提示（包含信号数量）
+            QString tooltip = QString("%1\n频率范围: %2\n信号数量: %3")
+                                  .arg(bandName).arg(freqDisplay).arg(info.signalCount);
+            QToolTip::showText(event->globalPos(), tooltip, this);
+            return;
         }
     }
 
-    if (!containingRanges.isEmpty())
-    {
-        // 找到最小的频率范围（最具体的）
-        FrequencyRangeInfo targetRange = containingRanges[0];
-        for (const auto &range : containingRanges)
-        {
-            double currentWidth = range.range.second - range.range.first;
-            double targetWidth = targetRange.range.second - targetRange.range.first;
-            if (currentWidth < targetWidth)
-            {
-                targetRange = range;
-            }
-        }
-
-        // 计算信号数量（包含当前鼠标频率的频率范围数量）
-        int signalCount = containingRanges.size();
-
-        // 构建频率范围显示文本
-        QString freqDisplay = buildFrequencyDisplay(targetRange.frequencyStr);
-
-        // 确定频段名称
-        QPair<double, double> range = calculateFrequencyRange(targetRange.frequencyStr);
-        double centerFreq = (range.first + range.second) / 2;
-        QString bandName = getBandName(centerFreq);
-
-        // 显示悬浮提示
-        QString tooltip = QString("%1\n频率范围: %2\n信号数量: %3")
-                              .arg(bandName).arg(freqDisplay).arg(signalCount);
-        QToolTip::showText(event->globalPos(), tooltip, this);
-    }
-    else
-    {
-        // 鼠标不在任何频率范围上，隐藏提示
-        QToolTip::hideText();
-    }
+    // 鼠标不在任何频率范围上，隐藏提示
+    QToolTip::hideText();
 }
 
-/**
- * @brief 鼠标离开事件
- * @param event 事件对象
- * @details 鼠标离开图表区域时隐藏悬浮提示。
- */
 void SpectrumChart::leaveEvent(QEvent *event)
 {
     QGraphicsView::leaveEvent(event);
@@ -499,77 +431,52 @@ void SpectrumChart::leaveEvent(QEvent *event)
 // SpectrumAnalysis 类实现
 // ==============================================================================
 
-/**
- * @brief 构造函数
- * @param parent 父窗口指针
- */
 SpectrumAnalysis::SpectrumAnalysis(QWidget *parent)
     : QWidget(parent), ui(new Ui::SpectrumAnalysis)
 {
     ui->setupUi(this);
 
     // 初始化参数
-    initParams();
+    initPara();
 
     // 初始化对象
-    initObject();
+    initClass();
 
     // 关联信号与槽函数
-    initConnect();
+    signalAndSlot();
 }
 
-/**
- * @brief 析构函数
- */
 SpectrumAnalysis::~SpectrumAnalysis()
 {
     delete ui;
 }
 
-/**
- * @brief 初始化参数
- * @details 预留扩展
- */
-void SpectrumAnalysis::initParams()
+void SpectrumAnalysis::initPara()
 {
 }
 
-/**
- * @brief 初始化对象
- * @details 生成测试数据、初始化表格属性、创建频谱图表、初始化数据模型并显示数据。
- */
-void SpectrumAnalysis::initObject()
+void SpectrumAnalysis::initClass()
 {
-    // 生成测试数据
-    generateTestData();
-
-    // 初始化表格属性
+    // 初始化颜色
     initTableViewAttr();
 
     // 初始化数据模型
     initDataModel();
 
+    // 生成测试数据
+    generateTestData();
+
     // 显示频谱源数据
     displayData();
 }
 
-/**
- * @brief 关联信号与槽函数
- * @details 预留扩展
- */
-void SpectrumAnalysis::initConnect()
+void SpectrumAnalysis::signalAndSlot()
 {
-
 }
 
-/**
- * @brief 生成测试数据
- * @details 生成雷达、电台、雷达对抗、通信对抗四类辐射源测试数据，
- *          生成前先清空容器，避免重复追加。
- */
 void SpectrumAnalysis::generateTestData()
 {
-    // 重新生成测试数据前先清空容器，避免重复追加
+    // 清空容器，避免重复追加
     m_radarSource.clear();
     m_radioSource.clear();
     m_radarJammerSource.clear();
@@ -577,379 +484,224 @@ void SpectrumAnalysis::generateTestData()
 
     // ---------- 1. 雷达数据 (Radar) ----------
     RadarSource radar1;
-    radar1.frequency = QString::fromUtf8("5.2~6.1GHz");
+    radar1.frequency = QStringLiteral("5.2~6.1GHz");
     m_radarSource.append(radar1);
 
     RadarSource radar2;
-    radar2.frequency = QString::fromUtf8("150~170MHz");
+    radar2.frequency = QStringLiteral("150~170MHz");
     m_radarSource.append(radar2);
 
     RadarSource radar3;
-    radar3.frequency = QString::fromUtf8("8~12GHz");
+    radar3.frequency = QStringLiteral("8~12GHz");
     m_radarSource.append(radar3);
-
-    // ---------- 2. 通信电台数据 (Communication) ----------
-    RadioSource radio1;
-    radio1.frequency = QString::fromUtf8("960~1215MHz");
-    m_radioSource.append(radio1);
-
-    RadioSource radio2;
-    radio2.frequency = QString::fromUtf8("30~88MHz");
-
-    m_radioSource.append(radio2);
-
-    RadioSource radio3;
-    radio3.frequency = QString::fromUtf8("Ku波段");
-    m_radioSource.append(radio3);
-
-    // ---------- 3. 雷达对抗设备 (Radar Jammer) ----------
-    RadarJammerSource radarJammer1;
-    radarJammer1.workingBand = QString::fromUtf8("2~18GHz");
-    m_radarJammerSource.append(radarJammer1);
-
-    RadarJammerSource radarJammer2;
-    radarJammer2.workingBand = QString::fromUtf8("8~12GHz");
-    m_radarJammerSource.append(radarJammer2);
-
-    RadarJammerSource radarJammer3;
-    radarJammer3.workingBand = QString::fromUtf8("S/C波段");
-    m_radarJammerSource.append(radarJammer3);
-
-    // ---------- 4. 通信对抗设备 (Comm Jammer) ----------
-    RadioJammerSource radioJammer1;
-    radioJammer1.coverageBand = QString::fromUtf8("20~100MHz");
-    m_RadioJammerSource.append(radioJammer1);
-
-    RadioJammerSource radioJammer2;
-    radioJammer2.coverageBand = QString::fromUtf8("400~470MHz");
-    m_RadioJammerSource.append(radioJammer2);
-
-    RadioJammerSource radioJammer3;
-    radioJammer3.coverageBand = QString::fromUtf8("225~400MHz");
-    m_RadioJammerSource.append(radioJammer3);
 }
 
-/**
- * @brief 初始化表格属性
- * @details 设置表格属性，如列数、列宽、行高、表头、数据样式等
- */
 void SpectrumAnalysis::initTableViewAttr()
 {
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-    
-    // 初始化默认颜色
-    m_radarColor = QColor(Qt::red);
+    // 初始化默认颜色（全部绿色）
+    m_radarColor = QColor(Qt::blue);
     m_radioColor = QColor(Qt::blue);
-    m_radarJammerColor = QColor(Qt::green);
-    m_radioJammerColor = QColor(Qt::darkYellow);
-    
+    m_radarJammerColor = QColor(Qt::blue);
+    m_radioJammerColor = QColor(Qt::blue);
+
     // 初始化频谱图表
     m_spectrumChart = new SpectrumChart(this);
     m_spectrumChart->setGeometry(10, 10, width() - 20, height() - 20);
-    m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
-                            m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
-
 }
 
-/**
- * @brief 初始化数据模型
- * @details 预留扩展
- */
 void SpectrumAnalysis::initDataModel()
 {
 }
 
-/**
- * @brief 显示数据
- * @details 预留扩展
- */
 void SpectrumAnalysis::displayData()
 {
-
+    // 刷新频谱图表
+    refreshChart();
 }
 
-/**
- * @brief 添加雷达辐射源数据
- * @param data 雷达辐射源对象
- * @details 追加到雷达缓存并刷新频谱图表。
- */
+// ==============================================================================
+// 缓存数据管理
+// ==============================================================================
+
 void SpectrumAnalysis::addData(const RadarSource &data)
 {
-    addData(data, m_radarColor);
+    m_radarSource.append(data);
+    refreshChart();
 }
 
 void SpectrumAnalysis::addData(const RadarSource &data, const QColor &color)
 {
-    m_radarSource.append(data);
     m_radarColor = color;
-    if (m_spectrumChart)
-    {
-        m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
-                                m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
-    }
+    m_radarSource.append(data);
+    refreshChart();
 }
 
-/**
- * @brief 添加电台辐射源数据
- * @param data 电台辐射源对象
- * @details 追加到电台缓存并刷新频谱图表。
- */
 void SpectrumAnalysis::addData(const RadioSource &data)
 {
-    addData(data, m_radioColor);
+    m_radioSource.append(data);
+    refreshChart();
 }
 
 void SpectrumAnalysis::addData(const RadioSource &data, const QColor &color)
 {
-    m_radioSource.append(data);
     m_radioColor = color;
-    if (m_spectrumChart)
-    {
-        m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
-                                m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
-    }
+    m_radioSource.append(data);
+    refreshChart();
 }
 
-/**
- * @brief 添加雷达干扰辐射源数据
- * @param data 雷达干扰辐射源对象
- * @details 追加到雷达干扰缓存并刷新频谱图表。
- */
 void SpectrumAnalysis::addData(const RadarJammerSource &data)
 {
-    addData(data, m_radarJammerColor);
+    m_radarJammerSource.append(data);
+    refreshChart();
 }
 
 void SpectrumAnalysis::addData(const RadarJammerSource &data, const QColor &color)
 {
-    m_radarJammerSource.append(data);
     m_radarJammerColor = color;
-    if (m_spectrumChart)
-    {
-        m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
-                                m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
-    }
+    m_radarJammerSource.append(data);
+    refreshChart();
 }
 
-/**
- * @brief 添加通信干扰辐射源数据
- * @param data 通信干扰辐射源对象
- * @details 追加到通信干扰缓存并刷新频谱图表。
- */
 void SpectrumAnalysis::addData(const RadioJammerSource &data)
 {
-    addData(data, m_radioJammerColor);
+    m_RadioJammerSource.append(data);
+    refreshChart();
 }
 
 void SpectrumAnalysis::addData(const RadioJammerSource &data, const QColor &color)
 {
-    m_RadioJammerSource.append(data);
     m_radioJammerColor = color;
-    if (m_spectrumChart)
-    {
-        m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
-                                m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
-    }
+    m_RadioJammerSource.append(data);
+    refreshChart();
 }
 
-/**
- * @brief 更新雷达辐射源数据
- * @param data 雷达辐射源对象（按 name 匹配）
- * @details 若未找到同名记录则不操作。
- */
 void SpectrumAnalysis::updateData(const RadarSource &data)
 {
-    updateData(data, m_radarColor);
+    int index = findIndexByName(m_radarSource, data.name);
+    if (index >= 0)
+    {
+        m_radarSource[index] = data;
+        refreshChart();
+    }
 }
 
 void SpectrumAnalysis::updateData(const RadarSource &data, const QColor &color)
 {
+    m_radarColor = color;
     int index = findIndexByName(m_radarSource, data.name);
-    if (index != -1)
+    if (index >= 0)
     {
         m_radarSource[index] = data;
-        m_radarColor = color;
-        if (m_spectrumChart)
-        {
-            m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
-                                    m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
-        }
+        refreshChart();
     }
 }
 
-/**
- * @brief 更新电台辐射源数据
- * @param data 电台辐射源对象（按 name 匹配）
- * @details 若未找到同名记录则不操作。
- */
 void SpectrumAnalysis::updateData(const RadioSource &data)
 {
-    updateData(data, m_radioColor);
+    int index = findIndexByName(m_radioSource, data.name);
+    if (index >= 0)
+    {
+        m_radioSource[index] = data;
+        refreshChart();
+    }
 }
 
 void SpectrumAnalysis::updateData(const RadioSource &data, const QColor &color)
 {
+    m_radioColor = color;
     int index = findIndexByName(m_radioSource, data.name);
-    if (index != -1)
+    if (index >= 0)
     {
         m_radioSource[index] = data;
-        m_radioColor = color;
-        if (m_spectrumChart)
-        {
-            m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
-                                    m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
-        }
+        refreshChart();
     }
 }
 
-/**
- * @brief 更新雷达干扰辐射源数据
- * @param data 雷达干扰辐射源对象（按 name 匹配）
- * @details 若未找到同名记录则不操作。
- */
 void SpectrumAnalysis::updateData(const RadarJammerSource &data)
 {
-    updateData(data, m_radarJammerColor);
+    int index = findIndexByName(m_radarJammerSource, data.name);
+    if (index >= 0)
+    {
+        m_radarJammerSource[index] = data;
+        refreshChart();
+    }
 }
 
 void SpectrumAnalysis::updateData(const RadarJammerSource &data, const QColor &color)
 {
+    m_radarJammerColor = color;
     int index = findIndexByName(m_radarJammerSource, data.name);
-    if (index != -1)
+    if (index >= 0)
     {
         m_radarJammerSource[index] = data;
-        m_radarJammerColor = color;
-        if (m_spectrumChart)
-        {
-            m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
-                                    m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
-        }
+        refreshChart();
     }
 }
 
-/**
- * @brief 更新通信干扰辐射源数据
- * @param data 通信干扰辐射源对象（按 name 匹配）
- * @details 若未找到同名记录则不操作。
- */
 void SpectrumAnalysis::updateData(const RadioJammerSource &data)
 {
-    updateData(data, m_radioJammerColor);
+    int index = findIndexByName(m_RadioJammerSource, data.name);
+    if (index >= 0)
+    {
+        m_RadioJammerSource[index] = data;
+        refreshChart();
+    }
 }
 
 void SpectrumAnalysis::updateData(const RadioJammerSource &data, const QColor &color)
 {
+    m_radioJammerColor = color;
     int index = findIndexByName(m_RadioJammerSource, data.name);
-    if (index != -1)
+    if (index >= 0)
     {
         m_RadioJammerSource[index] = data;
-        m_radioJammerColor = color;
-        if (m_spectrumChart)
-        {
-            m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
-                                    m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
-        }
+        refreshChart();
     }
 }
 
-/**
- * @brief 删除指定类型和名称的辐射源数据
- * @tparam T 数据类型（RadarSource / RadioSource / RadarJammerSource / RadioJammerSource）
- * @param name 目标名称
- * @details 根据类型在对应容器中查找并删除，删除后刷新频谱图表。
- */
-template <typename T>
-void SpectrumAnalysis::deleteData(const QString &name)
+void SpectrumAnalysis::clearCacheData()
 {
-    if constexpr (std::is_same_v<T, RadarSource>)
-    {
-        int index = findIndexByName(m_radarSource, name);
-        if (index != -1)
-        {
-            m_radarSource.removeAt(index);
-            if (m_spectrumChart)
-            {
-                m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
-                                        m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
-            }
-        }
-    }
-    else if constexpr (std::is_same_v<T, RadioSource>)
-    {
-        int index = findIndexByName(m_radioSource, name);
-        if (index != -1)
-        {
-            m_radioSource.removeAt(index);
-            if (m_spectrumChart)
-            {
-                m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
-                                        m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
-            }
-        }
-    }
-    else if constexpr (std::is_same_v<T, RadarJammerSource>)
-    {
-        int index = findIndexByName(m_radarJammerSource, name);
-        if (index != -1)
-        {
-            m_radarJammerSource.removeAt(index);
-            if (m_spectrumChart)
-            {
-                m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
-                                        m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
-            }
-        }
-    }
-    else if constexpr (std::is_same_v<T, RadioJammerSource>)
-    {
-        int index = findIndexByName(m_RadioJammerSource, name);
-        if (index != -1)
-        {
-            m_RadioJammerSource.removeAt(index);
-            if (m_spectrumChart)
-            {
-                m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
-                                        m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
-            }
-        }
-    }
+    // 清空所有缓存数据
+    m_radarSource.clear();
+    m_radioSource.clear();
+    m_radarJammerSource.clear();
+    m_RadioJammerSource.clear();
+
+    // 刷新频谱图表
+    refreshChart();
 }
 
-// 显式实例化模板
-template void SpectrumAnalysis::deleteData<RadarSource>(const QString &name);
-template void SpectrumAnalysis::deleteData<RadioSource>(const QString &name);
-template void SpectrumAnalysis::deleteData<RadarJammerSource>(const QString &name);
-template void SpectrumAnalysis::deleteData<RadioJammerSource>(const QString &name);
+void SpectrumAnalysis::refreshChart()
+{
+    // 从缓存数据刷新频谱图表
+    if (m_spectrumChart)
+    {
+        m_spectrumChart->setData(m_radarSource, m_radioSource, m_radarJammerSource, m_RadioJammerSource,
+                                 m_radarColor, m_radioColor, m_radarJammerColor, m_radioJammerColor);
+    }
 
-/**
- * @brief 窗口大小改变事件
- * @param event 大小改变事件
- * @details 调整频谱图表尺寸并重绘。
- */
+}
+
+// ==============================================================================
+// 事件处理
+// ==============================================================================
+
 void SpectrumAnalysis::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
+
+    // 调整频谱图表尺寸
     if (m_spectrumChart)
     {
         m_spectrumChart->setGeometry(10, 10, width() - 20, height() - 20);
-        m_spectrumChart->drawBarChart();
     }
 }
 
-/**
- * @brief 鼠标移动事件
- * @param event 鼠标事件
- */
 void SpectrumAnalysis::mouseMoveEvent(QMouseEvent *event)
 {
     QWidget::mouseMoveEvent(event);
 }
 
-/**
- * @brief 鼠标离开事件
- * @param event 事件对象
- */
 void SpectrumAnalysis::leaveEvent(QEvent *event)
 {
     QWidget::leaveEvent(event);

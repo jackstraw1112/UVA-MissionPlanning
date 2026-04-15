@@ -170,21 +170,23 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     firepowerItem->setObjectName("firepowerItem");
     QVBoxLayout *itemLayout = new QVBoxLayout(firepowerItem);
     itemLayout->setContentsMargins(0, 0, 0, 0);
-    itemLayout->setSpacing(8);
+    itemLayout->setSpacing(2);
 
     // 设备头部
     QWidget *headerWidget = new QWidget;
     QHBoxLayout *headerLayout = new QHBoxLayout(headerWidget);
     headerLayout->setContentsMargins(0, 0, 0, 0);
-    headerLayout->setSpacing(8);
+    headerLayout->setSpacing(2);
 
     // 设备名称
     QLabel *nameLabel = new QLabel(item.name);
     nameLabel->setProperty("name", "nameLabel");
+    nameLabel->setMaximumWidth(150);
 
     // 设备状态
     QLabel *statusLabel = new QLabel;
     statusLabel->setProperty("name", "statusLabel");
+    statusLabel->setFixedWidth(60);
 
     if (item.status == QString::fromUtf8("active"))
     {
@@ -207,7 +209,9 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
 
     // 参数网格
     QGridLayout *paramLayout = new QGridLayout;
-    paramLayout->setSpacing(6);
+    paramLayout->setSpacing(1);
+    paramLayout->setColumnStretch(0, 1);
+    paramLayout->setColumnStretch(1, 1);
 
     // 类型
     QFrame *typeBox = new QFrame;
@@ -264,7 +268,7 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     QFrame *rangeFrame = new QFrame;
     QVBoxLayout *rangeFrameLayout = new QVBoxLayout(rangeFrame);
     rangeFrameLayout->setContentsMargins(0, 0, 0, 0);
-    rangeFrameLayout->setSpacing(4);
+    rangeFrameLayout->setSpacing(2);
 
     QLabel *rangeTitle = new QLabel(QString::fromUtf8("拦截概率"));
     rangeTitle->setProperty("name", "rangeTitle");
@@ -280,7 +284,7 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     if (item.intercept != QString::fromUtf8("-"))
     {
         int percent = QString(item.intercept).replace(QString::fromUtf8("%"), QString()).toInt();
-        rangeFill->setFixedWidth(percent * rangeBar->width() / 100);
+        rangeFill->setFixedWidth(percent * rangeBar->width() / 140);
     }
 
     rangeBarLayout->addWidget(rangeFill);

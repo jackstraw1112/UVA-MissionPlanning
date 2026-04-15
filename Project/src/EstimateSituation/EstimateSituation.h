@@ -18,8 +18,9 @@ QT_END_NAMESPACE
 
 class RZSourceRadiation;
 class SpectrumAnalysis;
-class ThreatAssessment;
+
 class FirepowerControl;
+class RZThreatAssess;
 
 /**
  * @brief 态势估计主窗口
@@ -84,8 +85,9 @@ private:
     // 子窗口指针
     RZSourceRadiation *m_rzSourceRadiation;
     SpectrumAnalysis *m_spectrumAnalysis;
-    ThreatAssessment *m_threatAssessment;
+
     FirepowerControl *m_firepowerControl;
+    RZThreatAssess *m_rzThreatAssess;
 
 
 private:

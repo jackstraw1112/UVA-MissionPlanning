@@ -35,6 +35,27 @@ public:
     explicit RZThreatAssess(QWidget *parent = nullptr);
     ~RZThreatAssess() override;
 
+public:
+    /**
+     * @brief 获取雷达评估记录数据
+     * @return 雷达评估记录容器的常引用
+     */
+    const QVector<RadarThreatAssessRecord> &radarSources() const;
+
+    /**
+     * @brief 从 RZSourceRadiation 同步雷达辐射源数据
+     * @param sources 辐射源数据
+     * @details 接收辐射源数据后自动执行威胁评估并刷新表格
+     */
+    void syncFromSourceRadiation(const QVector<RadarThreatAssessRecord> &sources);
+
+signals:
+    /**
+     * @brief 威胁评估数据变更信号
+     * @details 当评估结果更新时发出，通知 RZSourceRadiation 同步
+     */
+    void threatAssessChanged();
+
 private:
     // 初始化参数
     void initPara();

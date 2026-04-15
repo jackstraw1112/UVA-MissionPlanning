@@ -308,9 +308,10 @@ void RZThreatAssess::generateTestData()
     {
         RadarThreatAssessRecord newRecord;
 
-        newRecord.entityName = id;
+        newRecord.entityName = name;
         newRecord.typeName = type;
         newRecord.perfPara = ProjectPublicInterface::radarInputFromPresetIndex(presetIndex);
+        newRecord.perfPara.name = name;
         newRecord.result = ProjectPublicInterface::evaluate(newRecord.perfPara);
         newRecord.typicalPara.freq = newRecord.result.freq;
         newRecord.typicalPara.pw = newRecord.result.pw;
@@ -506,19 +507,15 @@ void RZThreatAssess::onTableDoubleClicked(int row, int column)
 
 void RZThreatAssess::onRecvAssessResult()
 {
-    // 缓存数据
     m_radarSources[m_selectRow] = m_setThreatPanel->m_record;
 
-    // 保存到数据库-待处理
-
-    // 评估雷达威胁排序
     assessRadarThreatSort();
 
-    // 重新显示
     displayDataToTable();
 
-    // 重置标志位
     m_selectRow = -1;
+
+    emit threatAssessChanged();
 }
 
 void RZThreatAssess::onRemoveSelectedRows()
@@ -637,4 +634,17 @@ void RZThreatAssess::protectRealWorkPara(int row)
     {
         workPara.situationRadModeIndex = ThreatAssessUi::kDefaultRadiationMode;
     }
+}
+
+const QVector<RadarThreatAssessRecord> &RZThreatAssess::radarSources() const
+{
+    return m_radarSources;
+}
+
+void RZThreatAssess::syncFromSourceRadiation(const QVector<RadarThreatAssessRecord> &sources)
+{
+    m_radarSources = sources;
+    assessRadarThreat();
+    displayDataToTable();
+    emit threatAssessChanged();
 }
