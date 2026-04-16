@@ -10,6 +10,9 @@
 #include <QHeaderView>
 #include <QPushButton>
 #include <QStyledItemDelegate>
+#include <QMenu>
+#include <QInputDialog>
+#include <QMessageBox>
 
 
 namespace
@@ -114,42 +117,169 @@ void RZSourceRadiation::initConnect()
     connect(ui->radarJamSwitch, &QCheckBox::toggled, this, &RZSourceRadiation::onRadarJamSwitchChanged);
     // 防控火力显示开关
     connect(ui->defenseFireDisplaySwitch, &QCheckBox::toggled, this, &RZSourceRadiation::onDefenseFireDisplaySwitchChanged);*/
+    
+    // 表格右键菜单
+    ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tableView, &QTableView::customContextMenuRequested, this, [this](const QPoint &pos) {
+        QMenu menu(this);
+        QAction *addAction = menu.addAction("添加雷达");
+        QAction *editAction = menu.addAction("编辑雷达");
+        QAction *deleteAction = menu.addAction("删除雷达");
+        
+        QModelIndex index = ui->tableView->indexAt(pos);
+        editAction->setEnabled(index.isValid());
+        deleteAction->setEnabled(index.isValid());
+        
+        QAction *selectedAction = menu.exec(ui->tableView->viewport()->mapToGlobal(pos));
+        if (selectedAction == addAction) {
+            onAddRadar();
+        } else if (selectedAction == editAction) {
+            onEditRadar(index.row());
+        } else if (selectedAction == deleteAction) {
+            onDeleteRadar(index.row());
+        }
+    });
 }
 
 void RZSourceRadiation::generateTestData()
 {
-    m_radarSources.clear();
+    // 重新生成测试数据前先清空容器，避免重复追加
+    m_radarSource.clear();
     m_radioSource.clear();
     m_radarJammerSource.clear();
     m_RadioJammerSource.clear();
 
-    auto addRadar = [this](const QString &id, const QString &name, const QString &type,
-                           int presetIndex, const QString &scanMode, const QString &deviceType)
-    {
-        RadarThreatAssessRecord record;
-        record.equipID = id;
-        record.entityName = name;
-        record.typeName = type;
-        record.perfPara = ProjectPublicInterface::radarInputFromPresetIndex(presetIndex);
-        record.perfPara.name = name;
-        record.perfPara.scanMode = scanMode;
-        record.perfPara.deviceType = deviceType;
-        record.result = ProjectPublicInterface::evaluate(record.perfPara);
-        record.typicalPara.freq = record.result.freq;
-        record.typicalPara.pw = record.result.pw;
-        record.typicalPara.prf = record.result.prf;
-        record.typicalPara.valid = true;
-        record.workPara.situationDefenseIndex = -1;
-        record.workPara.situationRadModeIndex = -1;
-        m_radarSources.push_back(record);
-    };
+    // ---------- 1. 雷达数据 (Radar) ----------
+    RadarPerformancePara radar1;
+    radar1.name = QString::fromUtf8("AN/MPQ-53 相控阵雷达");
+    radar1.freqMin = 5.2;
+    radar1.freqMax = 6.1;
+    radar1.prfMin = 200;
+    radar1.prfMax = 500;
+    radar1.pwMin = 0.5;
+    radar1.pwMax = 25;
+    radar1.scanMode = QString::fromUtf8("电子扫描");
+    radar1.threatLevel = QString::fromUtf8("高");
+    radar1.deviceType = QString::fromUtf8("高功率火控雷达");
+    m_radarSource.append(radar1);
 
-    addRadar(QStringLiteral("RAD-001"), QStringLiteral("AN/MPQ-53 相控阵雷达"), QStringLiteral("MPQ-53 (PAC-2 火控)"), 2,
-             QStringLiteral("电子扫描"), QStringLiteral("高功率火控雷达"));
-    addRadar(QStringLiteral("RAD-002"), QStringLiteral("P-18 预警雷达"), QStringLiteral("SPS-48E"), 5,
-             QStringLiteral("6rpm"), QStringLiteral("米波远程警戒"));
-    addRadar(QStringLiteral("RAD-003"), QStringLiteral("MPQ-64 哨兵雷达"), QStringLiteral("TPS-75"), 7,
-             QStringLiteral("旋转扫描"), QStringLiteral("低空补盲雷达"));
+    RadarPerformancePara radar2;
+    radar2.name = QString::fromUtf8("P-18 预警雷达");
+    radar2.freqMin = 0.15;
+    radar2.freqMax = 0.17;
+    radar2.prfMin = 300;
+    radar2.prfMax = 300;
+    radar2.pwMin = 8;
+    radar2.pwMax = 8;
+    radar2.scanMode = QString::fromUtf8("6rpm");
+    radar2.threatLevel = QString::fromUtf8("中");
+    radar2.deviceType = QString::fromUtf8("米波远程警戒");
+    m_radarSource.append(radar2);
+
+    RadarPerformancePara radar3;
+    radar3.name = QString::fromUtf8("MPQ-64 哨兵雷达");
+    radar3.freqMin = 8;
+    radar3.freqMax = 12;
+    radar3.prfMin = 0;
+    radar3.prfMax = 0;
+    radar3.pwMin = 0;
+    radar3.pwMax = 0;
+    radar3.scanMode = QString::fromUtf8("旋转扫描");
+    radar3.threatLevel = QString::fromUtf8("高");
+    radar3.deviceType = QString::fromUtf8("低空补盲雷达");
+    m_radarSource.append(radar3);
+
+    /*
+    // ---------- 2. 通信电台数据 (Communication) ----------
+    RadioSource radio1;
+    radio1.name = QString::fromUtf8("Link-16 战术数据链");
+    radio1.frequency = QString::fromUtf8("960~1215MHz");
+    radio1.modulation = QString::fromUtf8("MSK/扩频");
+    radio1.codeRate = QString::fromUtf8("1.0Mbps");
+    radio1.powerOrWaveform = QString::fromUtf8("JTIDS");
+    radio1.threatLevel = QString::fromUtf8("高");
+    radio1.deviceType = QString::fromUtf8("关键指控链路");
+    m_radioSource.append(radio1);
+
+    RadioSource radio2;
+    radio2.name = QString::fromUtf8("VHF 战术电台");
+    radio2.frequency = QString::fromUtf8("30~88MHz");
+    radio2.modulation = QString::fromUtf8("FM/跳频");
+    radio2.codeRate = QString::fromUtf8("-");
+    radio2.powerOrWaveform = QString::fromUtf8("25W");
+    radio2.threatLevel = QString::fromUtf8("中");
+    radio2.deviceType = QString::fromUtf8("班组级通信");
+    m_radioSource.append(radio2);
+
+    RadioSource radio3;
+    radio3.name = QString::fromUtf8("卫星通信终端");
+    radio3.frequency = QString::fromUtf8("Ku波段");
+    radio3.modulation = QString::fromUtf8("QPSK");
+    radio3.codeRate = QString::fromUtf8("5Msps");
+    radio3.powerOrWaveform = QString::fromUtf8("同步卫星");
+    radio3.threatLevel = QString::fromUtf8("中");
+    radio3.deviceType = QString::fromUtf8("远程指挥链路");
+    m_radioSource.append(radio3);
+
+    // ---------- 3. 雷达对抗设备 (Radar Jammer) ----------
+    RadarJammerSource radarJammer1;
+    radarJammer1.name = QString::fromUtf8("SPECTRAL 侦察干扰吊舱");
+    radarJammer1.jammingType = QString::fromUtf8("距离门拖引/速度欺骗");
+    radarJammer1.workingBand = QString::fromUtf8("2~18GHz");
+    radarJammer1.technology = QString::fromUtf8("DRFM转发");
+    radarJammer1.threatLevel = QString::fromUtf8("高");
+    radarJammer1.deviceType = QString::fromUtf8("先进数字射频存储");
+    m_radarJammerSource.append(radarJammer1);
+
+    RadarJammerSource radarJammer2;
+    radarJammer2.name = QString::fromUtf8("Pelena-1 地面干扰站");
+    radarJammer2.jammingType = QString::fromUtf8("噪声压制/假目标");
+    radarJammer2.workingBand = QString::fromUtf8("8~12GHz");
+    radarJammer2.technology = QString::fromUtf8("模拟转发");
+    radarJammer2.threatLevel = QString::fromUtf8("高");
+    radarJammer2.deviceType = QString::fromUtf8("火控雷达对抗");
+    m_radarJammerSource.append(radarJammer2);
+
+    RadarJammerSource radarJammer3;
+    radarJammer3.name = QString::fromUtf8("战术侦察/干扰模块");
+    radarJammer3.jammingType = QString::fromUtf8("测频/测向+间歇采样");
+    radarJammer3.workingBand = QString::fromUtf8("S/C波段");
+    radarJammer3.technology = QString::fromUtf8("数字接收");
+    radarJammer3.threatLevel = QString::fromUtf8("中");
+    radarJammer3.deviceType = QString::fromUtf8("小型化电子攻击");
+    m_radarJammerSource.append(radarJammer3);
+
+    // ---------- 4. 通信对抗设备 (Comm Jammer) ----------
+    RadioJammerSource radioJammer1;
+    radioJammer1.name = QString::fromUtf8("R-330Zh 通信干扰系统");
+    radioJammer1.jammingStyle = QString::fromUtf8("噪声调频/梳状谱");
+    radioJammer1.coverageBand = QString::fromUtf8("20~100MHz");
+    radioJammer1.erp = QString::fromUtf8("1kW");
+    radioJammer1.threatLevel = QString::fromUtf8("高");
+    radioJammer1.deviceType = QString::fromUtf8("大功率宽带压制");
+    m_RadioJammerSource.append(radioJammer1);
+
+    RadioJammerSource radioJammer2;
+    radioJammer2.name = QString::fromUtf8("便携式通信干扰机");
+    radioJammer2.jammingStyle = QString::fromUtf8("单音/扫频");
+    radioJammer2.coverageBand = QString::fromUtf8("400~470MHz");
+    radioJammer2.erp = QString::fromUtf8("50W");
+    radioJammer2.threatLevel = QString::fromUtf8("低");
+    radioJammer2.deviceType = QString::fromUtf8("近距离战术干扰");
+    m_RadioJammerSource.append(radioJammer2);
+
+    RadioJammerSource radioJammer3;
+    radioJammer3.name = QString::fromUtf8("车载智能干扰站");
+    radioJammer3.jammingStyle = QString::fromUtf8("协议伪造/随机脉冲");
+    radioJammer3.coverageBand = QString::fromUtf8("225~400MHz");
+    radioJammer3.erp = QString::fromUtf8("200W");
+    radioJammer3.threatLevel = QString::fromUtf8("中");
+    radioJammer3.deviceType = QString::fromUtf8("自适应干扰");
+    m_RadioJammerSource.append(radioJammer3);
+    */
+
+
+
 }
 
 void RZSourceRadiation::initTableAttr()
@@ -265,7 +395,7 @@ void RZSourceRadiation::displayData()
     }
 
     // 将四类测试数据写入对应模型
-    for (const auto &item : m_radarSources)
+    for (const auto &item : m_radarSource)
     {
         displayData(item);
     }
@@ -283,34 +413,18 @@ void RZSourceRadiation::displayData()
     }*/
 }
 
-void RZSourceRadiation::displayData(const RadarThreatAssessRecord &data, int row)
+void RZSourceRadiation::displayData(const RadarPerformancePara &data, int row)
 {
-    const RadarPerformancePara &perf = data.perfPara;
-    auto formatFreqRange = [](double minVal, double maxVal) -> QString
-    {
-        if (minVal <= 0.0 && maxVal <= 0.0) return QStringLiteral("-");
-        if (qFuzzyCompare(minVal, maxVal)) return QString::number(minVal, 'f', 1) + QStringLiteral("GHz");
-        return QString::number(minVal, 'f', 1) + QStringLiteral("~") + QString::number(maxVal, 'f', 1) + QStringLiteral("GHz");
-    };
-    auto formatPrfRange = [](double minVal, double maxVal) -> QString
-    {
-        if (minVal <= 0.0 && maxVal <= 0.0) return QStringLiteral("-");
-        if (qFuzzyCompare(minVal, maxVal)) return QString::number(minVal, 'f', 0) + QStringLiteral("Hz");
-        return QString::number(minVal, 'f', 0) + QStringLiteral("~") + QString::number(maxVal, 'f', 0) + QStringLiteral("Hz");
-    };
-    auto formatPwRange = [](double minVal, double maxVal) -> QString
-    {
-        if (minVal <= 0.0 && maxVal <= 0.0) return QStringLiteral("-");
-        if (qFuzzyCompare(minVal, maxVal)) return QString::number(minVal, 'f', 1) + QStringLiteral("μs");
-        return QString::number(minVal, 'f', 1) + QStringLiteral("~") + QString::number(maxVal, 'f', 1) + QStringLiteral("μs");
-    };
-
+    // 按雷达字段顺序写入模型
     writeModelRow(m_mapModel.value(QString::fromUtf8("雷达"), nullptr),
-                  QStringList{perf.name,
-                              formatFreqRange(perf.freqMin, perf.freqMax),
-                              formatPrfRange(perf.prfMin, perf.prfMax),
-                              formatPwRange(perf.pwMin, perf.pwMax),
-                              perf.scanMode},
+                  QStringList{data.name,
+                              QString("%1~%2GHz").arg(data.freqMin).arg(data.freqMax),
+                              QString("%1~%2Hz").arg(data.prfMin).arg(data.prfMax),
+                              QString("%1~%2μs").arg(data.pwMin).arg(data.pwMax),
+                              data.scanMode,
+                              /*data.threatLevel,*/
+                              /*data.deviceType*/
+                               },
                   row);
 }
 
@@ -425,13 +539,70 @@ void RZSourceRadiation::onShowTableData()
  * @param data 雷达辐射源对象
  * @details 追加到雷达缓存并写入雷达模型。
  */
-void RZSourceRadiation::addDataImpl(const RadarThreatAssessRecord &data)
+void RZSourceRadiation::addDataImpl(const RadarPerformancePara &data)
 {
-    m_radarSources.append(data);
+    m_radarSource.append(data);
     displayData(data);
     ui->tableView->resizeColumnsToContents();
     ui->tableView->resizeRowsToContents();
-    emit radarDataChanged();
+}
+
+/**
+ * @brief 添加雷达辐射源数据（兼容 RadarSource 类型）
+ * @param data 雷达辐射源对象
+ * @details 将 RadarSource 转换为 RadarPerformancePara 后添加。
+ */
+void RZSourceRadiation::addDataImpl(const RadarSource &data)
+{
+    RadarPerformancePara para;
+    para.name = data.name;
+    para.scanMode = data.scanMode;
+    para.threatLevel = data.threatLevel;
+    para.deviceType = data.deviceType;
+    
+    // 简单解析频率范围
+    if (data.frequency.contains("~")) {
+        QStringList parts = data.frequency.split("~");
+        if (parts.size() == 2) {
+            QString part0 = parts[0];
+            QString part1 = parts[1];
+            para.freqMin = part0.replace("GHz", "").toDouble();
+            para.freqMax = part1.replace("GHz", "").toDouble();
+        }
+    } else {
+        QString freqStr = data.frequency;
+        para.freqMin = para.freqMax = freqStr.replace("GHz", "").toDouble();
+    }
+    
+    // 解析 PRF 范围
+    if (data.prf.contains("~")) {
+        QStringList parts = data.prf.split("~");
+        if (parts.size() == 2) {
+            QString part0 = parts[0];
+            QString part1 = parts[1];
+            para.prfMin = part0.replace("Hz", "").toDouble();
+            para.prfMax = part1.replace("Hz", "").toDouble();
+        }
+    } else {
+        QString prfStr = data.prf;
+        para.prfMin = para.prfMax = prfStr.replace("Hz", "").toDouble();
+    }
+    
+    // 解析脉宽范围
+    if (data.pulseWidth.contains("~")) {
+        QStringList parts = data.pulseWidth.split("~");
+        if (parts.size() == 2) {
+            QString part0 = parts[0];
+            QString part1 = parts[1];
+            para.pwMin = part0.replace("μs", "").toDouble();
+            para.pwMax = part1.replace("μs", "").toDouble();
+        }
+    } else {
+        QString pwStr = data.pulseWidth;
+        para.pwMin = para.pwMax = pwStr.replace("μs", "").toDouble();
+    }
+    
+    addDataImpl(para);
 }
 
 /**
@@ -478,27 +649,76 @@ void RZSourceRadiation::addDataImpl(const RadioJammerSource &data)
  * @param data 雷达辐射源对象（按 name 匹配）
  * @details 若未找到同名记录则转为新增。
  */
-void RZSourceRadiation::updateDataImpl(const RadarThreatAssessRecord &data)
+void RZSourceRadiation::updateDataImpl(const RadarPerformancePara &data)
 {
-    int row = -1;
-    for (int i = 0; i < m_radarSources.size(); ++i)
-    {
-        if (m_radarSources.at(i).perfPara.name == data.perfPara.name)
-        {
-            row = i;
-            break;
-        }
-    }
+    const int row = findIndexByName(m_radarSource, data.name);
     if (row < 0)
     {
         addDataImpl(data);
         return;
     }
-    m_radarSources[row] = data;
+    m_radarSource[row] = data;
     displayData(data, row);
     ui->tableView->resizeColumnsToContents();
     ui->tableView->resizeRowsToContents();
-    emit radarDataChanged();
+}
+
+/**
+ * @brief 更新雷达辐射源数据（兼容 RadarSource 类型）
+ * @param data 雷达辐射源对象
+ * @details 将 RadarSource 转换为 RadarPerformancePara 后更新。
+ */
+void RZSourceRadiation::updateDataImpl(const RadarSource &data)
+{
+    RadarPerformancePara para;
+    para.name = data.name;
+    para.scanMode = data.scanMode;
+    para.threatLevel = data.threatLevel;
+    para.deviceType = data.deviceType;
+    
+    // 简单解析频率范围
+    if (data.frequency.contains("~")) {
+        QStringList parts = data.frequency.split("~");
+        if (parts.size() == 2) {
+            QString part0 = parts[0];
+            QString part1 = parts[1];
+            para.freqMin = part0.replace("GHz", "").toDouble();
+            para.freqMax = part1.replace("GHz", "").toDouble();
+        }
+    } else {
+        QString freqStr = data.frequency;
+        para.freqMin = para.freqMax = freqStr.replace("GHz", "").toDouble();
+    }
+    
+    // 解析 PRF 范围
+    if (data.prf.contains("~")) {
+        QStringList parts = data.prf.split("~");
+        if (parts.size() == 2) {
+            QString part0 = parts[0];
+            QString part1 = parts[1];
+            para.prfMin = part0.replace("Hz", "").toDouble();
+            para.prfMax = part1.replace("Hz", "").toDouble();
+        }
+    } else {
+        QString prfStr = data.prf;
+        para.prfMin = para.prfMax = prfStr.replace("Hz", "").toDouble();
+    }
+    
+    // 解析脉宽范围
+    if (data.pulseWidth.contains("~")) {
+        QStringList parts = data.pulseWidth.split("~");
+        if (parts.size() == 2) {
+            QString part0 = parts[0];
+            QString part1 = parts[1];
+            para.pwMin = part0.replace("μs", "").toDouble();
+            para.pwMax = part1.replace("μs", "").toDouble();
+        }
+    } else {
+        QString pwStr = data.pulseWidth;
+        para.pwMin = para.pwMax = pwStr.replace("μs", "").toDouble();
+    }
+    
+    updateDataImpl(para);
 }
 
 /**
@@ -566,25 +786,16 @@ void RZSourceRadiation::updateDataImpl(const RadioJammerSource &data)
  */
 void RZSourceRadiation::deleteRadarDataByName(const QString &name)
 {
-    int row = -1;
-    for (int i = 0; i < m_radarSources.size(); ++i)
-    {
-        if (m_radarSources.at(i).perfPara.name == name)
-        {
-            row = i;
-            break;
-        }
-    }
+    const int row = findIndexByName(m_radarSource, name);
     if (row < 0)
     {
         return;
     }
-    m_radarSources.removeAt(row);
+    m_radarSource.removeAt(row);
     if (auto *model = m_mapModel.value(QString::fromUtf8("雷达"), nullptr); model != nullptr)
     {
         model->removeRow(row);
     }
-    emit radarDataChanged();
 }
 
 /**
@@ -670,7 +881,7 @@ void RZSourceRadiation::deleteControlDataByType(const QString &type)
     m_controlData.removeAt(row);
 }
 
-void RZSourceRadiation::onRadarSwitchChanged(bool checked)
+/*void RZSourceRadiation::onRadarSwitchChanged(bool checked)
 {
     emit controlStateChanged("radar", checked);
     updateControlDataImpl(SituationControlData("radar", checked, QString::fromUtf8("雷达")));
@@ -694,21 +905,176 @@ void RZSourceRadiation::onRadarJamSwitchChanged(bool checked)
     updateControlDataImpl(SituationControlData("radarJam", checked, QString::fromUtf8("雷达对抗")));
 }
 
-void RZSourceRadiation::onDefenseFireDisplaySwitchChanged(bool checked)
+/*void RZSourceRadiation::onDefenseFireDisplaySwitchChanged(bool checked)
 {
     emit controlStateChanged("defenseFire", checked);
     updateControlDataImpl(SituationControlData("defenseFire", checked, QString::fromUtf8("防控火力")));
 }
+*/
 
-const QVector<RadarThreatAssessRecord> &RZSourceRadiation::radarSources() const
+// 表格右键菜单处理方法
+void RZSourceRadiation::onAddRadar()
 {
-    return m_radarSources;
+    // 获取用户输入
+    QString name = QInputDialog::getText(this, "添加雷达", "雷达名称:");
+    if (name.isEmpty()) return;
+    
+    QString frequency = QInputDialog::getText(this, "添加雷达", "工作频率 (如 5.2~6.1GHz):");
+    QString prf = QInputDialog::getText(this, "添加雷达", "脉冲重频 (如 200~500Hz):");
+    QString pulseWidth = QInputDialog::getText(this, "添加雷达", "脉宽 (如 0.5~25μs):");
+    QString scanMode = QInputDialog::getText(this, "添加雷达", "扫描方式:");
+    QString threatLevel = QInputDialog::getText(this, "添加雷达", "威胁等级 (高/中/低):");
+    QString deviceType = QInputDialog::getText(this, "添加雷达", "设备类型:");
+    
+    // 创建 RadarPerformancePara 对象
+    RadarPerformancePara radar;
+    radar.name = name;
+    radar.scanMode = scanMode;
+    radar.threatLevel = threatLevel;
+    radar.deviceType = deviceType;
+    
+    // 简单解析频率范围（仅作为示例，实际应用需要更复杂的解析）
+    if (frequency.contains("~")) {
+        QStringList parts = frequency.split("~");
+        if (parts.size() == 2) {
+            radar.freqMin = parts[0].replace("GHz", "").toDouble();
+            radar.freqMax = parts[1].replace("GHz", "").toDouble();
+        }
+    } else {
+        radar.freqMin = radar.freqMax = frequency.replace("GHz", "").toDouble();
+    }
+    
+    // 解析 PRF 范围
+    if (prf.contains("~")) {
+        QStringList parts = prf.split("~");
+        if (parts.size() == 2) {
+            radar.prfMin = parts[0].replace("Hz", "").toDouble();
+            radar.prfMax = parts[1].replace("Hz", "").toDouble();
+        }
+    } else {
+        radar.prfMin = radar.prfMax = prf.replace("Hz", "").toDouble();
+    }
+    
+    // 解析脉宽范围
+    if (pulseWidth.contains("~")) {
+        QStringList parts = pulseWidth.split("~");
+        if (parts.size() == 2) {
+            radar.pwMin = parts[0].replace("μs", "").toDouble();
+            radar.pwMax = parts[1].replace("μs", "").toDouble();
+        }
+    } else {
+        radar.pwMin = radar.pwMax = pulseWidth.replace("μs", "").toDouble();
+    }
+    
+    // 添加到缓存和界面
+    addDataImpl(radar);
+    
+    // 发送信号
+    emit radarDataChanged(radar);
 }
 
-void RZSourceRadiation::syncRadarSources(const QVector<RadarThreatAssessRecord> &sources)
+void RZSourceRadiation::onEditRadar(int row)
 {
-    m_radarSources = sources;
-    displayData();
+    if (row < 0 || row >= m_radarSource.size()) return;
+    
+    RadarPerformancePara &radar = m_radarSource[row];
+    
+    // 获取用户输入
+    QString name = QInputDialog::getText(this, "编辑雷达", "雷达名称:", QLineEdit::Normal, radar.name);
+    if (name.isEmpty()) return;
+    
+    QString frequency = QInputDialog::getText(this, "编辑雷达", "工作频率 (如 5.2~6.1GHz):", QLineEdit::Normal, QString("%1~%2GHz").arg(radar.freqMin).arg(radar.freqMax));
+    QString prf = QInputDialog::getText(this, "编辑雷达", "脉冲重频 (如 200~500Hz):", QLineEdit::Normal, QString("%1~%2Hz").arg(radar.prfMin).arg(radar.prfMax));
+    QString pulseWidth = QInputDialog::getText(this, "编辑雷达", "脉宽 (如 0.5~25μs):", QLineEdit::Normal, QString("%1~%2μs").arg(radar.pwMin).arg(radar.pwMax));
+    QString scanMode = QInputDialog::getText(this, "编辑雷达", "扫描方式:", QLineEdit::Normal, radar.scanMode);
+    /*QString threatLevel = QInputDialog::getText(this, "编辑雷达", "威胁等级 (高/中/低):", QLineEdit::Normal, radar.threatLevel);
+    QString deviceType = QInputDialog::getText(this, "编辑雷达", "设备类型:", QLineEdit::Normal, radar.deviceType);*/
+    
+    // 简单解析频率范围
+    if (frequency.contains("~")) {
+        QStringList parts = frequency.split("~");
+        if (parts.size() == 2) {
+            radar.freqMin = parts[0].replace("GHz", "").toDouble();
+            radar.freqMax = parts[1].replace("GHz", "").toDouble();
+        }
+    } else {
+        radar.freqMin = radar.freqMax = frequency.replace("GHz", "").toDouble();
+    }
+    
+    // 解析 PRF 范围
+    if (prf.contains("~")) {
+        QStringList parts = prf.split("~");
+        if (parts.size() == 2) {
+            radar.prfMin = parts[0].replace("Hz", "").toDouble();
+            radar.prfMax = parts[1].replace("Hz", "").toDouble();
+        }
+    } else {
+        radar.prfMin = radar.prfMax = prf.replace("Hz", "").toDouble();
+    }
+    
+    // 解析脉宽范围
+    if (pulseWidth.contains("~")) {
+        QStringList parts = pulseWidth.split("~");
+        if (parts.size() == 2) {
+            radar.pwMin = parts[0].replace("μs", "").toDouble();
+            radar.pwMax = parts[1].replace("μs", "").toDouble();
+        }
+    } else {
+        radar.pwMin = radar.pwMax = pulseWidth.replace("μs", "").toDouble();
+    }
+    
+    // 更新数据
+    radar.name = name;
+    radar.scanMode = scanMode;
+    /*radar.threatLevel = threatLevel;
+    radar.deviceType = deviceType;*/
+    
+    // 更新界面
+    displayData(radar, row);
     ui->tableView->resizeColumnsToContents();
     ui->tableView->resizeRowsToContents();
+    
+    // 发送信号
+    emit radarDataChanged(radar);
+}
+
+void RZSourceRadiation::onDeleteRadar(int row)
+{
+    if (row < 0 || row >= m_radarSource.size()) return;
+    
+    QString name = m_radarSource[row].name;
+    if (QMessageBox::question(this, "删除雷达", QString("确定要删除雷达 %1 吗？").arg(name)) == QMessageBox::Yes) {
+        // 从缓存和界面中删除
+        m_radarSource.removeAt(row);
+        if (auto *model = m_mapModel.value(QString::fromUtf8("雷达"), nullptr); model != nullptr) {
+            model->removeRow(row);
+        }
+        
+        // 发送删除信号
+        emit radarDataDeleted(name);
+    }
+}
+
+// 与 RZThreatAssess 数据互通的槽函数
+void RZSourceRadiation::onRadarDataUpdated(const RadarPerformancePara &data)
+{
+    // 查找是否存在同名雷达
+    int row = findIndexByName(m_radarSource, data.name);
+    
+    if (row < 0) {
+        // 新增雷达
+        addDataImpl(data);
+    } else {
+        // 更新雷达
+        m_radarSource[row] = data;
+        displayData(data, row);
+        ui->tableView->resizeColumnsToContents();
+        ui->tableView->resizeRowsToContents();
+    }
+}
+
+void RZSourceRadiation::onRadarDataRemoved(const QString &name)
+{
+    // 从缓存和界面中删除
+    deleteRadarDataByName(name);
 }

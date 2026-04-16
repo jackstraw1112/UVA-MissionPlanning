@@ -536,6 +536,37 @@ void SpectrumAnalysis::addData(const RadarSource &data, const QColor &color)
     refreshChart();
 }
 
+void SpectrumAnalysis::addData(const RadarPerformancePara &data)
+{
+    // 将 RadarPerformancePara 转换为 RadarSource 格式
+    RadarSource radar;
+    radar.name = data.name;
+    radar.frequency = QString("%1~%2GHz").arg(data.freqMin).arg(data.freqMax);
+    radar.prf = QString("%1~%2Hz").arg(data.prfMin).arg(data.prfMax);
+    radar.pulseWidth = QString("%1~%2μs").arg(data.pwMin).arg(data.pwMax);
+    radar.scanMode = data.scanMode;
+    radar.threatLevel = data.threatLevel;
+    radar.deviceType = data.deviceType;
+    m_radarSource.append(radar);
+    refreshChart();
+}
+
+void SpectrumAnalysis::addData(const RadarPerformancePara &data, const QColor &color)
+{
+    m_radarColor = color;
+    // 将 RadarPerformancePara 转换为 RadarSource 格式
+    RadarSource radar;
+    radar.name = data.name;
+    radar.frequency = QString("%1~%2GHz").arg(data.freqMin).arg(data.freqMax);
+    radar.prf = QString("%1~%2Hz").arg(data.prfMin).arg(data.prfMax);
+    radar.pulseWidth = QString("%1~%2μs").arg(data.pwMin).arg(data.pwMax);
+    radar.scanMode = data.scanMode;
+    radar.threatLevel = data.threatLevel;
+    radar.deviceType = data.deviceType;
+    m_radarSource.append(radar);
+    refreshChart();
+}
+
 void SpectrumAnalysis::addData(const RadioSource &data)
 {
     m_radioSource.append(data);
@@ -592,6 +623,45 @@ void SpectrumAnalysis::updateData(const RadarSource &data, const QColor &color)
     if (index >= 0)
     {
         m_radarSource[index] = data;
+        refreshChart();
+    }
+}
+
+void SpectrumAnalysis::updateData(const RadarPerformancePara &data)
+{
+    // 将 RadarPerformancePara 转换为 RadarSource 格式
+    RadarSource radar;
+    radar.name = data.name;
+    radar.frequency = QString("%1~%2GHz").arg(data.freqMin).arg(data.freqMax);
+    radar.prf = QString("%1~%2Hz").arg(data.prfMin).arg(data.prfMax);
+    radar.pulseWidth = QString("%1~%2μs").arg(data.pwMin).arg(data.pwMax);
+    radar.scanMode = data.scanMode;
+    radar.threatLevel = data.threatLevel;
+    radar.deviceType = data.deviceType;
+    int index = findIndexByName(m_radarSource, data.name);
+    if (index >= 0)
+    {
+        m_radarSource[index] = radar;
+        refreshChart();
+    }
+}
+
+void SpectrumAnalysis::updateData(const RadarPerformancePara &data, const QColor &color)
+{
+    m_radarColor = color;
+    // 将 RadarPerformancePara 转换为 RadarSource 格式
+    RadarSource radar;
+    radar.name = data.name;
+    radar.frequency = QString("%1~%2GHz").arg(data.freqMin).arg(data.freqMax);
+    radar.prf = QString("%1~%2Hz").arg(data.prfMin).arg(data.prfMax);
+    radar.pulseWidth = QString("%1~%2μs").arg(data.pwMin).arg(data.pwMax);
+    radar.scanMode = data.scanMode;
+    radar.threatLevel = data.threatLevel;
+    radar.deviceType = data.deviceType;
+    int index = findIndexByName(m_radarSource, data.name);
+    if (index >= 0)
+    {
+        m_radarSource[index] = radar;
         refreshChart();
     }
 }

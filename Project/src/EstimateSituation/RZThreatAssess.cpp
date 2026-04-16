@@ -308,10 +308,9 @@ void RZThreatAssess::generateTestData()
     {
         RadarThreatAssessRecord newRecord;
 
-        newRecord.entityName = name;
+        newRecord.entityName = id;
         newRecord.typeName = type;
         newRecord.perfPara = ProjectPublicInterface::radarInputFromPresetIndex(presetIndex);
-        newRecord.perfPara.name = name;
         newRecord.result = ProjectPublicInterface::evaluate(newRecord.perfPara);
         newRecord.typicalPara.freq = newRecord.result.freq;
         newRecord.typicalPara.pw = newRecord.result.pw;
@@ -507,15 +506,19 @@ void RZThreatAssess::onTableDoubleClicked(int row, int column)
 
 void RZThreatAssess::onRecvAssessResult()
 {
+    // 缓存数据
     m_radarSources[m_selectRow] = m_setThreatPanel->m_record;
 
+    // 保存到数据库-待处理
+
+    // 评估雷达威胁排序
     assessRadarThreatSort();
 
+    // 重新显示
     displayDataToTable();
 
+    // 重置标志位
     m_selectRow = -1;
-
-    emit threatAssessChanged();
 }
 
 void RZThreatAssess::onRemoveSelectedRows()
@@ -636,15 +639,84 @@ void RZThreatAssess::protectRealWorkPara(int row)
     }
 }
 
-const QVector<RadarThreatAssessRecord> &RZThreatAssess::radarSources() const
+// 公共接口实现
+void RZThreatAssess::addRadarData(const RadarPerformancePara &data)
 {
-    return m_radarSources;
+    // 查找是否存在同名雷达
+    for (int i = 0; i < m_radarSources.size(); ++i) {
+        if (m_radarSources[i].entityName == data.name) {
+            // 更新现有雷达
+            updateRadarData(data);
+            return;
+        }
+    }
+    
+    // 创建新的雷达评估记录
+    RadarThreatAssessRecord record;
+    record.entityName = data.name;
+    record.typeName = data.deviceType;
+    record.perfPara = data;
+    
+    // 计算威胁评估结果
+    record.result = ProjectPublicInterface::calculateThreatResult(record);
+    
+    // 添加到缓存和界面
+    m_radarSources.append(record);
+    displayDataToTable(record);
+    
+    // 发送更新信号
+    emit radarDataUpdated(data);
 }
 
-void RZThreatAssess::syncFromSourceRadiation(const QVector<RadarThreatAssessRecord> &sources)
+void RZThreatAssess::updateRadarData(const RadarPerformancePara &data)
 {
-    m_radarSources = sources;
-    assessRadarThreat();
-    displayDataToTable();
-    emit threatAssessChanged();
+    // 查找同名雷达
+    for (int i = 0; i < m_radarSources.size(); ++i) {
+        if (m_radarSources[i].entityName == data.name) {
+            // 更新性能参数
+            m_radarSources[i].perfPara = data;
+            m_radarSources[i].typeName = data.deviceType;
+            
+            // 重新计算威胁评估结果
+            m_radarSources[i].result = ProjectPublicInterface::calculateThreatResult(m_radarSources[i]);
+            
+            // 更新界面
+            displayDataToTable(m_radarSources[i], i);
+            
+            // 发送更新信号
+            emit radarDataUpdated(data);
+            return;
+        }
+    }
+    
+    // 如果不存在，添加新雷达
+    addRadarData(data);
+}
+
+void RZThreatAssess::deleteRadarData(const QString &name)
+{
+    // 查找并删除同名雷达
+    for (int i = 0; i < m_radarSources.size(); ++i) {
+        if (m_radarSources[i].entityName == name) {
+            m_radarSources.removeAt(i);
+            ui->tableThreatList->removeRow(i);
+            
+            // 发送删除信号
+            emit radarDataRemoved(name);
+            return;
+        }
+    }
+}
+
+// 与 RZSourceRadiation 数据互通的槽函数
+void RZThreatAssess::onRadarDataChanged(const RadarPerformancePara &data)
+{
+    // 调用公共接口添加或更新雷达数据
+    addRadarData(data);
+}
+
+void RZThreatAssess::onRadarDataDeleted(const QString &name)
+{
+    // 调用公共接口删除雷达数据
+    deleteRadarData(name);
 }

@@ -114,6 +114,10 @@ public:
     void addData(const RadioJammerSource &data);
     void addData(const RadioJammerSource &data, const QColor &color);
 
+    // 添加雷达性能参数数据
+    void addData(const RadarPerformancePara &data);
+    void addData(const RadarPerformancePara &data, const QColor &color);
+
     // 更新雷达辐射源数据（按 name 匹配）
     void updateData(const RadarSource &data);
     void updateData(const RadarSource &data, const QColor &color);
@@ -129,6 +133,10 @@ public:
     // 更新通信干扰辐射源数据（按 name 匹配）
     void updateData(const RadioJammerSource &data);
     void updateData(const RadioJammerSource &data, const QColor &color);
+
+    // 更新雷达性能参数数据（按 name 匹配）
+    void updateData(const RadarPerformancePara &data);
+    void updateData(const RadarPerformancePara &data, const QColor &color);
 
     // 删除指定类型和名称的辐射源数据
     template <typename T>

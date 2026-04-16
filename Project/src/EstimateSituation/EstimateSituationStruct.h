@@ -13,7 +13,7 @@
 
 class QTableWidget;
 
-/**
+/*/**
  * @brief 雷达辐射源结构体
  * 对应网页中"雷达"标签页表格的字段
  */
@@ -142,8 +142,6 @@ struct SituationControlData
  * @brief 统一威胁项结构体
  * @details 用于存储不同类型威胁的统一格式数据
  */
-
-/*
 struct UnifiedThreatItem
 {
     QString name;        // 威胁名称
@@ -156,8 +154,6 @@ struct UnifiedThreatItem
     UnifiedThreatItem(const QString &n, const QString &tl, const QString &t, int p)
         : name(n), threatLevel(tl), type(t), priority(p) {}
 };
-*/
-
 
 /**
  * @brief 频率范围信息结构体
@@ -211,7 +207,10 @@ namespace GuideHeadBand
 // 雷达性能参数区间
 struct RadarPerformancePara
 {
-    QString name;               // 目标名称（原 RadarSource::name）
+    QString name;               // 目标名称，如 "AN/MPQ-53 相控阵雷达"
+    QString scanMode;           // 扫描方式，如 "电子扫描"
+    QString threatLevel;        // 威胁等级：高 / 中 / 低
+    QString deviceType;         // 设备类型子类，如 "高功率火控雷达"
     double freqMin = 0.0;       // 工作频率区间下限（GHz）
     double freqMax = 0.0;       // 工作频率区间上限（GHz）
     double pwMin = 0.0;         // 脉冲宽度区间下限（μs）
@@ -219,9 +218,7 @@ struct RadarPerformancePara
     double prfMin = 0.0;        // 脉冲重复频率区间下限（Hz）
     double prfMax = 0.0;        // 脉冲重复频率区间上限（Hz）
     double detectRange = 0.0;   // 探测距离（km），<=0 表示无数据（不做距离修正）
-    QString scanMode;           // 扫描方式（原 RadarSource::scanMode）
-    QString deviceType;         // 设备类型（原 RadarSource::deviceType）
-};
+}; // 雷达性能参数区间
 
 // 雷达典型参数（用户手动填写的代表值）
 struct RadarTypicalPara
@@ -411,141 +408,6 @@ public:
         if (value < 0.0) return 0.0;
         if (value > 1.0) return 1.0;
         return value;
-    }
-
-    static bool parseFrequencyRange(const QString &text, double &outMin, double &outMax)
-    {
-        outMin = 0.0;
-        outMax = 0.0;
-        QString cleaned = text;
-        cleaned.remove(' ').remove('\t');
-        double scale = 1.0;
-        if (cleaned.endsWith(QStringLiteral("MHz"), Qt::CaseInsensitive))
-        {
-            scale = 0.001;
-            cleaned.chop(3);
-        }
-        else if (cleaned.endsWith(QStringLiteral("GHz"), Qt::CaseInsensitive))
-        {
-            scale = 1.0;
-            cleaned.chop(3);
-        }
-        else if (cleaned.endsWith(QStringLiteral("KHz"), Qt::CaseInsensitive))
-        {
-            scale = 0.000001;
-            cleaned.chop(3);
-        }
-        const int sep = cleaned.indexOf('~');
-        if (sep >= 0)
-        {
-            bool ok1 = false, ok2 = false;
-            const double v1 = cleaned.left(sep).toDouble(&ok1) * scale;
-            const double v2 = cleaned.mid(sep + 1).toDouble(&ok2) * scale;
-            if (!ok1 || !ok2) return false;
-            outMin = qMin(v1, v2);
-            outMax = qMax(v1, v2);
-        }
-        else
-        {
-            bool ok = false;
-            const double v = cleaned.toDouble(&ok) * scale;
-            if (!ok) return false;
-            outMin = outMax = v;
-        }
-        return outMin > 0.0 && outMax > 0.0;
-    }
-
-    static bool parsePrfRange(const QString &text, double &outMin, double &outMax)
-    {
-        outMin = 0.0;
-        outMax = 0.0;
-        QString cleaned = text;
-        cleaned.remove(' ').remove('\t');
-        double scale = 1.0;
-        if (cleaned.endsWith(QStringLiteral("kHz"), Qt::CaseInsensitive))
-        {
-            scale = 1000.0;
-            cleaned.chop(3);
-        }
-        else if (cleaned.endsWith(QStringLiteral("Hz"), Qt::CaseInsensitive))
-        {
-            scale = 1.0;
-            cleaned.chop(2);
-        }
-        const int sep = cleaned.indexOf('~');
-        if (sep >= 0)
-        {
-            bool ok1 = false, ok2 = false;
-            const double v1 = cleaned.left(sep).toDouble(&ok1) * scale;
-            const double v2 = cleaned.mid(sep + 1).toDouble(&ok2) * scale;
-            if (!ok1 || !ok2) return false;
-            outMin = qMin(v1, v2);
-            outMax = qMax(v1, v2);
-        }
-        else
-        {
-            bool ok = false;
-            const double v = cleaned.toDouble(&ok) * scale;
-            if (!ok) return false;
-            outMin = outMax = v;
-        }
-        return outMin > 0.0 && outMax > 0.0;
-    }
-
-    static bool parsePulseWidthRange(const QString &text, double &outMin, double &outMax)
-    {
-        outMin = 0.0;
-        outMax = 0.0;
-        QString cleaned = text;
-        cleaned.remove(' ').remove('\t');
-        double scale = 1.0;
-        if (cleaned.endsWith(QStringLiteral("ns"), Qt::CaseInsensitive))
-        {
-            scale = 0.001;
-            cleaned.chop(2);
-        }
-        else if (cleaned.endsWith(QStringLiteral("ms"), Qt::CaseInsensitive))
-        {
-            scale = 1000.0;
-            cleaned.chop(2);
-        }
-        else if (cleaned.endsWith(QStringLiteral("μs"), Qt::CaseInsensitive) || cleaned.endsWith(QStringLiteral("us"), Qt::CaseInsensitive))
-        {
-            scale = 1.0;
-            if (cleaned.endsWith(QStringLiteral("μs"))) cleaned.chop(2);
-            else cleaned.chop(2);
-        }
-        const int sep = cleaned.indexOf('~');
-        if (sep >= 0)
-        {
-            bool ok1 = false, ok2 = false;
-            const double v1 = cleaned.left(sep).toDouble(&ok1) * scale;
-            const double v2 = cleaned.mid(sep + 1).toDouble(&ok2) * scale;
-            if (!ok1 || !ok2) return false;
-            outMin = qMin(v1, v2);
-            outMax = qMax(v1, v2);
-        }
-        else
-        {
-            bool ok = false;
-            const double v = cleaned.toDouble(&ok) * scale;
-            if (!ok) return false;
-            outMin = outMax = v;
-        }
-        return outMin > 0.0 && outMax > 0.0;
-    }
-
-    static RadarThreatAssessRecord radarSourceToRecord(const RadarSource &source)
-    {
-        RadarThreatAssessRecord record;
-        record.entityName = source.name;
-        record.perfPara.name = source.name;
-        record.perfPara.scanMode = source.scanMode;
-        record.perfPara.deviceType = source.deviceType;
-        parseFrequencyRange(source.frequency, record.perfPara.freqMin, record.perfPara.freqMax);
-        parsePrfRange(source.prf, record.perfPara.prfMin, record.perfPara.prfMax);
-        parsePulseWidthRange(source.pulseWidth, record.perfPara.pwMin, record.perfPara.pwMax);
-        return record;
     }
 
     static double geometricMean(double intervalLow, double intervalHigh)

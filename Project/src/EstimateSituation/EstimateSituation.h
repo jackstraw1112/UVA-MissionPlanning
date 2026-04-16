@@ -92,21 +92,22 @@ private:
 
 private:
     // 类型化增删改实现：由模板公共接口分发调用
-    // --- Add ---
+    // 具体类型的增删改实现（由模板接口调用）
     void addDataImpl(const RadarSource &data);
     void addDataImpl(const RadioSource &data);
     void addDataImpl(const RadarJammerSource &data);
     void addDataImpl(const RadioJammerSource &data);
     void addDataImpl(const FirepowerItem &data);
     void addDataImpl(const SituationControlData &data);
+    void addDataImpl(const RadarPerformancePara &data);
 
-    // --- Update ---
     void updateDataImpl(const RadarSource &data);
     void updateDataImpl(const RadioSource &data);
     void updateDataImpl(const RadarJammerSource &data);
     void updateDataImpl(const RadioJammerSource &data);
     void updateDataImpl(const FirepowerItem &data);
     void updateDataImpl(const SituationControlData &data);
+    void updateDataImpl(const RadarPerformancePara &data);
 
     // --- Delete ---
     void deleteRadarDataByName(const QString &name);

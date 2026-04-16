@@ -69,13 +69,13 @@ void EstimateSituation::initObject()
     // 右侧：防空火力与威胁评估竖直布局
     QSplitter *rightSplitter = new QSplitter(Qt::Vertical);
     rightSplitter->addWidget(m_firepowerControl);
-    rightSplitter->addWidget(m_rzThreatAssess);
-
+    rightSplitter->addWidget(m_rzThreatAssess); // 添加威胁评估模块
     rightSplitter->setStretchFactor(0, 1);
     rightSplitter->setStretchFactor(1, 1);
     QList<int> rightSizes;
     rightSizes << 400 << 400;
     rightSplitter->setSizes(rightSizes);
+    
 
     // 整体水平布局：左侧与右侧水平排列
     QSplitter *mainSplitter = new QSplitter(Qt::Horizontal);
@@ -95,25 +95,12 @@ void EstimateSituation::initObject()
 }
 
 void EstimateSituation::initConnect()
-{
-    if (m_rzSourceRadiation && m_rzThreatAssess)
-    {
-        connect(m_rzSourceRadiation, &RZSourceRadiation::radarDataChanged, this, [this]()
-        {
-            if (m_rzThreatAssess)
-            {
-                m_rzThreatAssess->syncFromSourceRadiation(m_rzSourceRadiation->radarSources());
-            }
-        });
+{ // 连接 RZSourceRadiation 和 RZThreatAssess 之间的信号
+    connect(m_rzSourceRadiation, &RZSourceRadiation::radarDataChanged, m_rzThreatAssess, &RZThreatAssess::onRadarDataChanged);
+    connect(m_rzSourceRadiation, &RZSourceRadiation::radarDataDeleted, m_rzThreatAssess, &RZThreatAssess::onRadarDataDeleted);
+    connect(m_rzThreatAssess, &RZThreatAssess::radarDataUpdated, m_rzSourceRadiation, &RZSourceRadiation::onRadarDataUpdated);
+    connect(m_rzThreatAssess, &RZThreatAssess::radarDataRemoved, m_rzSourceRadiation, &RZSourceRadiation::onRadarDataRemoved);
 
-        connect(m_rzThreatAssess, &RZThreatAssess::threatAssessChanged, this, [this]()
-        {
-            if (m_rzSourceRadiation)
-            {
-                m_rzSourceRadiation->syncRadarSources(m_rzThreatAssess->radarSources());
-            }
-        });
-    }
 }
 
 // ==============================================================================
@@ -124,6 +111,7 @@ void EstimateSituation::addDataImpl(const RadarSource &data)
 {
     if (m_rzSourceRadiation) m_rzSourceRadiation->addData(data);
     if (m_spectrumAnalysis) m_spectrumAnalysis->addData(data);
+    //if (m_rzThreatAssess) m_rzThreatAssess->addData(data);
 }
 
 void EstimateSituation::addDataImpl(const RadioSource &data)
@@ -154,6 +142,13 @@ void EstimateSituation::addDataImpl(const SituationControlData &data)
     if (m_rzSourceRadiation) m_rzSourceRadiation->addData(data);
 }
 
+void EstimateSituation::addDataImpl(const RadarPerformancePara &data)
+{
+    if (m_rzSourceRadiation) m_rzSourceRadiation->addData(data);
+    if (m_spectrumAnalysis) m_spectrumAnalysis->addData(data);
+    if (m_rzThreatAssess) m_rzThreatAssess->addData(data);
+}
+
 // ==============================================================================
 // Update 实现：分发到所有子窗口
 // ==============================================================================
@@ -162,6 +157,7 @@ void EstimateSituation::updateDataImpl(const RadarSource &data)
 {
     if (m_rzSourceRadiation) m_rzSourceRadiation->updateData(data);
     if (m_spectrumAnalysis) m_spectrumAnalysis->updateData(data);
+    //if (m_rzThreatAssess) m_rzThreatAssess->updateData(data);
 }
 
 void EstimateSituation::updateDataImpl(const RadioSource &data)
@@ -192,14 +188,22 @@ void EstimateSituation::updateDataImpl(const SituationControlData &data)
     if (m_rzSourceRadiation) m_rzSourceRadiation->updateData(data);
 }
 
+void EstimateSituation::updateDataImpl(const RadarPerformancePara &data)
+{
+    if (m_rzSourceRadiation) m_rzSourceRadiation->updateData(data);
+    if (m_spectrumAnalysis) m_spectrumAnalysis->updateData(data);
+    if (m_rzThreatAssess) m_rzThreatAssess->updateData(data);
+}
+
 // ==============================================================================
 // Delete 实现：分发到所有子窗口
 // ==============================================================================
 
 void EstimateSituation::deleteRadarDataByName(const QString &name)
 {
-    if (m_rzSourceRadiation) m_rzSourceRadiation->deleteData<RadarSource>(name);
+    if (m_rzSourceRadiation) m_rzSourceRadiation->deleteData<RadarPerformancePara>(name);
     if (m_spectrumAnalysis) m_spectrumAnalysis->deleteData<RadarSource>(name);
+    if (m_rzThreatAssess) m_rzThreatAssess->deleteRadarData(name);
 }
 
 void EstimateSituation::deleteRadioDataByName(const QString &name)

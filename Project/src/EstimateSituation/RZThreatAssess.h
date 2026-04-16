@@ -34,27 +34,37 @@ class RZThreatAssess : public QWidget
 public:
     explicit RZThreatAssess(QWidget *parent = nullptr);
     ~RZThreatAssess() override;
-
-public:
-    /**
-     * @brief 获取雷达评估记录数据
-     * @return 雷达评估记录容器的常引用
-     */
-    const QVector<RadarThreatAssessRecord> &radarSources() const;
-
-    /**
-     * @brief 从 RZSourceRadiation 同步雷达辐射源数据
-     * @param sources 辐射源数据
-     * @details 接收辐射源数据后自动执行威胁评估并刷新表格
-     */
-    void syncFromSourceRadiation(const QVector<RadarThreatAssessRecord> &sources);
-
+    
+    // 公共接口：添加/更新/删除雷达数据
+    void addRadarData(const RadarPerformancePara &data);
+    void updateRadarData(const RadarPerformancePara &data);
+    void deleteRadarData(const QString &name);
+    
 signals:
     /**
-     * @brief 威胁评估数据变更信号
-     * @details 当评估结果更新时发出，通知 RZSourceRadiation 同步
+     * @brief 雷达数据更新信号
+     * @param data 雷达性能参数
      */
-    void threatAssessChanged();
+    void radarDataUpdated(const RadarPerformancePara &data);
+    
+    /**
+     * @brief 雷达数据删除信号
+     * @param name 雷达名称
+     */
+    void radarDataRemoved(const QString &name);
+    
+public slots:
+    /**
+     * @brief 接收来自辐射源列表的雷达数据变更
+     * @param data 雷达性能参数
+     */
+    void onRadarDataChanged(const RadarPerformancePara &data);
+    
+    /**
+     * @brief 接收来自辐射源列表的雷达数据删除
+     * @param name 雷达名称
+     */
+    void onRadarDataDeleted(const QString &name);
 
 private:
     // 初始化参数
