@@ -13,63 +13,56 @@
 
 class QTableWidget;
 
-/*/**
- * @brief 雷达辐射源结构体
- * 对应网页中"雷达"标签页表格的字段
+/* 已废弃：以下结构体已合并到 RadarPerformancePara，不再使用
+ *
+ * 合并说明：
+ *   RadarSource     → RadarPerformancePara（frequency/prf/pulseWidth 已由 freqMin/Max/prfMin/Max/pwMin/Max 数值字段替代）
+ *   RadioSource     → RadarPerformancePara（modulation/codeRate/powerOrWaveform 合并为新字段）
+ *   RadarJammerSource → RadarPerformancePara（jammingType/workingBand/technology 合并为新字段）
+ *   RadioJammerSource → RadarPerformancePara（jammingStyle/coverageBand/erp 合并为新字段）
+ *
+ * struct RadarSource
+ * {
+ *     QString name;
+ *     QString frequency;
+ *     QString prf;
+ *     QString pulseWidth;
+ *     QString scanMode;
+ *     QString threatLevel;
+ *     QString deviceType;
+ * };
+ *
+ * struct RadioSource
+ * {
+ *     QString name;
+ *     QString frequency;
+ *     QString modulation;
+ *     QString codeRate;
+ *     QString powerOrWaveform;
+ *     QString threatLevel;
+ *     QString deviceType;
+ * };
+ *
+ * struct RadioJammerSource
+ * {
+ *     QString name;
+ *     QString jammingStyle;
+ *     QString coverageBand;
+ *     QString erp;
+ *     QString threatLevel;
+ *     QString deviceType;
+ * };
+ *
+ * struct RadarJammerSource
+ * {
+ *     QString name;
+ *     QString jammingType;
+ *     QString workingBand;
+ *     QString technology;
+ *     QString threatLevel;
+ *     QString deviceType;
+ * };
  */
-struct RadarSource
-{
-    QString name;           // 目标名称，如 "AN/MPQ-53 相控阵雷达"
-    QString frequency;      // 工作频率，如 "5.2~6.1GHz"
-    QString prf;            // 脉冲重频 (PRF)，如 "200~500Hz"
-    QString pulseWidth;     // 脉宽 (PW)，如 "0.5~25μs"
-    QString scanMode;       // 扫描方式，如 "电子扫描"
-    QString threatLevel;    // 威胁等级：高 / 中 / 低
-    QString deviceType;     // 设备类型子类（额外字段），如 "高功率火控雷达"
-};
-
-/**
- * @brief 通信电台结构体
- * 对应网页中"电台"标签页表格的字段
- */
-struct RadioSource
-{
-    QString name;               // 目标名称，如 "Link-16 战术数据链"
-    QString frequency;          // 工作频率，如 "960~1215MHz"
-    QString modulation;         // 调制方式，如 "MSK/扩频"
-    QString codeRate;           // 码速率，如 "1.0Mbps"
-    QString powerOrWaveform;    // 功率或波形，如 "25W" 或 "JTIDS"
-    QString threatLevel;        // 威胁等级：高 / 中 / 低
-    QString deviceType;         // 设备类型子类（额外字段），如 "关键指控链路"
-};
-
-/**
- * @brief 通信对抗设备（通信干扰）结构体
- * 对应网页中"通信对抗"标签页表格的字段
- */
-struct RadioJammerSource
-{
-    QString name;           // 目标名称，如 "R-330Zh 通信干扰系统"
-    QString jammingStyle;   // 干扰样式，如 "噪声调频/梳状谱"
-    QString coverageBand;   // 覆盖频段，如 "20~100MHz"
-    QString erp;            // 有效辐射功率 (ERP)，如 "1kW"
-    QString threatLevel;    // 威胁等级：高 / 中 / 低
-    QString deviceType;     // 设备类型描述，如 "大功率宽带压制"
-};
-
-/**
- * @brief 雷达对抗设备（雷达干扰）结构体
- * 对应网页中"雷达对抗"标签页表格的字段
- */
-struct RadarJammerSource
-{
-    QString name;           // 目标名称，如 "SPECTRAL 侦察干扰吊舱"
-    QString jammingType;    // 对抗类型 / 干扰样式，如 "距离门拖引/速度欺骗"
-    QString workingBand;    // 工作频段，如 "2~18GHz"
-    QString technology;     // 技术体制，如 "DRFM转发"
-    QString threatLevel;    // 威胁等级：高 / 中 / 低
-    QString deviceType;     // 设备类型描述，如 "先进数字射频存储"
-};
 
 enum class SourceType
 {
@@ -155,18 +148,15 @@ struct UnifiedThreatItem
         : name(n), threatLevel(tl), type(t), priority(p) {}
 };
 
-/**
- * @brief 频率范围信息结构体
- * @details 存储频率范围字符串、数值范围、柱状图矩形区域和颜色，用于频谱分析图表绘制和鼠标悬浮检测。
- */
-struct FrequencyRangeInfo
-{
-    QString frequencyStr;           // 频率范围字符串
-    QPair<double, double> range;    // 频率范围数值（MHz）
-    QRectF rect;                    // 柱状图矩形区域
-    QColor color;                   // 柱状图颜色
-    int signalCount;                // 该范围内的信号数量
-};
+// 频率范围信息结构体（已合并到 RadarPerformancePara 中）
+// struct FrequencyRangeInfo
+// {
+//     QString frequencyStr;           // 频率范围字符串
+//     QPair<double, double> range;    // 频率范围数值（MHz）
+//     QRectF rect;                    // 柱状图矩形区域
+//     QColor color;                   // 柱状图颜色
+//     int signalCount;                // 该范围内的信号数量
+// };
 
 // ============================================================================
 // 威胁评估 — 枚举与常量
@@ -204,13 +194,22 @@ namespace GuideHeadBand
 // 威胁评估 — 参数与结果结构体
 // ============================================================================
 
-// 雷达性能参数区间
+// 雷达性能参数区间（统一辐射源数据结构体）
 struct RadarPerformancePara
 {
+    // ── 通用字段 ──
     QString name;               // 目标名称，如 "AN/MPQ-53 相控阵雷达"
     QString scanMode;           // 扫描方式，如 "电子扫描"
     QString threatLevel;        // 威胁等级：高 / 中 / 低
     QString deviceType;         // 设备类型子类，如 "高功率火控雷达"
+    SourceType sourceType = SourceType::Radar;  // 辐射源类型
+    
+    // ── 装备实体参数 ──
+    QString equipID;            // 设备ID
+    QString entityName;         // 装备实体名称
+    QString typeName;           // 雷达型号
+
+    // ── 雷达性能参数（数值区间） ──
     double freqMin = 0.0;       // 工作频率区间下限（GHz）
     double freqMax = 0.0;       // 工作频率区间上限（GHz）
     double pwMin = 0.0;         // 脉冲宽度区间下限（μs）
@@ -218,6 +217,28 @@ struct RadarPerformancePara
     double prfMin = 0.0;        // 脉冲重复频率区间下限（Hz）
     double prfMax = 0.0;        // 脉冲重复频率区间上限（Hz）
     double detectRange = 0.0;   // 探测距离（km），<=0 表示无数据（不做距离修正）
+
+    // ── 通信电台字段（源自 RadioSource） ──
+    QString modulation;         // 调制方式，如 "MSK/扩频"
+    QString codeRate;           // 码速率，如 "1.0Mbps"
+    QString powerOrWaveform;    // 功率或波形，如 "25W" 或 "JTIDS"
+
+    // ── 雷达对抗设备字段（源自 RadarJammerSource） ──
+    QString jammingType;        // 对抗类型/干扰样式，如 "距离门拖引/速度欺骗"
+    QString workingBand;        // 工作频段，如 "2~18GHz"
+    QString technology;         // 技术体制，如 "DRFM转发"
+
+    // ── 通信对抗设备字段（源自 RadioJammerSource） ──
+    QString jammingStyle;       // 干扰样式，如 "噪声调频/梳状谱"
+    QString coverageBand;       // 覆盖频段，如 "20~100MHz"
+    QString erp;                // 有效辐射功率 (ERP)，如 "1kW"
+    
+    // ── 频谱分析字段（源自 FrequencyRangeInfo） ──
+    QString frequencyStr;       // 频率范围字符串
+    QPair<double, double> freqRange;    // 频率范围数值（MHz）
+    QRectF barRect;             // 柱状图矩形区域
+    QColor barColor;            // 柱状图颜色
+    int signalCount = 0;        // 该范围内的信号数量
 }; // 雷达性能参数区间
 
 // 雷达典型参数（用户手动填写的代表值）
