@@ -13,56 +13,6 @@
 
 class QTableWidget;
 
-/* 已废弃：以下结构体已合并到 RadarPerformancePara，不再使用
- *
- * 合并说明：
- *   RadarSource     → RadarPerformancePara（frequency/prf/pulseWidth 已由 freqMin/Max/prfMin/Max/pwMin/Max 数值字段替代）
- *   RadioSource     → RadarPerformancePara（modulation/codeRate/powerOrWaveform 合并为新字段）
- *   RadarJammerSource → RadarPerformancePara（jammingType/workingBand/technology 合并为新字段）
- *   RadioJammerSource → RadarPerformancePara（jammingStyle/coverageBand/erp 合并为新字段）
- *
- * struct RadarSource
- * {
- *     QString name;
- *     QString frequency;
- *     QString prf;
- *     QString pulseWidth;
- *     QString scanMode;
- *     QString threatLevel;
- *     QString deviceType;
- * };
- *
- * struct RadioSource
- * {
- *     QString name;
- *     QString frequency;
- *     QString modulation;
- *     QString codeRate;
- *     QString powerOrWaveform;
- *     QString threatLevel;
- *     QString deviceType;
- * };
- *
- * struct RadioJammerSource
- * {
- *     QString name;
- *     QString jammingStyle;
- *     QString coverageBand;
- *     QString erp;
- *     QString threatLevel;
- *     QString deviceType;
- * };
- *
- * struct RadarJammerSource
- * {
- *     QString name;
- *     QString jammingType;
- *     QString workingBand;
- *     QString technology;
- *     QString threatLevel;
- *     QString deviceType;
- * };
- */
 
 enum class SourceType
 {
@@ -135,34 +85,10 @@ struct SituationControlData
  * @brief 统一威胁项结构体
  * @details 用于存储不同类型威胁的统一格式数据
  */
-struct UnifiedThreatItem
-{
-    QString name;        // 威胁名称
-    QString threatLevel; // 威胁等级
-    QString type;        // 威胁类型
-    int priority;        // 优先级（用于排序）
 
-    UnifiedThreatItem() : priority(0) {}
 
-    UnifiedThreatItem(const QString &n, const QString &tl, const QString &t, int p)
-        : name(n), threatLevel(tl), type(t), priority(p) {}
-};
 
-// 频率范围信息结构体（已合并到 RadarPerformancePara 中）
-// struct FrequencyRangeInfo
-// {
-//     QString frequencyStr;           // 频率范围字符串
-//     QPair<double, double> range;    // 频率范围数值（MHz）
-//     QRectF rect;                    // 柱状图矩形区域
-//     QColor color;                   // 柱状图颜色
-//     int signalCount;                // 该范围内的信号数量
-// };
-
-// ============================================================================
-// 威胁评估 — 枚举与常量
-// ============================================================================
-
-/// 防御等级，与界面 combo 索引一一对应
+// 防御等级，与界面 combo 索引一一对应
 enum class DefenseLevel
 {
     None   = 0,    // 无防护 — 独立雷达站，周边无防空火力
@@ -202,7 +128,7 @@ struct RadarPerformancePara
     QString scanMode;           // 扫描方式，如 "电子扫描"
     QString threatLevel;        // 威胁等级：高 / 中 / 低
     QString deviceType;         // 设备类型子类，如 "高功率火控雷达"
-    SourceType sourceType = SourceType::Radar;  // 辐射源类型
+
     
     // ── 装备实体参数 ──
     QString equipID;            // 设备ID

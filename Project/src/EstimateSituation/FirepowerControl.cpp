@@ -145,17 +145,20 @@ void FirepowerControl::displayData()
         delete item;
     }
 
+    // 设置主布局间距，进一步缩小布局
+    ui->verticalLayout_3->setSpacing(1);
+
     // 添加所有设备项
     for (const auto &firepower : m_firepowerData)
     {
         addFirepowerItem(firepower);
     }
 
-    // 更新单位数量标签
-    if (ui->unitCountLabel)
-    {
-        ui->unitCountLabel->setText(QString::fromUtf8("%1个单位").arg(m_firepowerData.size()));
-    }
+    // // 更新单位数量标签
+    // if (ui->unitCountLabel)
+    // {
+    //     ui->unitCountLabel->setText(QString::fromUtf8("%1个单位").arg(m_firepowerData.size()));
+    // }
 }
 
 /**
@@ -170,35 +173,44 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     firepowerItem->setObjectName("firepowerItem");
     QVBoxLayout *itemLayout = new QVBoxLayout(firepowerItem);
     itemLayout->setContentsMargins(0, 0, 0, 0);
-    itemLayout->setSpacing(2);
+    itemLayout->setSpacing(1); // 进一步减小间距
 
     // 设备头部
     QWidget *headerWidget = new QWidget;
     QHBoxLayout *headerLayout = new QHBoxLayout(headerWidget);
     headerLayout->setContentsMargins(0, 0, 0, 0);
-    headerLayout->setSpacing(2);
+    headerLayout->setSpacing(1); // 进一步减小间距
 
     // 设备名称
     QLabel *nameLabel = new QLabel(item.name);
     nameLabel->setProperty("name", "nameLabel");
     nameLabel->setMaximumWidth(150);
+    QFont nameFont = nameLabel->font();
+    nameFont.setPointSize(3); // 进一步缩小字体大小以显示更多模块
+    nameLabel->setFont(nameFont);
 
     // 设备状态
     QLabel *statusLabel = new QLabel;
     statusLabel->setProperty("name", "statusLabel");
     statusLabel->setFixedWidth(60);
+    QFont statusFont = statusLabel->font();
+    statusFont.setPointSize(3); // 进一步缩小字体大小以显示更多模块
+    statusLabel->setFont(statusFont);
 
     if (item.status == QString::fromUtf8("active"))
     {
         statusLabel->setText(QString::fromUtf8("在线"));
+        statusLabel->setStyleSheet("QLabel { background-color: #28a745; color: white; border-radius: 4px; padding: 2px 8px; text-align: center; }");
     }
     else if (item.status == QString::fromUtf8("standby"))
     {
         statusLabel->setText(QString::fromUtf8("待机"));
+        statusLabel->setStyleSheet("QLabel { background-color: #ffc107; color: black; border-radius: 4px; padding: 2px 8px; text-align: center; }");
     }
     else
     {
         statusLabel->setText(QString::fromUtf8("离线"));
+        statusLabel->setStyleSheet("QLabel { background-color: #6c757d; color: white; border-radius: 4px; padding: 2px 8px; text-align: center; }");
     }
 
     headerLayout->addWidget(nameLabel);
@@ -217,10 +229,16 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     QFrame *typeBox = new QFrame;
     QVBoxLayout *typeBoxLayout = new QVBoxLayout(typeBox);
     typeBoxLayout->setContentsMargins(0, 0, 0, 0);
-    typeBoxLayout->setSpacing(2);
+    typeBoxLayout->setSpacing(1); // 减小间距
     QLabel *typeLabel = new QLabel(QString::fromUtf8("类型"));
+    QFont labelFont = typeLabel->font();
+    labelFont.setPointSize(3); // 进一步缩小字体大小以显示更多模块
+    typeLabel->setFont(labelFont);
     QLabel *typeValue = new QLabel(item.type);
     typeValue->setProperty("name", "typeValue");
+    QFont valueFont = typeValue->font();
+    valueFont.setPointSize(3); // 进一步缩小字体大小以显示更多模块
+    typeValue->setFont(valueFont);
     typeBoxLayout->addWidget(typeLabel);
     typeBoxLayout->addWidget(typeValue);
 
@@ -228,10 +246,12 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     QFrame *rangeBox = new QFrame;
     QVBoxLayout *rangeBoxLayout = new QVBoxLayout(rangeBox);
     rangeBoxLayout->setContentsMargins(0, 0, 0, 0);
-    rangeBoxLayout->setSpacing(2);
+    rangeBoxLayout->setSpacing(1); // 减小间距
     QLabel *rangeLabel = new QLabel(QString::fromUtf8("射程"));
+    rangeLabel->setFont(labelFont);
     QLabel *rangeValue = new QLabel(item.range);
     rangeValue->setProperty("name", "rangeValue");
+    rangeValue->setFont(valueFont);
     rangeBoxLayout->addWidget(rangeLabel);
     rangeBoxLayout->addWidget(rangeValue);
 
@@ -239,10 +259,12 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     QFrame *ammoBox = new QFrame;
     QVBoxLayout *ammoBoxLayout = new QVBoxLayout(ammoBox);
     ammoBoxLayout->setContentsMargins(0, 0, 0, 0);
-    ammoBoxLayout->setSpacing(2);
+    ammoBoxLayout->setSpacing(1); // 减小间距
     QLabel *ammoLabel = new QLabel(item.ammo.contains(QString::fromUtf8("枚")) ? QString::fromUtf8("弹药") : QString::fromUtf8("模式"));
+    ammoLabel->setFont(labelFont);
     QLabel *ammoValue = new QLabel(item.ammo);
     ammoValue->setProperty("name", "ammoValue");
+    ammoValue->setFont(valueFont);
     ammoBoxLayout->addWidget(ammoLabel);
     ammoBoxLayout->addWidget(ammoValue);
 
@@ -250,10 +272,12 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     QFrame *responseBox = new QFrame;
     QVBoxLayout *responseBoxLayout = new QVBoxLayout(responseBox);
     responseBoxLayout->setContentsMargins(0, 0, 0, 0);
-    responseBoxLayout->setSpacing(2);
+    responseBoxLayout->setSpacing(1); // 减小间距
     QLabel *responseLabel = new QLabel(QString::fromUtf8("响应"));
+    responseLabel->setFont(labelFont);
     QLabel *responseValue = new QLabel(item.response);
     responseValue->setProperty("name", "responseValue");
+    responseValue->setFont(valueFont);
     responseBoxLayout->addWidget(responseLabel);
     responseBoxLayout->addWidget(responseValue);
 
@@ -268,29 +292,29 @@ void FirepowerControl::addFirepowerItem(const FirepowerItem &item)
     QFrame *rangeFrame = new QFrame;
     QVBoxLayout *rangeFrameLayout = new QVBoxLayout(rangeFrame);
     rangeFrameLayout->setContentsMargins(0, 0, 0, 0);
-    rangeFrameLayout->setSpacing(2);
+    rangeFrameLayout->setSpacing(0); // 最小化间距
 
     QLabel *rangeTitle = new QLabel(QString::fromUtf8("拦截概率"));
     rangeTitle->setProperty("name", "rangeTitle");
-
-    QFrame *rangeBar = new QFrame;
-    rangeBar->setProperty("name", "rangeBar");
-    QHBoxLayout *rangeBarLayout = new QHBoxLayout(rangeBar);
-    rangeBarLayout->setContentsMargins(0, 0, 0, 0);
-
-    QFrame *rangeFill = new QFrame;
-    rangeFill->setProperty("name", "rangeFill");
+    rangeTitle->setFont(labelFont);
 
     if (item.intercept != QString::fromUtf8("-"))
     {
+        QProgressBar *interceptBar = new QProgressBar;
+        interceptBar->setProperty("name", "interceptBar");
+        interceptBar->setMinimum(0);
+        interceptBar->setMaximum(100);
         int percent = QString(item.intercept).replace(QString::fromUtf8("%"), QString()).toInt();
-        rangeFill->setFixedWidth(percent * rangeBar->width() / 140);
+        interceptBar->setValue(percent);
+        interceptBar->setStyleSheet(
+            "QProgressBar { border: 1px solid #444; border-radius: 8px; background: #333; height: 1px; } "
+            "QProgressBar::chunk { background: #28a745; border-radius: 8px; }"
+        );
+        interceptBar->setTextVisible(false);
+
+        rangeFrameLayout->addWidget(rangeTitle);
+        rangeFrameLayout->addWidget(interceptBar);
     }
-
-    rangeBarLayout->addWidget(rangeFill);
-
-    rangeFrameLayout->addWidget(rangeTitle);
-    rangeFrameLayout->addWidget(rangeBar);
 
     itemLayout->addWidget(rangeFrame);
 

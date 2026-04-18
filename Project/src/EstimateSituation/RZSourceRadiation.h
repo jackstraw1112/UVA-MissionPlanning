@@ -136,9 +136,6 @@ private slots:
      */
     void onDeleteRadar(int row);
 
-protected:
-    // 事件过滤器
-    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
     Ui::RZSourceRadiation *ui;
@@ -150,9 +147,6 @@ private:
 
     // 态势控制数据
     QVector<SituationControlData> m_controlData;
-    
-    // 雷达威力范围显示状态
-    bool m_radarRangeVisible = false;
 
 private:
     void addDataImpl(const RadarPerformancePara &data);
@@ -162,9 +156,6 @@ private:
 
     void deleteDataByName(const QString &name);
     void deleteControlDataByType(const QString &type);
-    
-    // 雷达标签点击事件处理
-    void onRadarLabelClicked();
 
     template <typename T>
     int findIndexByType(const QVector<T> &container, const QString &type)

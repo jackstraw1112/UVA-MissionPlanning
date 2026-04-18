@@ -15,6 +15,7 @@
 #include <QToolTip>
 #include <QtMath>
 
+#include <algorithm>
 #include <limits>
 #include <utility>
 #include <vector>
@@ -45,6 +46,10 @@ SpectrumChart::SpectrumChart(QWidget *parent)
     m_hoveredIndex = -1;
     m_tooltipItem = nullptr;
     m_tooltipBg = nullptr;
+
+    // 初始化字体
+    m_bandLabelFont.setPointSize(10);
+    m_freqLabelFont.setPointSize(9);
 
     initScene();
 }
@@ -210,104 +215,148 @@ void SpectrumChart::drawBarChart()
         }
     }
 
-    // 动态计算最大频率范围，确保频谱图不重叠
-    m_maxFreq = 0.0;
-    for (const auto &info : mergedInfos)
-    {
-        if (info.freqRange.second > m_maxFreq)
-        {
-            m_maxFreq = info.freqRange.second;
-        }
-    }
-    // 确保最小频率为 0，最大频率至少为 1000 MHz
+    // 设置固定频率范围
     m_minFreq = 0.0;
-    m_maxFreq = qMax(m_maxFreq, 1000.0);
-    // 向上取整到最近的 1000 MHz
-    m_maxFreq = qCeil(m_maxFreq / 1000.0) * 1000.0;
-    
+    m_maxFreq = 20000.0; // 20 GHz
+
     Q_ASSERT(m_minFreq < m_maxFreq);
 
     qreal chartWidth = width() - kWidthMargin;
     qreal chartHeight = height() - kHeightMargin;
-    qreal barHeight = chartHeight * kBarHeightRatio;
+    qreal halfChartHeight = chartHeight / 2;
+    qreal barHeight = halfChartHeight * kBarHeightRatio;
     qreal xOffset = kXOffset;
     qreal yOffset = kYOffset;
 
     double freqRange = m_maxFreq - m_minFreq;
     double scaleFactor = chartWidth / freqRange;
 
+    // 绘制中间部分的柱状图（0~2000MHz）
+    qreal middleBarY = yOffset + (halfChartHeight - barHeight);
     for (auto &info : mergedInfos)
     {
-        qreal barStart = xOffset + (info.freqRange.first - m_minFreq) * scaleFactor;
-        qreal barWidth = (info.freqRange.second - info.freqRange.first) * scaleFactor;
+        if (info.freqRange.first < 2000) // 频率范围与0~2000MHz有交集
+        {
+            // 计算中间部分的起始和结束频率
+            double startFreq = info.freqRange.first;
+            double endFreq = qMin(info.freqRange.second, 2000.0);
 
-        QRectF barRect(barStart, yOffset + (chartHeight - barHeight), barWidth, barHeight);
-        QPen barPen(Qt::NoPen);  // 移除边框
-        QGraphicsRectItem *barItem = m_scene->addRect(barRect, barPen, QBrush(info.barColor));
-        barItem->setOpacity(0.7);  // 调整透明度，确保重叠时颜色不加深
+            // 根据中间坐标轴刻度计算柱状图位置
+            double middleChartWidth = chartWidth;
+            double middleScaleFactor = middleChartWidth / 2000.0; // 0~2000MHz对应整个中间坐标轴宽度
 
-        info.barRect = barRect;
+            qreal barStart = xOffset + (startFreq) * middleScaleFactor;
+            qreal barEnd = xOffset + (endFreq) * middleScaleFactor;
+            qreal barWidth = barEnd - barStart;
+
+            if (barWidth > 0)
+            {
+                QRectF barRect(barStart, middleBarY, barWidth, barHeight);
+                QPen barPen(Qt::NoPen);  // 移除边框
+                QGraphicsRectItem *barItem = m_scene->addRect(barRect, barPen, QBrush(info.barColor));
+                barItem->setOpacity(0.7);  // 调整透明度，确保重叠时颜色不加深
+
+                info.barRect = barRect;
+            }
+        }
+    }
+
+    // 绘制下面部分的柱状图（2000~20000MHz）
+    qreal bottomBarY = yOffset + halfChartHeight + (halfChartHeight - barHeight);
+    for (auto &info : mergedInfos)
+    {
+        if (info.freqRange.second > 2000) // 频率范围与2000~20000MHz有交集
+        {
+            // 计算底部部分的起始和结束频率
+            double startFreq = qMax(info.freqRange.first, 2000.0);
+            double endFreq = info.freqRange.second;
+
+            // 根据底部坐标轴刻度计算柱状图位置
+            double bottomChartWidth = chartWidth;
+            double bottomScaleFactor = bottomChartWidth / (20000.0 - 2000.0); // 2000~20000MHz对应整个底部坐标轴宽度
+
+            qreal barStart = xOffset + (startFreq - 2000.0) * bottomScaleFactor;
+            qreal barEnd = xOffset + (endFreq - 2000.0) * bottomScaleFactor;
+            qreal barWidth = barEnd - barStart;
+
+            if (barWidth > 0)
+            {
+                QRectF barRect(barStart, bottomBarY, barWidth, barHeight);
+                QPen barPen(Qt::NoPen);  // 移除边框
+                QGraphicsRectItem *barItem = m_scene->addRect(barRect, barPen, QBrush(info.barColor));
+                barItem->setOpacity(0.7);  // 调整透明度，确保重叠时颜色不加深
+
+                info.barRect = barRect;
+            }
+        }
     }
 
     m_rangeInfos = mergedInfos;
 
     QPen axisPen(Qt::black, 1);
-    m_scene->addLine(xOffset, yOffset + chartHeight,
-                     xOffset + chartWidth, yOffset + chartHeight, axisPen);
 
+    // 绘制中间坐标轴（适应窗口大小）
+    qreal middleAxisY = yOffset + halfChartHeight;
+    m_scene->addLine(xOffset, middleAxisY, xOffset + chartWidth, middleAxisY, axisPen);
+
+    // 绘制下面的坐标轴
+    qreal bottomAxisY = yOffset + chartHeight;
+    m_scene->addLine(xOffset, bottomAxisY, xOffset + chartWidth, bottomAxisY, axisPen);
+
+    // 绘制下面坐标轴的箭头
     qreal arrowSize = kArrowSize;
-    QPolygonF arrow;
-    arrow << QPointF(xOffset + chartWidth, yOffset + chartHeight)
-          << QPointF(xOffset + chartWidth - arrowSize, yOffset + chartHeight - arrowSize / 2)
-          << QPointF(xOffset + chartWidth - arrowSize, yOffset + chartHeight + arrowSize / 2);
-    m_scene->addPolygon(arrow, axisPen, QBrush(Qt::black));
+    QPolygonF bottomArrow;
+    bottomArrow << QPointF(xOffset + chartWidth, bottomAxisY)
+                << QPointF(xOffset + chartWidth - arrowSize, bottomAxisY - arrowSize / 2)
+                << QPointF(xOffset + chartWidth - arrowSize, bottomAxisY + arrowSize / 2);
+    m_scene->addPolygon(bottomArrow, axisPen, QBrush(Qt::black));
 
-    qreal bandLabelY = yOffset + chartHeight + 25;
-    QFont bandLabelFont;
-    bandLabelFont.setPointSize(10);
-
-    qreal freqLabelY = bandLabelY + 25;
-    QFont freqLabelFont;
-    freqLabelFont.setPointSize(9);
-
-    // 动态生成刻度标签（优化版）
-
-    // 标准频率刻度点（按业务常用值）
-    QList<double> freqTicks;
-    int tickCount = 6; // 想要几个刻度
-    double step = m_maxFreq / (tickCount - 1);
-
-    for (int i = 0; i < tickCount; ++i) {
-        freqTicks << i * step;
-    }
-    for (double freq : freqTicks)
+    // 中间坐标轴的刻度（从中间坐标轴开始到结束均匀分配，5个标签）
+    int middleTickCount = 5; // 5个刻度点，包括起点和终点
+    double middleTickInterval = chartWidth / (middleTickCount - 1);
+    for (int i = 0; i < middleTickCount; ++i)
     {
-        if (freq < m_minFreq || freq > m_maxFreq)
-        {
-            continue;
-        }
+        double tickX = xOffset + i * middleTickInterval;
 
-        double tickX = xOffset + (freq - m_minFreq) * scaleFactor;
+        // 计算对应的频率值（0~2000 MHz）
+        double freq = (tickX - xOffset) * (2000.0 / chartWidth);
 
-        // 绘制刻度线
+        // 绘制中间坐标轴刻度线
         QPen tickPen(Qt::black, 1);
-        m_scene->addLine(tickX, yOffset + chartHeight, tickX, yOffset + chartHeight + 5, tickPen);
+        m_scene->addLine(tickX, middleAxisY, tickX, middleAxisY + 5, tickPen);
 
-        QString labelText;
-        if (freq >= 1000)
-        {
-            labelText = QStringLiteral("%1G").arg(freq / 1000.0, 0, 'f', 0);
-        }
-        else
-        {
-            labelText = QStringLiteral("%1").arg(freq, 0, 'f', 0);
-        }
-
-        QGraphicsTextItem *textItem = m_scene->addText(labelText, freqLabelFont);
-        textItem->setDefaultTextColor(Qt::black);
-        qreal textWidth = textItem->boundingRect().width();
+        // 中间坐标轴标签
+        QString labelText = QStringLiteral("%1").arg(freq, 0, 'f', 0);
+        QGraphicsTextItem *middleTextItem = m_scene->addText(labelText, m_freqLabelFont);
+        middleTextItem->setDefaultTextColor(Qt::black);
+        qreal textWidth = middleTextItem->boundingRect().width();
         qreal textX = tickX - textWidth / 2;
-        textItem->setPos(textX, freqLabelY - textItem->boundingRect().height() / 2);
+        qreal middleLabelY = middleAxisY + 15;
+        middleTextItem->setPos(textX, middleLabelY - middleTextItem->boundingRect().height() / 2);
+    }
+
+    // 底部坐标轴的刻度（2000~20000 MHz，均匀分配）
+    int bottomTickCount = 5; // 5个刻度点，包括起点和终点，与中间坐标轴一致
+    double bottomTickInterval = chartWidth / (bottomTickCount - 1);
+    for (int i = 0; i < bottomTickCount; ++i)
+    {
+        double tickX = xOffset + i * bottomTickInterval;
+
+        // 计算对应的频率值（2000~20000 MHz）
+        double freq = 2000.0 + (tickX - xOffset) * ((20000.0 - 2000.0) / chartWidth);
+
+        // 绘制下边坐标轴刻度线
+        QPen tickPen(Qt::black, 1);
+        m_scene->addLine(tickX, bottomAxisY, tickX, bottomAxisY - 5, tickPen);
+
+        // 下边坐标轴标签
+        QString labelText = QStringLiteral("%1").arg(freq / 1000.0, 0, 'f', 0);
+        QGraphicsTextItem *bottomTextItem = m_scene->addText(labelText, m_freqLabelFont);
+        bottomTextItem->setDefaultTextColor(Qt::black);
+        qreal textWidth = bottomTextItem->boundingRect().width();
+        qreal textX = tickX - textWidth / 2;
+        qreal bottomLabelY = bottomAxisY + 15;
+        bottomTextItem->setPos(textX, bottomLabelY - bottomTextItem->boundingRect().height() / 2);
     }
 }
 
@@ -343,78 +392,114 @@ void SpectrumChart::mouseMoveEvent(QMouseEvent *event)
 
     QPointF scenePos = mapToScene(event->pos());
 
-    qreal chartWidth = width() - 40;
-    qreal chartHeight = height() - 110;
-    qreal xOffset = 20;
-    qreal yOffset = 20;
+    qreal chartWidth = width() - kWidthMargin;
+    qreal chartHeight = height() - kHeightMargin;
+    qreal halfChartHeight = chartHeight / 2;
+    qreal xOffset = kXOffset;
+    qreal yOffset = kYOffset;
 
-    double freqRange = m_maxFreq - m_minFreq;
-    double scaleFactor = chartWidth / freqRange;
+    qreal middleAxisY = yOffset + halfChartHeight;
+    qreal bottomAxisY = yOffset + chartHeight;
 
-    double mouseFreq = m_minFreq + (scenePos.x() - xOffset) / scaleFactor;
+    double mouseFreq = -1.0;
 
-    // 查找所有与当前鼠标位置重叠的雷达数据
-    QVector<RadarPerformancePara> overlappingRadars;
-    for (const auto &radar : m_radarSource)
-    {
-        double radarFreqMin = radar.freqMin * 1000; // 转换为 MHz
-        double radarFreqMax = radar.freqMax * 1000;
-        if (mouseFreq >= radarFreqMin && mouseFreq <= radarFreqMax)
-        {
-            overlappingRadars.append(radar);
+    if (scenePos.x() >= xOffset && scenePos.x() <= xOffset + chartWidth) {
+        if (scenePos.y() >= yOffset && scenePos.y() <= middleAxisY) {
+            double middleScaleFactor = chartWidth / 2000.0;
+            mouseFreq = (scenePos.x() - xOffset) / middleScaleFactor;
+        } else if (scenePos.y() > middleAxisY && scenePos.y() <= bottomAxisY) {
+            double bottomScaleFactor = chartWidth / (20000.0 - 2000.0);
+            mouseFreq = 2000.0 + (scenePos.x() - xOffset) / bottomScaleFactor;
         }
     }
 
-    if (!overlappingRadars.isEmpty())
-    {
-        if (overlappingRadars.size() == 1)
-        {
-            // 只有一个雷达，显示该雷达的信息
-            const auto &radar = overlappingRadars[0];
-            double radarFreqMin = radar.freqMin * 1000;
-            double radarFreqMax = radar.freqMax * 1000;
-            QString freqDisplay = QStringLiteral("%1~%2MHz").arg(radarFreqMin).arg(radarFreqMax);
+    if (mouseFreq < 0.0) {
+        QToolTip::hideText();
+        return;
+    }
 
-            double centerFreq = (radarFreqMin + radarFreqMax) / 2;
-            QString bandName = getBandName(centerFreq);
-
-            QString tooltip = QString("%1\n频率范围: %2\n信号数量: 1").arg(bandName).arg(freqDisplay);
-            
-            QToolTip::showText(event->globalPos(), tooltip, this);
-            return;
-        }
-        else
-        {
-            // 多个雷达重叠，计算重叠范围
-            double overlapMin = overlappingRadars[0].freqMin * 1000;
-            double overlapMax = overlappingRadars[0].freqMax * 1000;
-            for (const auto &radar : overlappingRadars)
-            {
-                double radarFreqMin = radar.freqMin * 1000;
-                double radarFreqMax = radar.freqMax * 1000;
-                overlapMin = qMax(overlapMin, radarFreqMin);
-                overlapMax = qMin(overlapMax, radarFreqMax);
-            }
-
-            QString freqDisplay = QStringLiteral("%1~%2MHz").arg(overlapMin).arg(overlapMax);
-
-            double centerFreq = (overlapMin + overlapMax) / 2;
-            QString bandName = getBandName(centerFreq);
-
-            QString tooltip = QString("%1\n重叠频率范围: %2\n信号数量: %3").arg(bandName).arg(freqDisplay).arg(overlappingRadars.size());
-            
-            QToolTip::showText(event->globalPos(), tooltip, this);
-            return;
+    QVector<int> coveringIndices;
+    for (int i = 0; i < m_radarSource.size(); ++i) {
+        double fMin = m_radarSource[i].freqMin * 1000.0;
+        double fMax = m_radarSource[i].freqMax * 1000.0;
+        if (mouseFreq >= fMin && mouseFreq <= fMax) {
+            coveringIndices.append(i);
         }
     }
 
-    QToolTip::hideText();
+    if (coveringIndices.isEmpty()) {
+        QToolTip::hideText();
+        return;
+    }
+
+    QVector<double> boundaries;
+    for (int idx : coveringIndices) {
+        boundaries.append(m_radarSource[idx].freqMin * 1000.0);
+        boundaries.append(m_radarSource[idx].freqMax * 1000.0);
+    }
+    std::sort(boundaries.begin(), boundaries.end());
+    boundaries.erase(std::unique(boundaries.begin(), boundaries.end()), boundaries.end());
+
+    double segStart = boundaries.first();
+    double segEnd = boundaries.last();
+    for (int i = 0; i < boundaries.size() - 1; ++i) {
+        if (mouseFreq >= boundaries[i] && mouseFreq <= boundaries[i + 1]) {
+            segStart = boundaries[i];
+            segEnd = boundaries[i + 1];
+            break;
+        }
+    }
+
+    int signalCount = 0;
+    for (int idx : coveringIndices) {
+        double fMin = m_radarSource[idx].freqMin * 1000.0;
+        double fMax = m_radarSource[idx].freqMax * 1000.0;
+        if (fMin <= segStart && fMax >= segEnd) {
+            ++signalCount;
+        }
+    }
+
+    auto formatFreq = [](double mhz) -> QString {
+        if (mhz >= 1000.0) {
+            return QStringLiteral("%1GHz").arg(mhz / 1000.0, 0, 'f', 1);
+        }
+        return QStringLiteral("%1MHz").arg(mhz, 0, 'f', 0);
+    };
+
+    QString freqDisplay = formatFreq(segStart) + QStringLiteral("~") + formatFreq(segEnd);
+    double centerFreq = (segStart + segEnd) / 2;
+    QString bandName = getBandName(centerFreq);
+
+    QString tooltip = QString("%1\n").arg(bandName);
+    tooltip += QString("频率范围: %1\n").arg(freqDisplay);
+    tooltip += QString("信号数量: %1").arg(signalCount);
+
+    QToolTip::showText(event->globalPos(), tooltip, this);
 }
 
 void SpectrumChart::leaveEvent(QEvent *event)
 {
     QGraphicsView::leaveEvent(event);
     QToolTip::hideText();
+}
+
+void SpectrumChart::resizeEvent(QResizeEvent *event)
+{
+    QGraphicsView::resizeEvent(event);
+    // 窗口大小变化时重新绘制图表
+    if (!m_radarSource.isEmpty())
+    {
+        drawBarChart();
+    }
+}
+
+void SpectrumChart::setFont(const QFont &font)
+{
+    QGraphicsView::setFont(font);
+    m_bandLabelFont = font;
+    m_bandLabelFont.setPointSize(10);
+    m_freqLabelFont = font;
+    m_freqLabelFont.setPointSize(9);
 }
 
 // ==============================================================================
@@ -565,6 +650,14 @@ void SpectrumAnalysis::mouseMoveEvent(QMouseEvent *event)
 void SpectrumAnalysis::leaveEvent(QEvent *event)
 {
     QWidget::leaveEvent(event);
+}
+
+void SpectrumAnalysis::setFont(const QFont &font)
+{
+    QWidget::setFont(font);
+    if (m_spectrumChart) {
+        m_spectrumChart->setFont(font);
+    }
 }
 
 void SpectrumAnalysis::onRadarDataChanged(const RadarPerformancePara &data)

@@ -12,6 +12,7 @@
 #include <QGraphicsTextItem>
 #include <QGraphicsView>
 #include <QObject>
+#include <QPair>
 #include <QVector>
 #include <QWidget>
 #include <type_traits>
@@ -36,6 +37,9 @@ public:
     void drawBarChart();
 
     QPair<double, double> calculateFrequencyRange(const QString &frequencyStr);
+    
+    // 设置字体
+    void setFont(const QFont &font);
 
 private:
     QGraphicsScene *m_scene;
@@ -44,11 +48,15 @@ private:
     QGraphicsRectItem *m_tooltipBg;
 
     QVector<RadarPerformancePara> m_radarSource;
-
     QVector<RadarPerformancePara> m_rangeInfos;
+    QVector<QPair<QRectF, int>> m_barRects;
 
     // 颜色配置
     QColor m_radarColor;
+    
+    // 字体配置
+    QFont m_bandLabelFont;
+    QFont m_freqLabelFont;
     
     // 动态频率范围
     double m_minFreq = 0.0;
@@ -66,6 +74,8 @@ private:
     void mouseMoveEvent(QMouseEvent *event) override;
     // 鼠标离开事件
     void leaveEvent(QEvent *event) override;
+    // 窗口大小变化事件
+    void resizeEvent(QResizeEvent *event) override;
 };
 
 // 频谱分析窗口
@@ -88,6 +98,9 @@ public:
     void clearCacheData();
 
     void refreshChart();
+    
+    // 设置字体
+    void setFont(const QFont &font);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

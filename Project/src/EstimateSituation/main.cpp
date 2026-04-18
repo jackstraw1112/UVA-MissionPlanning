@@ -10,7 +10,7 @@
 #include "RZThreatAssess.h"
 #include "SpectrumAnalysis.h"
 #include "RZSourceRadiation.h"
-
+#include "FirepowerControl.h"
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -26,6 +26,8 @@ int main(int argc, char *argv[])
     EstimateSituation e;
     e.show();
 
+    // FirepowerControl f;
+    // f.show();
 
     return app.exec();
 }

@@ -36,12 +36,19 @@ void EstimateSituation::initParams()
     setWindowTitle(QString::fromUtf8("态势估计系统"));
     resize(1000, 800);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    
+    // 设置全局字体
+    QFont font;
+    font.setFamily("Microsoft YaHei");
+    font.setPointSize(10);
+    setFont(font);
 }
 
 void EstimateSituation::initObject()
 {
     m_rzSourceRadiation = new RZSourceRadiation(this);
     m_spectrumAnalysis = new SpectrumAnalysis(this);
+    m_spectrumAnalysis->setFont(font());
 
     m_firepowerControl = new FirepowerControl(this);
     m_rzThreatAssess = new RZThreatAssess(this);

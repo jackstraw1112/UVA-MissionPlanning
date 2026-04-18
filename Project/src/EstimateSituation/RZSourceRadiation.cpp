@@ -128,30 +128,53 @@ void RZSourceRadiation::initConnect()
         QAction *deleteAction = menu.addAction("删除雷达");
         
         QModelIndex index = ui->tableView->indexAt(pos);
-        editAction->setEnabled(index.isValid());
-        deleteAction->setEnabled(index.isValid());
+        QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+        
+        // 编辑操作只在选中单行时可用
+        editAction->setEnabled(index.isValid() && selectedIndexes.size() == 1);
+        // 删除操作在选中至少一行时可用
+        deleteAction->setEnabled(!selectedIndexes.isEmpty());
         
         QAction *selectedAction = menu.exec(ui->tableView->viewport()->mapToGlobal(pos));
         if (selectedAction == addAction) {
             onAddRadar();
-        } else if (selectedAction == editAction) {
+        } else if (selectedAction == editAction && index.isValid()) {
             onEditRadar(index.row());
-        } else if (selectedAction == deleteAction) {
-            onDeleteRadar(index.row());
+        } else if (selectedAction == deleteAction && !selectedIndexes.isEmpty()) {
+            // 处理多选删除
+            if (selectedIndexes.size() == 1) {
+                onDeleteRadar(selectedIndexes.first().row());
+            } else {
+                // 多选删除确认
+                if (QMessageBox::question(this, "删除雷达", QString("确定要删除选中的 %1 个雷达吗？").arg(selectedIndexes.size())) == QMessageBox::Yes) {
+                    // 按行号降序删除，避免索引混乱
+                    QList<int> rows;
+                    for (const QModelIndex &idx : selectedIndexes) {
+                        rows.append(idx.row());
+                    }
+                    std::sort(rows.begin(), rows.end(), std::greater<int>());
+                    
+                    for (int row : rows) {
+                        QString name = m_radarSource[row].name;
+                        m_radarSource.removeAt(row);
+                        if (auto *model = m_mapModel.value(QString::fromUtf8("雷达"), nullptr); model != nullptr) {
+                            model->removeRow(row);
+                        }
+                        emit radarDataDeleted(name);
+                    }
+                }
+            }
         }
     });
     
-    // 雷达标签点击事件
-    ui->label->installEventFilter(this);
+
 }
 
 void RZSourceRadiation::generateTestData()
 {
     // 重新生成测试数据前先清空容器，避免重复追加
     m_radarSource.clear();
-    // m_radioSource.clear();
-    // m_radarJammerSource.clear();
-    // m_RadioJammerSource.clear();
+
 
     // ---------- 1. 雷达数据 (Radar) ----------
     // 与 RZThreatAssess 统一使用相同的预设数据
@@ -163,8 +186,10 @@ void RZSourceRadiation::generateTestData()
         radar.deviceType = type;
         radar.scanMode = scanMode;
         radar.equipID = id;
-        radar.entityName = name;
-        radar.typeName = type;
+        // radar.entityName = name;
+        // radar.typeName = type;
+    radar.entityName = id;
+    radar.typeName = type;
         m_radarSource.append(radar);
     };
 
@@ -175,96 +200,6 @@ void RZSourceRadiation::generateTestData()
     addRadar(QStringLiteral("RAD-004"), QStringLiteral("MPQ-64 哨兵雷达"), QStringLiteral("TPS-75"), 7, QStringLiteral("旋转扫描"));
     addRadar(QStringLiteral("RAD-005"), QStringLiteral("远程预警 FPS-117"), QStringLiteral("FPS-117"), 6, QStringLiteral("机械扫描"));
 
-    /*
-    // ---------- 2. 通信电台数据 (Communication) ----------
-    RadioSource radio1;
-    radio1.name = QString::fromUtf8("Link-16 战术数据链");
-    radio1.frequency = QString::fromUtf8("960~1215MHz");
-    radio1.modulation = QString::fromUtf8("MSK/扩频");
-    radio1.codeRate = QString::fromUtf8("1.0Mbps");
-    radio1.powerOrWaveform = QString::fromUtf8("JTIDS");
-    radio1.threatLevel = QString::fromUtf8("高");
-    radio1.deviceType = QString::fromUtf8("关键指控链路");
-    m_radioSource.append(radio1);
-
-    RadioSource radio2;
-    radio2.name = QString::fromUtf8("VHF 战术电台");
-    radio2.frequency = QString::fromUtf8("30~88MHz");
-    radio2.modulation = QString::fromUtf8("FM/跳频");
-    radio2.codeRate = QString::fromUtf8("-");
-    radio2.powerOrWaveform = QString::fromUtf8("25W");
-    radio2.threatLevel = QString::fromUtf8("中");
-    radio2.deviceType = QString::fromUtf8("班组级通信");
-    m_radioSource.append(radio2);
-
-    RadioSource radio3;
-    radio3.name = QString::fromUtf8("卫星通信终端");
-    radio3.frequency = QString::fromUtf8("Ku波段");
-    radio3.modulation = QString::fromUtf8("QPSK");
-    radio3.codeRate = QString::fromUtf8("5Msps");
-    radio3.powerOrWaveform = QString::fromUtf8("同步卫星");
-    radio3.threatLevel = QString::fromUtf8("中");
-    radio3.deviceType = QString::fromUtf8("远程指挥链路");
-    m_radioSource.append(radio3);
-
-    // ---------- 3. 雷达对抗设备 (Radar Jammer) ----------
-    RadarJammerSource radarJammer1;
-    radarJammer1.name = QString::fromUtf8("SPECTRAL 侦察干扰吊舱");
-    radarJammer1.jammingType = QString::fromUtf8("距离门拖引/速度欺骗");
-    radarJammer1.workingBand = QString::fromUtf8("2~18GHz");
-    radarJammer1.technology = QString::fromUtf8("DRFM转发");
-    radarJammer1.threatLevel = QString::fromUtf8("高");
-    radarJammer1.deviceType = QString::fromUtf8("先进数字射频存储");
-    m_radarJammerSource.append(radarJammer1);
-
-    RadarJammerSource radarJammer2;
-    radarJammer2.name = QString::fromUtf8("Pelena-1 地面干扰站");
-    radarJammer2.jammingType = QString::fromUtf8("噪声压制/假目标");
-    radarJammer2.workingBand = QString::fromUtf8("8~12GHz");
-    radarJammer2.technology = QString::fromUtf8("模拟转发");
-    radarJammer2.threatLevel = QString::fromUtf8("高");
-    radarJammer2.deviceType = QString::fromUtf8("火控雷达对抗");
-    m_radarJammerSource.append(radarJammer2);
-
-    RadarJammerSource radarJammer3;
-    radarJammer3.name = QString::fromUtf8("战术侦察/干扰模块");
-    radarJammer3.jammingType = QString::fromUtf8("测频/测向+间歇采样");
-    radarJammer3.workingBand = QString::fromUtf8("S/C波段");
-    radarJammer3.technology = QString::fromUtf8("数字接收");
-    radarJammer3.threatLevel = QString::fromUtf8("中");
-    radarJammer3.deviceType = QString::fromUtf8("小型化电子攻击");
-    m_radarJammerSource.append(radarJammer3);
-
-    // ---------- 4. 通信对抗设备 (Comm Jammer) ----------
-    RadioJammerSource radioJammer1;
-    radioJammer1.name = QString::fromUtf8("R-330Zh 通信干扰系统");
-    radioJammer1.jammingStyle = QString::fromUtf8("噪声调频/梳状谱");
-    radioJammer1.coverageBand = QString::fromUtf8("20~100MHz");
-    radioJammer1.erp = QString::fromUtf8("1kW");
-    radioJammer1.threatLevel = QString::fromUtf8("高");
-    radioJammer1.deviceType = QString::fromUtf8("大功率宽带压制");
-    m_RadioJammerSource.append(radioJammer1);
-
-    RadioJammerSource radioJammer2;
-    radioJammer2.name = QString::fromUtf8("便携式通信干扰机");
-    radioJammer2.jammingStyle = QString::fromUtf8("单音/扫频");
-    radioJammer2.coverageBand = QString::fromUtf8("400~470MHz");
-    radioJammer2.erp = QString::fromUtf8("50W");
-    radioJammer2.threatLevel = QString::fromUtf8("低");
-    radioJammer2.deviceType = QString::fromUtf8("近距离战术干扰");
-    m_RadioJammerSource.append(radioJammer2);
-
-    RadioJammerSource radioJammer3;
-    radioJammer3.name = QString::fromUtf8("车载智能干扰站");
-    radioJammer3.jammingStyle = QString::fromUtf8("协议伪造/随机脉冲");
-    radioJammer3.coverageBand = QString::fromUtf8("225~400MHz");
-    radioJammer3.erp = QString::fromUtf8("200W");
-    radioJammer3.threatLevel = QString::fromUtf8("中");
-    radioJammer3.deviceType = QString::fromUtf8("自适应干扰");
-    m_RadioJammerSource.append(radioJammer3);
-    */
-
-
 
 }
 
@@ -272,7 +207,7 @@ void RZSourceRadiation::initTableAttr()
 {
     // 交互行为
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);               // 不可编辑
-    ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);             // 单行选中
+    ui->tableView->setSelectionMode(QAbstractItemView::ExtendedSelection);           // 多行选中，支持Ctrl键多选
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);              // 全行选中
     ui->tableView->setItemDelegate(new UpperCenterTextDelegate(ui->tableView));      // 内容居中并大写显示
     ui->tableView->horizontalHeader()->setDefaultAlignment(Qt::AlignCenter);         // 表头居中
@@ -330,41 +265,7 @@ void RZSourceRadiation::initTableModel()
     });
     m_mapModel.insert(QString::fromUtf8("雷达"), radarModel);
 
-    /*// 2) 电台
-    auto *radioModel = createModel(QStringList{
-        QString::fromUtf8("名称"),
-        QString::fromUtf8("频率"),
-        QString::fromUtf8("调制方式"),
-        QString::fromUtf8("码速率"),
-        QString::fromUtf8("功率/波形"),
-        QString::fromUtf8("威胁等级"),
-        QString::fromUtf8("设备类型")
-    });*/
-    /*m_mapModel.insert(QString::fromUtf8("电台"), radioModel);
 
-    // 3) 雷达干扰
-    auto *radarJamModel = createModel(QStringList{
-        QString::fromUtf8("名称"),
-        QString::fromUtf8("干扰类型"),
-        QString::fromUtf8("工作频段"),
-        QString::fromUtf8("技术体制"),
-        QString::fromUtf8("威胁等级"),
-        QString::fromUtf8("设备类型")
-    });*/
-    /*m_mapModel.insert(QString::fromUtf8("雷达干扰"), radarJamModel);
-
-    // 4) 通信干扰
-    auto *radioJamModel = createModel(QStringList{
-        QString::fromUtf8("名称"),
-        QString::fromUtf8("干扰样式"),
-        QString::fromUtf8("覆盖频段"),
-        QString::fromUtf8("ERP"),
-        QString::fromUtf8("威胁等级"),
-        QString::fromUtf8("设备类型")
-    });
-    m_mapModel.insert(QString::fromUtf8("通信干扰"), radioJamModel);
-    */
-    // 默认显示"雷达"模型
     ui->tableView->setModel(radarModel);
 }
 
@@ -385,18 +286,7 @@ void RZSourceRadiation::displayData()
     {
         displayData(item);
     }
-    /*for (const auto &item : m_radioSource)
-    {
-        displayData(item);
-    }
-    for (const auto &item : m_radarJammerSource)
-    {
-        displayData(item);
-    }
-    for (const auto &item : m_RadioJammerSource)
-    {
-        displayData(item);
-    }*/
+
 }
 
 void RZSourceRadiation::displayData(const RadarPerformancePara &data, int row)
@@ -414,45 +304,6 @@ void RZSourceRadiation::displayData(const RadarPerformancePara &data, int row)
                   row);
 }
 
-/*void RZSourceRadiation::displayData(const RadioSource &data, int row)
-{
-    // 按电台字段顺序写入模型
-    writeModelRow(m_mapModel.value(QString::fromUtf8("电台"), nullptr),
-                  QStringList{data.name,
-                              data.frequency,
-                              data.modulation,
-                              data.codeRate,
-                              data.powerOrWaveform,
-                              data.threatLevel,
-                              data.deviceType},
-                  row);
-}
-
-void RZSourceRadiation::displayData(const RadarJammerSource &data, int row)
-{
-    // 按雷达干扰字段顺序写入模型
-    writeModelRow(m_mapModel.value(QString::fromUtf8("雷达干扰"), nullptr),
-                  QStringList{data.name,
-                              data.jammingType,
-                              data.workingBand,
-                              data.technology,
-                              data.threatLevel,
-                              data.deviceType},
-                  row);
-}
-
-void RZSourceRadiation::displayData(const RadioJammerSource &data, int row)
-{
-    // 按通信干扰字段顺序写入模型
-    writeModelRow(m_mapModel.value(QString::fromUtf8("通信干扰"), nullptr),
-                  QStringList{data.name,
-                              data.jammingStyle,
-                              data.coverageBand,
-                              data.erp,
-                              data.threatLevel,
-                              data.deviceType},
-                  row);
-}*/
 
 void RZSourceRadiation::writeModelRow(QStandardItemModel *model, const QStringList &columns, int row)
 {
@@ -491,18 +342,7 @@ void RZSourceRadiation::onShowTableData()
     {
         modelKey = QString::fromUtf8("雷达");
     }
-    /*else if (btn == ui->btnRadio)
-    {
-        modelKey = QString::fromUtf8("电台");
-    }
-    else if (btn == ui->btnRadarJam)
-    {
-        modelKey = QString::fromUtf8("雷达干扰");
-    }
-    else if (btn == ui->btnRadioJam)
-    {
-        modelKey = QString::fromUtf8("通信干扰");
-    }*/
+
     else
     {
         return;
@@ -746,32 +586,5 @@ void RZSourceRadiation::onRadarDataRemoved(const QString &name)
     deleteDataByName(name);
 }
 
-// 事件过滤器，处理雷达标签点击事件
-bool RZSourceRadiation::eventFilter(QObject *watched, QEvent *event)
-{
-    if (watched == ui->label && event->type() == QEvent::MouseButtonPress)
-    {
-        onRadarLabelClicked();
-        return true;
-    }
-    return QWidget::eventFilter(watched, event);
-}
 
-// 雷达标签点击事件处理
-void RZSourceRadiation::onRadarLabelClicked()
-{
-    m_radarRangeVisible = !m_radarRangeVisible;
-    
-    if (m_radarRangeVisible)
-    {
-        // 显示雷达威力范围
-        QMessageBox::information(this, "雷达威力范围", "雷达威力范围已显示");
-        ui->label->setStyleSheet("color: blue;");
-    }
-    else
-    {
-        // 隐藏雷达威力范围
-        QMessageBox::information(this, "雷达威力范围", "雷达威力范围已隐藏");
-        ui->label->setStyleSheet("color: black;");
-    }
-}
+
