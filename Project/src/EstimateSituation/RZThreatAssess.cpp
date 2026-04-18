@@ -369,6 +369,46 @@ void RZThreatAssess::displayDataToTable()
     {
         displayDataToTable(var);
     }
+
+    // 自适应列宽
+    pTable->resizeColumnsToContents();
+    
+    // 计算表格可用宽度
+    int tableWidth = pTable->viewport()->width();
+    int totalContentWidth = 0;
+    for (int col = 0; col < pTable->columnCount(); ++col)
+    {
+        if (!pTable->isColumnHidden(col))
+        {
+            totalContentWidth += pTable->columnWidth(col);
+        }
+    }
+    
+    // 如果内容宽度小于表格宽度，按比例扩展列宽填满窗口
+    if (totalContentWidth > 0 && totalContentWidth < tableWidth)
+    {
+        int extraWidth = tableWidth - totalContentWidth;
+        int visibleCols = 0;
+        for (int col = 0; col < pTable->columnCount(); ++col)
+        {
+            if (!pTable->isColumnHidden(col))
+            {
+                ++visibleCols;
+            }
+        }
+        
+        if (visibleCols > 0)
+        {
+            int extraPerCol = extraWidth / visibleCols;
+            for (int col = 0; col < pTable->columnCount(); ++col)
+            {
+                if (!pTable->isColumnHidden(col))
+                {
+                    pTable->setColumnWidth(col, pTable->columnWidth(col) + extraPerCol);
+                }
+            }
+        }
+    }
 }
 
 void RZThreatAssess::displayDataToTable(const RadarThreatAssessRecord &record, int row)

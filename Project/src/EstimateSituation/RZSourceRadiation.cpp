@@ -59,6 +59,11 @@ namespace
     }
 }
 
+/**
+ * @brief 雷达辐射源窗口构造函数
+ * @param parent 父窗口指针
+ * @details 初始化UI、参数、对象和信号槽连接
+ */
 RZSourceRadiation::RZSourceRadiation(QWidget *parent)
     : QWidget(parent), ui(new Ui::RZSourceRadiation)
 {
@@ -74,15 +79,27 @@ RZSourceRadiation::RZSourceRadiation(QWidget *parent)
     initConnect();
 }
 
+/**
+ * @brief 雷达辐射源窗口析构函数
+ * @details 释放UI资源
+ */
 RZSourceRadiation::~RZSourceRadiation()
 {
     delete ui;
 }
 
+/**
+ * @brief 初始化参数
+ * @details 预留扩展
+ */
 void RZSourceRadiation::initParams()
 {
 }
 
+/**
+ * @brief 初始化对象
+ * @details 生成测试数据、初始化表格属性和数据模型
+ */
 void RZSourceRadiation::initObject()
 {
     // 生成测试数据
@@ -98,8 +115,13 @@ void RZSourceRadiation::initObject()
     displayData();
 
 
+
 }
 
+/**
+ * @brief 关联信号与槽函数
+ * @details 关联按钮点击、表格右键菜单等信号槽
+ */
 void RZSourceRadiation::initConnect()
 {
     // 四个类型按钮复用同一槽函数，根据 sender() 判断切换模型
@@ -170,6 +192,10 @@ void RZSourceRadiation::initConnect()
 
 }
 
+/**
+ * @brief 生成测试数据
+ * @details 初始化雷达辐射源测试数据
+ */
 void RZSourceRadiation::generateTestData()
 {
     // 重新生成测试数据前先清空容器，避免重复追加
@@ -199,10 +225,12 @@ void RZSourceRadiation::generateTestData()
     addRadar(QStringLiteral("RAD-003"), QStringLiteral("P-18 预警雷达"), QStringLiteral("SPS-48E"), 5, QStringLiteral("6rpm"));
     addRadar(QStringLiteral("RAD-004"), QStringLiteral("MPQ-64 哨兵雷达"), QStringLiteral("TPS-75"), 7, QStringLiteral("旋转扫描"));
     addRadar(QStringLiteral("RAD-005"), QStringLiteral("远程预警 FPS-117"), QStringLiteral("FPS-117"), 6, QStringLiteral("机械扫描"));
-
-
 }
 
+/**
+ * @brief 初始化表格属性
+ * @details 设置表格交互行为、字体、列宽策略等
+ */
 void RZSourceRadiation::initTableAttr()
 {
     // 交互行为
@@ -236,8 +264,17 @@ void RZSourceRadiation::initTableAttr()
 
     // 行高按内容自适应
     ui->tableView->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+
+
+    ui->btnRadio->setVisible(false); // 电台
+    ui->btnCommJam->setVisible(false); // 通信对抗
+    ui->btnRadarJam->setVisible(false); // 雷达对抗
 }
 
+/**
+ * @brief 初始化数据模型
+ * @details 创建雷达表格模型并设置表头
+ */
 void RZSourceRadiation::initTableModel()
 {
     // 清理旧模型并重新创建，防止重复初始化造成内存泄漏
@@ -269,6 +306,10 @@ void RZSourceRadiation::initTableModel()
     ui->tableView->setModel(radarModel);
 }
 
+/**
+ * @brief 显示所有辐射源数据
+ * @details 清空并重新显示所有雷达数据
+ */
 void RZSourceRadiation::displayData()
 {
     // 清空表格
@@ -289,6 +330,12 @@ void RZSourceRadiation::displayData()
 
 }
 
+/**
+ * @brief 显示单条辐射源数据
+ * @param data 雷达性能参数
+ * @param row 行号，-1表示追加
+ * @details 将雷达数据写入表格指定行
+ */
 void RZSourceRadiation::displayData(const RadarPerformancePara &data, int row)
 {
     // 按雷达字段顺序写入模型
@@ -304,7 +351,13 @@ void RZSourceRadiation::displayData(const RadarPerformancePara &data, int row)
                   row);
 }
 
-
+/**
+ * @brief 写入模型行数据
+ * @param model 数据模型指针
+ * @param columns 列数据列表
+ * @param row 行号，-1表示追加
+ * @details 将数据写入模型的指定行
+ */
 void RZSourceRadiation::writeModelRow(QStandardItemModel *model, const QStringList &columns, int row)
 {
     // 模型未初始化时直接返回，避免空指针访问
@@ -327,6 +380,10 @@ void RZSourceRadiation::writeModelRow(QStandardItemModel *model, const QStringLi
     }
 }
 
+/**
+ * @brief 显示表格数据槽函数
+ * @details 根据点击的按钮切换显示对应的数据模型
+ */
 void RZSourceRadiation::onShowTableData()
 {
     // 通过 sender() 获取当前点击按钮
@@ -360,31 +417,61 @@ void RZSourceRadiation::onShowTableData()
     ui->tableView->resizeRowsToContents();
 }
 
+/**
+ * @brief 添加雷达数据
+ * @param data 雷达性能参数
+ * @details 调用addDataImpl添加数据
+ */
 void RZSourceRadiation::addData(const RadarPerformancePara &data)
 {
     addDataImpl(data);
 }
 
+/**
+ * @brief 添加控制数据
+ * @param data 态势控制数据
+ * @details 调用addControlDataImpl添加数据
+ */
 void RZSourceRadiation::addData(const SituationControlData &data)
 {
     addControlDataImpl(data);
 }
 
+/**
+ * @brief 更新雷达数据
+ * @param data 雷达性能参数
+ * @details 调用updateDataImpl更新数据
+ */
 void RZSourceRadiation::updateData(const RadarPerformancePara &data)
 {
     updateDataImpl(data);
 }
 
+/**
+ * @brief 更新控制数据
+ * @param data 态势控制数据
+ * @details 调用updateControlDataImpl更新数据
+ */
 void RZSourceRadiation::updateData(const SituationControlData &data)
 {
     updateControlDataImpl(data);
 }
 
+/**
+ * @brief 删除数据
+ * @param name 名称
+ * @details 调用deleteDataByName删除数据
+ */
 void RZSourceRadiation::deleteData(const QString &name)
 {
     deleteDataByName(name);
 }
 
+/**
+ * @brief 添加雷达数据实现
+ * @param data 雷达性能参数
+ * @details 添加数据到列表并更新显示
+ */
 void RZSourceRadiation::addDataImpl(const RadarPerformancePara &data)
 {
     m_radarSource.append(data);
@@ -393,6 +480,11 @@ void RZSourceRadiation::addDataImpl(const RadarPerformancePara &data)
     ui->tableView->resizeRowsToContents();
 }
 
+/**
+ * @brief 更新雷达数据实现
+ * @param data 雷达性能参数
+ * @details 根据雷达名称查找并更新数据
+ */
 void RZSourceRadiation::updateDataImpl(const RadarPerformancePara &data)
 {
     const int row = findIndexByName(m_radarSource, data.name);
@@ -407,11 +499,21 @@ void RZSourceRadiation::updateDataImpl(const RadarPerformancePara &data)
     ui->tableView->resizeRowsToContents();
 }
 
+/**
+ * @brief 添加控制数据实现
+ * @param data 态势控制数据
+ * @details 添加到控制数据列表
+ */
 void RZSourceRadiation::addControlDataImpl(const SituationControlData &data)
 {
     m_controlData.append(data);
 }
 
+/**
+ * @brief 更新控制数据实现
+ * @param data 态势控制数据
+ * @details 根据类型查找并更新数据
+ */
 void RZSourceRadiation::updateControlDataImpl(const SituationControlData &data)
 {
     const int row = findIndexByType(m_controlData, data.type);
@@ -423,6 +525,11 @@ void RZSourceRadiation::updateControlDataImpl(const SituationControlData &data)
     m_controlData[row] = data;
 }
 
+/**
+ * @brief 根据名称删除数据
+ * @param name 雷达名称
+ * @details 从列表和模型中删除指定雷达
+ */
 void RZSourceRadiation::deleteDataByName(const QString &name)
 {
     const int row = findIndexByName(m_radarSource, name);
@@ -437,6 +544,11 @@ void RZSourceRadiation::deleteDataByName(const QString &name)
     }
 }
 
+/**
+ * @brief 根据类型删除控制数据
+ * @param type 数据类型
+ * @details 从控制数据列表中删除
+ */
 void RZSourceRadiation::deleteControlDataByType(const QString &type)
 {
     const int row = findIndexByType(m_controlData, type);
@@ -447,6 +559,10 @@ void RZSourceRadiation::deleteControlDataByType(const QString &type)
     m_controlData.removeAt(row);
 }
 
+/**
+ * @brief 添加雷达槽函数
+ * @details 弹出对话框获取雷达信息并添加
+ */
 void RZSourceRadiation::onAddRadar()
 {
     QString name = QInputDialog::getText(this, "添加雷达", "雷达名称:");
@@ -498,6 +614,11 @@ void RZSourceRadiation::onAddRadar()
     addDataImpl(radar);
 }
 
+/**
+ * @brief 编辑雷达槽函数
+ * @param row 待编辑的行号
+ * @details 弹出对话框修改雷达信息并更新显示
+ */
 void RZSourceRadiation::onEditRadar(int row)
 {
     if (row < 0 || row >= m_radarSource.size()) return;
@@ -552,6 +673,11 @@ void RZSourceRadiation::onEditRadar(int row)
     emit radarDataChanged(radar);
 }
 
+/**
+ * @brief 删除雷达槽函数
+ * @param row 待删除的行号
+ * @details 弹出确认对话框，删除雷达数据并发送删除信号
+ */
 void RZSourceRadiation::onDeleteRadar(int row)
 {
     if (row < 0 || row >= m_radarSource.size()) return;
@@ -567,6 +693,11 @@ void RZSourceRadiation::onDeleteRadar(int row)
     }
 }
 
+/**
+ * @brief 雷达数据更新处理槽函数
+ * @param data 雷达性能参数
+ * @details 查找并更新数据，如不存在则添加
+ */
 void RZSourceRadiation::onRadarDataUpdated(const RadarPerformancePara &data)
 {
     int row = findIndexByName(m_radarSource, data.name);
@@ -581,6 +712,11 @@ void RZSourceRadiation::onRadarDataUpdated(const RadarPerformancePara &data)
     }
 }
 
+/**
+ * @brief 雷达数据删除处理槽函数
+ * @param name 雷达名称
+ * @details 调用deleteDataByName删除数据
+ */
 void RZSourceRadiation::onRadarDataRemoved(const QString &name)
 {
     deleteDataByName(name);

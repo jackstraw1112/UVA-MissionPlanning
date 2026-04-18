@@ -22,18 +22,23 @@
 
 namespace
 {
-    constexpr qreal kXOffset = 20.0;
-    constexpr qreal kYOffset = 20.0;
-    constexpr qreal kWidthMargin = 40.0;
-    constexpr qreal kHeightMargin = 110.0;
+    constexpr qreal kXOffset = 15.0;
+    constexpr qreal kYOffset = 15.0;
+    constexpr qreal kWidthMargin = 30.0;
+    constexpr qreal kHeightMargin = 90.0;
     constexpr qreal kBarHeightRatio = 0.7;
-    constexpr qreal kArrowSize = 8.0;
-    constexpr qreal kBandLabelOffset = 25.0;
-    constexpr qreal kFreqLabelOffset = 25.0;
-    constexpr int kBandLabelFontSize = 10;
-    constexpr int kFreqLabelFontSize = 9;
+    constexpr qreal kArrowSize = 6.0;
+    constexpr qreal kBandLabelOffset = 20.0;
+    constexpr qreal kFreqLabelOffset = 20.0;
+    constexpr int kBandLabelFontSize = 8;
+    constexpr int kFreqLabelFontSize = 7;
 }
 
+/**
+ * @brief 频谱图表控件构造函数
+ * @param parent 父窗口指针
+ * @details 初始化频谱图表场景、渲染提示和鼠标追踪
+ */
 SpectrumChart::SpectrumChart(QWidget *parent)
     : QGraphicsView(parent)
 {
@@ -42,30 +47,44 @@ SpectrumChart::SpectrumChart(QWidget *parent)
     setRenderHint(QPainter::Antialiasing);
     setAlignment(Qt::AlignLeft | Qt::AlignBottom);
     setMouseTracking(true);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setDragMode(QGraphicsView::NoDrag);
 
     m_hoveredIndex = -1;
     m_tooltipItem = nullptr;
     m_tooltipBg = nullptr;
 
-    // 初始化字体
-    m_bandLabelFont.setPointSize(10);
-    m_freqLabelFont.setPointSize(9);
+    m_bandLabelFont.setPointSize(kBandLabelFontSize);
+    m_freqLabelFont.setPointSize(kFreqLabelFontSize);
 
     initScene();
 }
 
+/**
+ * @brief 频谱图表控件析构函数
+ * @details 清理场景资源并删除场景对象
+ */
 SpectrumChart::~SpectrumChart()
 {
     clearScene();
     delete m_scene;
 }
 
+/**
+ * @brief 初始化频谱图表场景
+ * @details 清空现有场景并设置背景色
+ */
 void SpectrumChart::initScene()
 {
     clearScene();
     m_scene->setBackgroundBrush(QColor(240, 240, 240));
 }
 
+/**
+ * @brief 清空频谱图表场景
+ * @details 清空场景内容并重置悬停状态和提示框
+ */
 void SpectrumChart::clearScene()
 {
     m_scene->clear();
@@ -74,6 +93,12 @@ void SpectrumChart::clearScene()
     m_tooltipBg = nullptr;
 }
 
+/**
+ * @brief 设置频谱图表数据
+ * @param radarSource 雷达性能参数列表
+ * @param radarColor 雷达颜色
+ * @details 保存数据并绘制柱状图
+ */
 void SpectrumChart::setData(const QVector<RadarPerformancePara> &radarSource, const QColor &radarColor)
 {
     m_radarSource = radarSource;
@@ -81,6 +106,12 @@ void SpectrumChart::setData(const QVector<RadarPerformancePara> &radarSource, co
     drawBarChart();
 }
 
+/**
+ * @brief 计算频率范围
+ * @param frequencyStr 频率字符串（支持波段名称或数值范围）
+ * @return 频率范围（MHz）
+ * @details 支持波段名称映射（Ku/S/C/X波段）和正则匹配数值范围
+ */
 QPair<double, double> SpectrumChart::calculateFrequencyRange(const QString &frequencyStr)
 {
     // 1. 波段名称 → 频率范围（MHz）【统一配置，一目了然】
@@ -170,6 +201,10 @@ QPair<double, double> SpectrumChart::calculateFrequencyRange(const QString &freq
 }
 */
 
+/**
+ * @brief 绘制频谱柱状图
+ * @details 合并重叠频率范围并绘制双坐标轴频谱图
+ */
 void SpectrumChart::drawBarChart()
 {
     clearScene();
@@ -295,8 +330,8 @@ void SpectrumChart::drawBarChart()
 
     QPen axisPen(Qt::black, 1);
 
-    // 绘制中间坐标轴（适应窗口大小）
-    qreal middleAxisY = yOffset + halfChartHeight;
+    // 绘制中间坐标轴（适应窗口大小，居中对齐）
+    qreal middleAxisY = yOffset + halfChartHeight - barHeight / 2;
     m_scene->addLine(xOffset, middleAxisY, xOffset + chartWidth, middleAxisY, axisPen);
 
     // 绘制下面的坐标轴
@@ -360,6 +395,12 @@ void SpectrumChart::drawBarChart()
     }
 }
 
+/**
+ * @brief 根据频率获取频段名称
+ * @param freq 频率（MHz）
+ * @return 频段名称
+ * @details 根据频率阈值返回对应频段名称
+ */
 QString SpectrumChart::getBandName(double freq)
 {
     static const QList<std::pair<double, QString>> bandMap = {
@@ -386,6 +427,11 @@ QString SpectrumChart::getBandName(double freq)
     return QStringLiteral("毫米波频段");
 }
 
+/**
+ * @brief 鼠标移动事件处理
+ * @param event 鼠标事件
+ * @details 根据鼠标位置计算频率并显示提示框
+ */
 void SpectrumChart::mouseMoveEvent(QMouseEvent *event)
 {
     QGraphicsView::mouseMoveEvent(event);
@@ -395,10 +441,11 @@ void SpectrumChart::mouseMoveEvent(QMouseEvent *event)
     qreal chartWidth = width() - kWidthMargin;
     qreal chartHeight = height() - kHeightMargin;
     qreal halfChartHeight = chartHeight / 2;
+    qreal barHeight = halfChartHeight * kBarHeightRatio;
     qreal xOffset = kXOffset;
     qreal yOffset = kYOffset;
 
-    qreal middleAxisY = yOffset + halfChartHeight;
+    qreal middleAxisY = yOffset + halfChartHeight - barHeight / 2;
     qreal bottomAxisY = yOffset + chartHeight;
 
     double mouseFreq = -1.0;
@@ -477,12 +524,22 @@ void SpectrumChart::mouseMoveEvent(QMouseEvent *event)
     QToolTip::showText(event->globalPos(), tooltip, this);
 }
 
+/**
+ * @brief 鼠标离开事件处理
+ * @param event 事件对象
+ * @details 隐藏提示框
+ */
 void SpectrumChart::leaveEvent(QEvent *event)
 {
     QGraphicsView::leaveEvent(event);
     QToolTip::hideText();
 }
 
+/**
+ * @brief 窗口大小改变事件处理
+ * @param event 窗口大小事件
+ * @details 窗口大小变化时重新绘制图表
+ */
 void SpectrumChart::resizeEvent(QResizeEvent *event)
 {
     QGraphicsView::resizeEvent(event);
@@ -493,6 +550,11 @@ void SpectrumChart::resizeEvent(QResizeEvent *event)
     }
 }
 
+/**
+ * @brief 设置字体
+ * @param font 字体对象
+ * @details 设置频谱图表标签字体大小
+ */
 void SpectrumChart::setFont(const QFont &font)
 {
     QGraphicsView::setFont(font);
@@ -506,6 +568,11 @@ void SpectrumChart::setFont(const QFont &font)
 // SpectrumAnalysis 类实现
 // ==============================================================================
 
+/**
+ * @brief 频谱分析窗口构造函数
+ * @param parent 父窗口指针
+ * @details 初始化UI、参数、对象和信号槽连接
+ */
 SpectrumAnalysis::SpectrumAnalysis(QWidget *parent)
     : QWidget(parent), ui(new Ui::SpectrumAnalysis)
 {
@@ -515,15 +582,27 @@ SpectrumAnalysis::SpectrumAnalysis(QWidget *parent)
     signalAndSlot();
 }
 
+/**
+ * @brief 频谱分析窗口析构函数
+ * @details 释放UI资源
+ */
 SpectrumAnalysis::~SpectrumAnalysis()
 {
     delete ui;
 }
 
+/**
+ * @brief 初始化参数
+ * @details 预留扩展
+ */
 void SpectrumAnalysis::initPara()
 {
 }
 
+/**
+ * @brief 初始化对象
+ * @details 初始化表格视图属性、数据模型和测试数据
+ */
 void SpectrumAnalysis::initClass()
 {
     initTableViewAttr();
@@ -532,10 +611,18 @@ void SpectrumAnalysis::initClass()
     displayData();
 }
 
+/**
+ * @brief 关联信号与槽函数
+ * @details 预留扩展
+ */
 void SpectrumAnalysis::signalAndSlot()
 {
 }
 
+/**
+ * @brief 生成测试数据
+ * @details 初始化雷达辐射源测试数据
+ */
 void SpectrumAnalysis::generateTestData()
 {
     m_radarSource.clear();
@@ -557,29 +644,53 @@ void SpectrumAnalysis::generateTestData()
     addRadar(QStringLiteral("远程预警 FPS-117"), QStringLiteral("FPS-117"), 6, QStringLiteral("机械扫描"));
 }
 
+/**
+ * @brief 初始化表格视图属性
+ * @details 设置频谱图表颜色和几何位置
+ */
 void SpectrumAnalysis::initTableViewAttr()
 {
     m_radarColor = QColor(Qt::blue);
 
     m_spectrumChart = new SpectrumChart(this);
-    m_spectrumChart->setGeometry(10, 10, width() - 20, height() - 20);
+    m_spectrumChart->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    ui->gridLayout->addWidget(m_spectrumChart);
 }
 
+/**
+ * @brief 初始化数据模型
+ * @details 预留扩展
+ */
 void SpectrumAnalysis::initDataModel()
 {
 }
 
+/**
+ * @brief 显示数据
+ * @details 刷新频谱图表
+ */
 void SpectrumAnalysis::displayData()
 {
     refreshChart();
 }
 
+/**
+ * @brief 添加雷达数据
+ * @param data 雷达性能参数
+ * @details 添加数据到列表并刷新图表
+ */
 void SpectrumAnalysis::addData(const RadarPerformancePara &data)
 {
     m_radarSource.append(data);
     refreshChart();
 }
 
+/**
+ * @brief 添加雷达数据（带颜色）
+ * @param data 雷达性能参数
+ * @param color 雷达颜色
+ * @details 设置颜色并添加数据到列表刷新图表
+ */
 void SpectrumAnalysis::addData(const RadarPerformancePara &data, const QColor &color)
 {
     m_radarColor = color;
@@ -587,6 +698,11 @@ void SpectrumAnalysis::addData(const RadarPerformancePara &data, const QColor &c
     refreshChart();
 }
 
+/**
+ * @brief 更新雷达数据
+ * @param data 雷达性能参数
+ * @details 根据雷达名称查找并更新数据
+ */
 void SpectrumAnalysis::updateData(const RadarPerformancePara &data)
 {
     int index = findIndexByName(m_radarSource, data.name);
@@ -597,6 +713,12 @@ void SpectrumAnalysis::updateData(const RadarPerformancePara &data)
     }
 }
 
+/**
+ * @brief 更新雷达数据（带颜色）
+ * @param data 雷达性能参数
+ * @param color 雷达颜色
+ * @details 设置颜色并更新数据
+ */
 void SpectrumAnalysis::updateData(const RadarPerformancePara &data, const QColor &color)
 {
     m_radarColor = color;
@@ -608,6 +730,11 @@ void SpectrumAnalysis::updateData(const RadarPerformancePara &data, const QColor
     }
 }
 
+/**
+ * @brief 删除雷达数据
+ * @param name 雷达名称
+ * @details 根据名称删除数据
+ */
 void SpectrumAnalysis::deleteData(const QString &name)
 {
     int index = findIndexByName(m_radarSource, name);
@@ -618,12 +745,20 @@ void SpectrumAnalysis::deleteData(const QString &name)
     }
 }
 
+/**
+ * @brief 清空缓存数据
+ * @details 清空雷达数据列表并刷新图表
+ */
 void SpectrumAnalysis::clearCacheData()
 {
     m_radarSource.clear();
     refreshChart();
 }
 
+/**
+ * @brief 刷新图表
+ * @details 更新频谱图表数据
+ */
 void SpectrumAnalysis::refreshChart()
 {
     if (m_spectrumChart)
@@ -632,26 +767,46 @@ void SpectrumAnalysis::refreshChart()
     }
 }
 
+/**
+ * @brief 窗口大小改变事件处理
+ * @param event 窗口大小事件
+ * @details 调整频谱图表大小
+ */
 void SpectrumAnalysis::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
 
-    if (m_spectrumChart)
+    if (m_spectrumChart && !m_radarSource.isEmpty())
     {
-        m_spectrumChart->setGeometry(10, 10, width() - 20, height() - 20);
+        m_spectrumChart->drawBarChart();
     }
 }
 
+/**
+ * @brief 鼠标移动事件处理
+ * @param event 鼠标事件
+ * @details 预留扩展
+ */
 void SpectrumAnalysis::mouseMoveEvent(QMouseEvent *event)
 {
     QWidget::mouseMoveEvent(event);
 }
 
+/**
+ * @brief 鼠标离开事件处理
+ * @param event 事件对象
+ * @details 预留扩展
+ */
 void SpectrumAnalysis::leaveEvent(QEvent *event)
 {
     QWidget::leaveEvent(event);
 }
 
+/**
+ * @brief 设置字体
+ * @param font 字体对象
+ * @details 设置窗口字体并同步到频谱图表
+ */
 void SpectrumAnalysis::setFont(const QFont &font)
 {
     QWidget::setFont(font);
@@ -660,6 +815,11 @@ void SpectrumAnalysis::setFont(const QFont &font)
     }
 }
 
+/**
+ * @brief 雷达数据变更处理槽函数
+ * @param data 雷达性能参数
+ * @details 根据雷达名称查找并更新或添加数据
+ */
 void SpectrumAnalysis::onRadarDataChanged(const RadarPerformancePara &data)
 {
     int index = findIndexByName(m_radarSource, data.name);
